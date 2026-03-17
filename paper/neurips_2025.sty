@@ -1,0 +1,58 @@
+% neurips_2025.sty - Style file for NeurIPS 2025
+% Simplified version for compatibility
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{neurips_2025}[2025/01/01 NeurIPS 2025 Style]
+
+% Options
+\newif\if@neuripsfinal\@neuripsfinalfalse
+\DeclareOption{final}{\@neuripsfinaltrue}
+\DeclareOption{preprint}{\@neuripsfinalfalse}
+\ProcessOptions\relax
+
+% Page layout
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{times}
+\usepackage{fancyhdr}
+
+% Line spacing
+\linespread{1.0}
+
+% Paragraph formatting
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Section formatting
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\paragraph}[runin]{\normalsize\bfseries}{}{}{}[.]
+
+% Caption formatting
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+
+% Abstract
+\renewenvironment{abstract}{%
+  \begin{center}
+    \textbf{Abstract}
+  \end{center}
+  \begin{quotation}
+    \small
+}{%
+  \end{quotation}
+}
+
+% Author block (simplified)
+\if@neuripsfinal
+  % Final version - show authors
+\else
+  % Anonymous submission
+\fi
+
+% Natbib compatibility
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+\setcitestyle{authoryear,round}
+
+\endinput

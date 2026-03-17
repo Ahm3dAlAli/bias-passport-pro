@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Main API server with dashboard
+  fingerprint-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fingerprint-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - DATABASE_PATH=/app/data/fingerprints.db
+      - RESULTS_PATH=/app/results
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./static:/app/static
+      - ./fhibe_images:/app/fhibe_images:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Background evaluation worker
+  fingerprint-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fingerprint-worker
+    command: ["python", "-m", "fingerprint_squared.worker"]
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - DATABASE_PATH=/app/data/fingerprints.db
+      - RESULTS_PATH=/app/results
+      - WORKER_MODE=true
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./fhibe_images:/app/fhibe_images:ro
+    depends_on:
+      - fingerprint-api
+    restart: unless-stopped
+
+volumes:
+  fingerprint-data:
+  fingerprint-results:

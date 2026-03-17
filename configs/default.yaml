@@ -1,0 +1,48 @@
+# Fingerprint² Default Configuration
+# This file contains the default settings for VLM bias evaluation
+
+# Experiment metadata
+name: "default_evaluation"
+description: "Default Fingerprint² evaluation configuration"
+author: ""
+tags:
+  - bias
+  - fairness
+  - vlm
+
+# Models to evaluate
+models:
+  - "gpt-4o"
+  # - "claude-3-opus"
+  # - "gemini-1.5-pro"
+
+# Evaluation settings
+benchmark: "fp2-core"
+probe_types:
+  - "stereotype_association"
+  - "counterfactual"
+  - "representation"
+demographic_dimensions:
+  - "gender"
+  - "race"
+  - "age"
+n_probes_per_type: 50
+max_samples: null  # null = no limit
+
+# Model API settings
+max_tokens: 512
+temperature: 0.0
+max_concurrent: 5
+
+# Fairness and bias thresholds
+fairness_threshold: 0.1  # 10% disparity allowed
+bias_threshold: 0.5  # Above this is considered high bias
+
+# Output settings
+output_dir: "./fp2_results"
+save_raw_responses: true
+generate_reports: true
+report_format: "html"
+
+# Reproducibility
+seed: 42
