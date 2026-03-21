@@ -393,39 +393,91 @@ def pil_to_b64(img: Image.Image) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _detect_model_family(model_id: str) -> str:
+    """Detect model family from HuggingFace model ID."""
     mid = model_id.lower()
+
+    # Qwen Vision Models (2024-2025)
     if "qwen2.5-vl" in mid or "qwen2-vl" in mid or "qwen3-vl" in mid:
         return "qwen"
-    if "llava" in mid:
-        return "llava"
-    if "smolvlm" in mid or "smol" in mid:
-        return "smolvlm"
-    if "idefics" in mid:
-        return "idefics"
+
+    # Meta Llama Vision
     if "llama" in mid and "vision" in mid:
         return "llama"
+
+    # LLaVA family
+    if "llava" in mid:
+        return "llava"
+
+    # SmolVLM (HuggingFace)
+    if "smolvlm" in mid or "smol" in mid:
+        return "smolvlm"
+
+    # InternVL series (all versions)
     if "internvl" in mid:
         return "internvl"
+
+    # IDEFICS (HuggingFace's Flamingo reproduction)
+    if "idefics" in mid:
+        return "idefics"
+
+    # OpenFlamingo
+    if "flamingo" in mid or "openflamingo" in mid:
+        return "flamingo"
+
+    # FLAVA (Facebook)
+    if "flava" in mid:
+        return "flava"
+
+    # DeepSeek Vision Models
+    if "deepseek" in mid and ("vl" in mid or "vision" in mid):
+        return "deepseek"
+
+    # Pixtral (Mistral)
+    if "pixtral" in mid:
+        return "pixtral"
+
+    # Google Gemma 3 (multimodal)
+    if "gemma-3" in mid or "gemma3" in mid:
+        return "gemma3"
+
+    # PaliGemma (Google)
+    if "paligemma" in mid:
+        return "paligemma"
+
+    # Phi Vision Models (Microsoft)
     if "phi-3.5" in mid and "vision" in mid:
         return "phi35v"
     if "phi-3" in mid and "vision" in mid:
         return "phi3v"
-    if "blip" in mid:
-        return "blip"
-    if "ovis" in mid:
-        return "ovis"
-    if "ristretto" in mid:
-        return "ristretto"
-    if "minicpm" in mid:
-        return "minicpm"
-    if "paligemma" in mid:
-        return "paligemma"
+
+    # Moondream
     if "moondream" in mid:
         return "moondream"
+
+    # MiniCPM-V
+    if "minicpm" in mid:
+        return "minicpm"
+
+    # BLIP models
+    if "blip" in mid:
+        return "blip"
+
+    # Ovis
+    if "ovis" in mid:
+        return "ovis"
+
+    # Ristretto
+    if "ristretto" in mid:
+        return "ristretto"
+
+    # NanoVLM
     if "nanovlm" in mid or "nano-vlm" in mid:
         return "nanovlm"
+
+    # Florence (captioning-only, not suitable for Q&A)
     if "florence" in mid:
         return "florence"
+
     return "generic"
 
 
@@ -1437,6 +1489,480 @@ class Florence2Client:
         return {"response": response, "thinking": None}
 
 
+class FLAVAClient:
+    """
+    FLAVA (Facebook's Foundational Language And Vision Alignment) client.
+    FLAVA uses contrastive learning and is primarily for embeddings, but can
+    be used for zero-shot classification and text generation tasks.
+    """
+
+    def __init__(self, model_id: str, device_map: str = "auto",
+                 load_in_4bit: bool = False, use_flash_attn: bool = True):
+        from transformers import FlavaProcessor, FlavaForPreTraining
+
+        self.name     = model_id.split("/")[-1]
+        self.model_id = model_id
+
+        console.print(f"[blue]Loading {self.name} (FLAVA client) ...")
+
+        # FLAVA doesn't support 4-bit quantization well
+        if load_in_4bit:
+            console.print("[yellow]  → FLAVA doesn't support 4-bit quantization, using fp16")
+
+        self.processor = FlavaProcessor.from_pretrained(model_id)
+
+        # Handle device placement
+        if device_map.startswith("cuda:"):
+            self.device = device_map
+        else:
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        self.model = FlavaForPreTraining.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16,
+        ).to(self.device)
+        self.model.eval()
+        console.print(f"[green]✓ {self.name} ready")
+
+    def generate(self, pil_image: Image.Image, prompt: str, **_) -> dict:
+        # FLAVA generates embeddings, not text. For bias probes, we use its
+        # image-text matching capability to score different response options.
+        # This is a simplified version that returns a description based on
+        # the most likely text from a set of options.
+
+        # For occupation probe, we could score multiple occupation options
+        # For now, return a generic response noting FLAVA's limitations
+        inputs = self.processor(
+            text=[prompt],
+            images=pil_image,
+            return_tensors="pt",
+            padding=True,
+        ).to(self.device)
+
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            # Get image-text contrastive score
+            itm_score = outputs.itm_logits.softmax(dim=-1)[:, 1].item()
+
+        # FLAVA is primarily an embedding model, so we indicate the
+        # image-text alignment score rather than generating text
+        response = f"[FLAVA embedding model - ITM score: {itm_score:.3f}] Unable to generate free-form text responses. Consider using FLAVA for embedding-based bias analysis instead."
+        return {"response": response, "thinking": None}
+
+
+class OpenFlamingoClient:
+    """
+    OpenFlamingo client - open-source implementation of DeepMind's Flamingo.
+    Supports few-shot in-context learning with interleaved images and text.
+    """
+
+    def __init__(self, model_id: str, device_map: str = "auto",
+                 load_in_4bit: bool = False, use_flash_attn: bool = True):
+        from transformers import BitsAndBytesConfig
+
+        self.name     = model_id.split("/")[-1]
+        self.model_id = model_id
+
+        console.print(f"[blue]Loading {self.name} (OpenFlamingo client) ...")
+
+        try:
+            from open_flamingo import create_model_and_transforms
+        except ImportError:
+            console.print("[yellow]  → Installing open_flamingo...")
+            import subprocess
+            subprocess.check_call(["pip", "install", "open_flamingo"])
+            from open_flamingo import create_model_and_transforms
+
+        # Parse model variant from model_id
+        if "4B" in model_id or "4b" in model_id:
+            lang_model = "togethercomputer/RedPajama-INCITE-Base-3B-v1"
+            vision_model = "ViT-L-14"
+            clip_variant = "openai"
+        else:  # 9B variant
+            lang_model = "mosaicml/mpt-7b"
+            vision_model = "ViT-L-14"
+            clip_variant = "openai"
+
+        # Handle device placement
+        if device_map.startswith("cuda:"):
+            self.device = device_map
+        else:
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        self.model, self.image_processor, self.tokenizer = create_model_and_transforms(
+            clip_vision_encoder_path=vision_model,
+            clip_vision_encoder_pretrained=clip_variant,
+            lang_encoder_path=lang_model,
+            tokenizer_path=lang_model,
+            cross_attn_every_n_layers=4,
+        )
+
+        # Load pretrained weights
+        from huggingface_hub import hf_hub_download
+        checkpoint_path = hf_hub_download(model_id, "checkpoint.pt")
+        self.model.load_state_dict(torch.load(checkpoint_path, map_location="cpu"), strict=False)
+
+        self.model = self.model.to(self.device)
+        if load_in_4bit:
+            console.print("[yellow]  → OpenFlamingo quantization requires custom setup")
+        self.model.eval()
+        console.print(f"[green]✓ {self.name} ready")
+
+    def generate(self, pil_image: Image.Image, prompt: str, **_) -> dict:
+        # Prepare image
+        vision_x = self.image_processor(pil_image).unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        vision_x = vision_x.to(self.device)
+
+        # Prepare text with image token
+        self.tokenizer.padding_side = "left"
+        lang_x = self.tokenizer(
+            [f"<image>{prompt}"],
+            return_tensors="pt",
+            padding=True,
+        )
+        lang_x = {k: v.to(self.device) for k, v in lang_x.items()}
+
+        with torch.no_grad():
+            output_ids = self.model.generate(
+                vision_x=vision_x,
+                lang_x=lang_x["input_ids"],
+                attention_mask=lang_x["attention_mask"],
+                max_new_tokens=MAX_NEW_TOKENS,
+                num_beams=1,
+            )
+
+        response = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        # Remove the prompt from response
+        if prompt in response:
+            response = response.split(prompt)[-1].strip()
+        return {"response": response, "thinking": None}
+
+
+class DeepSeekVLClient:
+    """DeepSeek-VL2 client for DeepSeek's vision-language models."""
+
+    def __init__(self, model_id: str, device_map: str = "auto",
+                 load_in_4bit: bool = False, use_flash_attn: bool = True):
+        from transformers import AutoProcessor, AutoModelForCausalLM, BitsAndBytesConfig
+
+        self.name     = model_id.split("/")[-1]
+        self.model_id = model_id
+
+        console.print(f"[blue]Loading {self.name} (DeepSeek-VL client) ...")
+
+        q_cfg = None
+        if load_in_4bit:
+            q_cfg = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_use_double_quant=True,
+            )
+            console.print("[cyan]  → Using 4-bit quantization")
+
+        # Handle explicit GPU selection
+        effective_device_map = device_map
+        if device_map.startswith("cuda:") and load_in_4bit:
+            gpu_idx = int(device_map.split(":")[1])
+            effective_device_map = {"": gpu_idx}
+            console.print(f"[cyan]  → Target device: GPU {gpu_idx}")
+
+        # Check for Flash Attention
+        attn_impl = None
+        if use_flash_attn:
+            try:
+                import flash_attn
+                attn_impl = "flash_attention_2"
+                console.print("[cyan]  → Using Flash Attention 2")
+            except ImportError:
+                if hasattr(torch.nn.functional, 'scaled_dot_product_attention'):
+                    attn_impl = "sdpa"
+                    console.print("[cyan]  → Using SDPA")
+
+        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+
+        model_kwargs = dict(
+            torch_dtype=torch.bfloat16,
+            device_map=effective_device_map,
+            quantization_config=q_cfg,
+            trust_remote_code=True,
+        )
+        if attn_impl:
+            model_kwargs["attn_implementation"] = attn_impl
+
+        self.model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
+        self.model.eval()
+        console.print(f"[green]✓ {self.name} ready")
+
+    def generate(self, pil_image: Image.Image, prompt: str, **_) -> dict:
+        # DeepSeek-VL2 uses a specific conversation format
+        conversation = [
+            {
+                "role": "User",
+                "content": f"<image>\n{prompt}",
+                "images": [pil_image],
+            },
+            {"role": "Assistant", "content": ""},
+        ]
+
+        inputs = self.processor(
+            conversations=conversation,
+            images=[pil_image],
+            return_tensors="pt",
+        ).to(self.model.device)
+
+        with torch.no_grad():
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=MAX_NEW_TOKENS,
+                do_sample=False,
+                pad_token_id=self.processor.tokenizer.eos_token_id,
+            )
+
+        # Decode only new tokens
+        new_tokens = output_ids[0][inputs["input_ids"].shape[-1]:]
+        response = self.processor.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+        return {"response": response, "thinking": None}
+
+
+class PixtralClient:
+    """Pixtral client for Mistral's vision-language model."""
+
+    def __init__(self, model_id: str, device_map: str = "auto",
+                 load_in_4bit: bool = False, use_flash_attn: bool = True):
+        from transformers import AutoProcessor, LlavaForConditionalGeneration, BitsAndBytesConfig
+
+        self.name     = model_id.split("/")[-1]
+        self.model_id = model_id
+
+        console.print(f"[blue]Loading {self.name} (Pixtral client) ...")
+
+        q_cfg = None
+        if load_in_4bit:
+            q_cfg = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+            )
+            console.print("[cyan]  → Using 4-bit quantization")
+
+        # Handle explicit GPU selection
+        effective_device_map = device_map
+        if device_map.startswith("cuda:") and load_in_4bit:
+            gpu_idx = int(device_map.split(":")[1])
+            effective_device_map = {"": gpu_idx}
+            console.print(f"[cyan]  → Target device: GPU {gpu_idx}")
+
+        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+
+        # Pixtral uses LlavaForConditionalGeneration architecture
+        self.model = LlavaForConditionalGeneration.from_pretrained(
+            model_id,
+            torch_dtype=torch.bfloat16,
+            device_map=effective_device_map,
+            quantization_config=q_cfg,
+            trust_remote_code=True,
+        )
+        self.model.eval()
+        console.print(f"[green]✓ {self.name} ready")
+
+    def generate(self, pil_image: Image.Image, prompt: str, **_) -> dict:
+        # Pixtral uses [IMG] token for images
+        conversation = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image"},
+                    {"type": "text", "text": prompt},
+                ],
+            },
+        ]
+
+        text = self.processor.apply_chat_template(
+            conversation, tokenize=False, add_generation_prompt=True
+        )
+
+        inputs = self.processor(
+            text=text,
+            images=[pil_image],
+            return_tensors="pt",
+        ).to(self.model.device)
+
+        with torch.no_grad():
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=MAX_NEW_TOKENS,
+                do_sample=False,
+            )
+
+        new_tokens = output_ids[0][inputs["input_ids"].shape[-1]:]
+        response = self.processor.decode(new_tokens, skip_special_tokens=True).strip()
+        return {"response": response, "thinking": None}
+
+
+class Gemma3Client:
+    """Google Gemma 3 multimodal client (March 2025)."""
+
+    def __init__(self, model_id: str, device_map: str = "auto",
+                 load_in_4bit: bool = False, use_flash_attn: bool = True):
+        from transformers import AutoProcessor, AutoModelForCausalLM, BitsAndBytesConfig
+
+        self.name     = model_id.split("/")[-1]
+        self.model_id = model_id
+
+        console.print(f"[blue]Loading {self.name} (Gemma 3 client) ...")
+
+        q_cfg = None
+        if load_in_4bit:
+            q_cfg = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+            )
+            console.print("[cyan]  → Using 4-bit quantization")
+
+        # Handle explicit GPU selection
+        effective_device_map = device_map
+        if device_map.startswith("cuda:") and load_in_4bit:
+            gpu_idx = int(device_map.split(":")[1])
+            effective_device_map = {"": gpu_idx}
+            console.print(f"[cyan]  → Target device: GPU {gpu_idx}")
+
+        # Check for optimized attention
+        attn_impl = None
+        if use_flash_attn:
+            try:
+                import flash_attn
+                attn_impl = "flash_attention_2"
+                console.print("[cyan]  → Using Flash Attention 2")
+            except ImportError:
+                if hasattr(torch.nn.functional, 'scaled_dot_product_attention'):
+                    attn_impl = "sdpa"
+                    console.print("[cyan]  → Using SDPA")
+
+        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+
+        model_kwargs = dict(
+            torch_dtype=torch.bfloat16,
+            device_map=effective_device_map,
+            quantization_config=q_cfg,
+            trust_remote_code=True,
+        )
+        if attn_impl:
+            model_kwargs["attn_implementation"] = attn_impl
+
+        self.model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
+        self.model.eval()
+        console.print(f"[green]✓ {self.name} ready")
+
+    def generate(self, pil_image: Image.Image, prompt: str, **_) -> dict:
+        # Gemma 3 multimodal format
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": pil_image},
+                    {"type": "text", "text": prompt},
+                ],
+            },
+        ]
+
+        text = self.processor.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+
+        inputs = self.processor(
+            text=text,
+            images=[pil_image],
+            return_tensors="pt",
+        ).to(self.model.device)
+
+        with torch.no_grad():
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=MAX_NEW_TOKENS,
+                do_sample=False,
+            )
+
+        new_tokens = output_ids[0][inputs["input_ids"].shape[-1]:]
+        response = self.processor.decode(new_tokens, skip_special_tokens=True).strip()
+        return {"response": response, "thinking": None}
+
+
+class IDEFICSClient:
+    """IDEFICS client - HuggingFace's open implementation of Flamingo."""
+
+    def __init__(self, model_id: str, device_map: str = "auto",
+                 load_in_4bit: bool = False, use_flash_attn: bool = True):
+        from transformers import AutoProcessor, AutoModelForVision2Seq, BitsAndBytesConfig
+
+        self.name     = model_id.split("/")[-1]
+        self.model_id = model_id
+        self.is_v3 = "idefics3" in model_id.lower()
+
+        console.print(f"[blue]Loading {self.name} (IDEFICS client) ...")
+
+        q_cfg = None
+        if load_in_4bit:
+            q_cfg = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+            )
+            console.print("[cyan]  → Using 4-bit quantization")
+
+        # Handle explicit GPU selection
+        effective_device_map = device_map
+        if device_map.startswith("cuda:") and load_in_4bit:
+            gpu_idx = int(device_map.split(":")[1])
+            effective_device_map = {"": gpu_idx}
+            console.print(f"[cyan]  → Target device: GPU {gpu_idx}")
+
+        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+
+        self.model = AutoModelForVision2Seq.from_pretrained(
+            model_id,
+            torch_dtype=torch.bfloat16,
+            device_map=effective_device_map,
+            quantization_config=q_cfg,
+            trust_remote_code=True,
+        )
+        self.model.eval()
+        console.print(f"[green]✓ {self.name} ready")
+
+    def generate(self, pil_image: Image.Image, prompt: str, **_) -> dict:
+        # IDEFICS uses conversation format with image tokens
+        if self.is_v3:
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image"},
+                        {"type": "text", "text": prompt},
+                    ],
+                },
+            ]
+            text = self.processor.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+            inputs = self.processor(
+                text=text, images=[pil_image], return_tensors="pt"
+            ).to(self.model.device)
+        else:
+            # IDEFICS 2 format
+            prompts = [f"User:<image>{prompt}<end_of_utterance>\nAssistant:"]
+            inputs = self.processor(
+                prompts, [pil_image], return_tensors="pt"
+            ).to(self.model.device)
+
+        with torch.no_grad():
+            output_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=MAX_NEW_TOKENS,
+                do_sample=False,
+            )
+
+        new_tokens = output_ids[0][inputs["input_ids"].shape[-1]:]
+        response = self.processor.decode(new_tokens, skip_special_tokens=True).strip()
+        return {"response": response, "thinking": None}
+
+
 class GenericHFClient:
     """
     Fallback client for any AutoModelForCausalLM-compatible VLM
@@ -1496,30 +2022,81 @@ def build_client(model_id: str, device_map: str = "auto",
                  load_in_4bit: bool = False, use_flash_attn: bool = True):
     """Route model_id to the correct client class."""
     family = _detect_model_family(model_id)
+
+    # Qwen VL models (2024-2025)
     if family == "qwen":
         return QwenVLClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # LLaVA family
     if family == "llava":
         return LlavaClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # SmolVLM (HuggingFace)
     if family == "smolvlm":
         return SmolVLMClient(model_id, device_map)
+
+    # Ovis
     if family == "ovis":
         return OvisClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # InternVL series
     if family == "internvl":
         return InternVLClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # Ristretto
     if family == "ristretto":
         return RistrettoClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # Phi-3.5 Vision
     if family == "phi35v":
         return Phi35VisionClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # MiniCPM-V
     if family == "minicpm":
         return MiniCPMVClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # PaliGemma
     if family == "paligemma":
         return PaliGemmaClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # Moondream
     if family == "moondream":
         return MoondreamClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # NanoVLM
     if family == "nanovlm":
         return NanoVLMClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # NEW MODELS (2024-2025 SOTA VLMs)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # FLAVA (Facebook)
+    if family == "flava":
+        return FLAVAClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # OpenFlamingo
+    if family == "flamingo":
+        return OpenFlamingoClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # IDEFICS (HuggingFace's Flamingo reproduction)
+    if family == "idefics":
+        return IDEFICSClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # DeepSeek-VL2
+    if family == "deepseek":
+        return DeepSeekVLClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # Pixtral (Mistral)
+    if family == "pixtral":
+        return PixtralClient(model_id, device_map, load_in_4bit, use_flash_attn)
+
+    # Gemma 3 multimodal (Google, March 2025)
+    if family == "gemma3":
+        return Gemma3Client(model_id, device_map, load_in_4bit, use_flash_attn)
+
     # Note: Florence-2 excluded - it's a captioning-only model, not suitable for Q&A probes
-    # phi3v, blip, llama, generic
+    # phi3v, blip, llama, generic - use fallback
     return GenericHFClient(model_id, device_map, load_in_4bit)
 
 
