@@ -36,7 +36,7 @@ MODELS = {
     "qwen2.5-vl-3b": "Qwen/Qwen2.5-VL-3B-Instruct",
     "smolvlm": "HuggingFaceTB/SmolVLM2-2.2B-Instruct",
     "paligemma": "google/paligemma-3b-mix-448",
-    "moondream2": "vikhyat/moondream2",
+    # "moondream2": "vikhyat/moondream2",  # Requires HF auth
     "internvl2-2b": "OpenGVLab/InternVL2-2B",
 
     # ═══════════════════════════════════════════════════════════════════════════
@@ -109,7 +109,7 @@ MODELS = {
 # Default models to run - representative subset across model families
 DEFAULT_MODELS = [
     # Original verified models
-    "qwen2.5-vl-3b", "smolvlm", "paligemma", "moondream2", "internvl2-2b",
+    "qwen2.5-vl-3b", "smolvlm", "paligemma", "internvl2-2b",
     # Latest SOTA (single GPU capable)
     "qwen3-vl-2b", "llama-3.2-11b-vision", "internvl3-2b",
     "pixtral-12b", "deepseek-vl2-tiny", "gemma3-4b-it",
@@ -119,7 +119,7 @@ DEFAULT_MODELS = [
 
 # Lightweight models for quick testing
 LIGHTWEIGHT_MODELS = [
-    "qwen2.5-vl-3b", "smolvlm", "moondream2", "internvl2-2b",
+    "qwen2.5-vl-3b", "smolvlm", "internvl2-2b",
     "qwen3-vl-2b", "internvl3-2b", "deepseek-vl2-tiny",
 ]
 
