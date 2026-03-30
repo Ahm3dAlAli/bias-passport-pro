@@ -1,10 +1,11 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Fingerprint, BarChart3, FlaskConical, Plane, Shield, Wrench, ScanLine } from 'lucide-react';
+import { Fingerprint, BarChart3, FlaskConical, Plane, Shield, Wrench, ScanLine, Camera } from 'lucide-react';
 
 const NAV = [
   { to: '/report', icon: BarChart3, label: 'Report' },
   { to: '/lab', icon: FlaskConical, label: 'Lab' },
   { to: '/airport', icon: Plane, label: 'Airport' },
+  { to: '/scan', icon: Camera, label: 'Scan Face' },
   { to: '/eid', icon: ScanLine, label: 'E-ID' },
   { to: '/eu-ai-act', icon: Shield, label: 'EU AI' },
   { to: '/mitigation', icon: Wrench, label: 'Fix Bias' },
