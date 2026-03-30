@@ -2,14 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 :root {
-  --obs-bg: 222 47% 6%;
-  --obs-surface: 222 40% 10%;
-  --obs-surface-alt: 222 35% 14%;
-  --obs-border: 222 20% 20%;
+  --obs-bg: 222 47% 5%;
+  --obs-surface: 222 35% 9%;
+  --obs-surface-alt: 222 30% 13%;
+  --obs-border: 222 20% 18%;
   --obs-text: 210 40% 96%;
   --obs-text-muted: 215 20% 65%;
-  --obs-text-dim: 215 15% 45%;
+  --obs-text-dim: 215 15% 42%;
   --obs-accent: 199 89% 48%;
   --obs-accent-glow: 199 100% 60%;
   --obs-danger: 0 84% 60%;
@@ -20,7 +22,7 @@
 
 body {
   margin: 0;
-  background: hsl(222 47% 6%);
+  background: hsl(222 47% 5%);
   color: hsl(210 40% 96%);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -29,9 +31,9 @@ body {
 * { box-sizing: border-box; }
 
 .glass {
-  background: hsl(222 40% 10% / 0.7);
-  backdrop-filter: blur(16px);
-  border: 1px solid hsl(222 20% 20% / 0.5);
+  background: hsl(222 35% 9% / 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsl(222 20% 18% / 0.6);
 }
 
 .glow-accent {
@@ -45,6 +47,46 @@ body {
   background-clip: text;
 }
 
+.page-container {
+  @apply p-6 md:p-10 max-w-7xl mx-auto;
+}
+
+.page-header {
+  @apply mb-8;
+}
+
+.page-title {
+  @apply text-3xl font-bold tracking-tight flex items-center gap-3;
+}
+
+.page-subtitle {
+  @apply text-observatory-text-muted text-sm mt-2;
+}
+
+.card {
+  @apply glass rounded-2xl p-6;
+}
+
+.card-header {
+  @apply text-xs font-mono uppercase tracking-wider text-observatory-text-dim mb-4;
+}
+
+.tab-group {
+  @apply flex gap-1 p-1 bg-observatory-surface rounded-xl mb-8;
+}
+
+.tab-button {
+  @apply px-5 py-2.5 rounded-lg text-sm font-medium transition-all;
+}
+
+.tab-active {
+  @apply bg-observatory-accent/15 text-observatory-accent;
+}
+
+.tab-inactive {
+  @apply text-observatory-text-muted hover:text-observatory-text;
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(222 20% 25%); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: hsl(222 20% 22%); border-radius: 3px; }
