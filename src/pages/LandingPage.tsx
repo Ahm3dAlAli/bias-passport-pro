@@ -93,6 +93,7 @@ const MODULES = [
   { to: '/report', label: 'Bias Report', tag: 'Real Data' },
   { to: '/lab', label: 'Fingerprint Lab', tag: 'Interactive' },
   { to: '/airport', label: 'AI Airport', tag: 'Live' },
+  { to: '/scan', label: 'Scan Your Face', tag: 'QR / Camera' },
   { to: '/eid', label: 'E-ID Portal', tag: 'Simulation' },
   { to: '/eu-ai-act', label: 'EU AI Act', tag: 'Legal' },
   { to: '/mitigation', label: 'Mitigation', tag: 'Solutions' },
