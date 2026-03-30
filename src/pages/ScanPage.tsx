@@ -176,29 +176,28 @@ export default function ScanPage() {
 
       <div className="space-y-4">
         {/* Camera / Image */}
-        <div className="relative aspect-[4/3] bg-black rounded-xl overflow-hidden border border-white/10">
+        <div className="relative aspect-[4/3] bg-black rounded-2xl overflow-hidden border border-observatory-border">
           {!cameraActive && !capturedImage && (
             <button onClick={startCamera} className="absolute inset-0 flex flex-col items-center justify-center">
-              <Camera className="w-16 h-16 text-gray-600 mb-2" />
-              <span className="text-gray-500 text-sm">Tap to open camera</span>
+              <Camera className="w-16 h-16 text-observatory-text-dim mb-2" />
+              <span className="text-observatory-text-muted text-sm">Tap to open camera</span>
             </button>
           )}
           <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${cameraActive && !capturedImage ? '' : 'hidden'}`} />
           {capturedImage && <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />}
           {scanning && (
             <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
-              <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mb-2" />
-              <p className="text-cyan-400 text-xs font-mono">Scanning with {currentModel}…</p>
-              <p className="text-gray-500 text-[10px] mt-1">{results.length}/{SCAN_MODELS.length} models done</p>
+              <Loader2 className="w-10 h-10 text-observatory-accent animate-spin mb-2" />
+              <p className="text-observatory-accent text-xs font-mono">Scanning with {currentModel}…</p>
+              <p className="text-observatory-text-dim text-[10px] mt-1">{results.length}/{SCAN_MODELS.length} models done</p>
             </div>
           )}
-          {/* Corner brackets */}
           {(cameraActive || scanning) && (
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-cyan-400/60" />
-              <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-cyan-400/60" />
-              <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-cyan-400/60" />
-              <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-cyan-400/60" />
+              <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 border-observatory-accent/60" />
+              <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-observatory-accent/60" />
+              <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 border-observatory-accent/60" />
+              <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 border-observatory-accent/60" />
             </div>
           )}
         </div>
