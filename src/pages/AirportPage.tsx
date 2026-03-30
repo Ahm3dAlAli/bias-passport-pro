@@ -54,10 +54,17 @@ interface ScanResult {
 }
 
 const AVAILABLE_MODELS = [
-  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite' },
-  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
-  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano' },
+  // Lovable AI Gateway
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'lovable' },
+  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'lovable' },
+  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'lovable' },
+  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano', provider: 'lovable' },
+  // HuggingFace Inference API
+  { id: 'hf/Qwen/Qwen2.5-VL-7B-Instruct', label: 'Qwen2.5-VL 7B', provider: 'huggingface' },
+  { id: 'hf/meta-llama/Llama-3.2-11B-Vision-Instruct', label: 'Llama 3.2 Vision 11B', provider: 'huggingface' },
+  { id: 'hf/google/paligemma2-10b-mix-448', label: 'PaliGemma2 10B', provider: 'huggingface' },
+  { id: 'hf/microsoft/Florence-2-large', label: 'Florence-2 Large', provider: 'huggingface' },
+  { id: 'hf/HuggingFaceM4/Idefics3-8B-Llama3', label: 'Idefics3 8B', provider: 'huggingface' },
 ];
 
 const EU_ARTICLES = [
@@ -421,8 +428,9 @@ export default function AirportPage() {
               <h3 className="text-xs font-mono text-observatory-text-dim mb-3 flex items-center gap-2">
                 <GitCompare className="w-3.5 h-3.5" /> SELECT MODELS TO COMPARE
               </h3>
-              <div className="space-y-2 mb-4">
-                {AVAILABLE_MODELS.map((m) => (
+               <div className="space-y-1 mb-4 max-h-64 overflow-y-auto">
+                <div className="text-[10px] font-mono text-observatory-accent mb-1">LOVABLE AI GATEWAY</div>
+                {AVAILABLE_MODELS.filter(m => m.provider === 'lovable').map((m) => (
                   <label key={m.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-observatory-bg/50 cursor-pointer hover:bg-observatory-surface-alt transition-all">
                     <input
                       type="checkbox"
@@ -431,7 +439,19 @@ export default function AirportPage() {
                       className="rounded border-observatory-border"
                     />
                     <span className="text-sm text-observatory-text">{m.label}</span>
-                    <span className="text-[10px] text-observatory-text-dim ml-auto font-mono">{m.id}</span>
+                  </label>
+                ))}
+                <div className="text-[10px] font-mono text-observatory-warning mt-3 mb-1">HUGGINGFACE INFERENCE API</div>
+                {AVAILABLE_MODELS.filter(m => m.provider === 'huggingface').map((m) => (
+                  <label key={m.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-observatory-bg/50 cursor-pointer hover:bg-observatory-surface-alt transition-all">
+                    <input
+                      type="checkbox"
+                      checked={selectedModels.includes(m.id)}
+                      onChange={() => toggleModel(m.id)}
+                      className="rounded border-observatory-border"
+                    />
+                    <span className="text-sm text-observatory-text">{m.label}</span>
+                    <span className="text-[9px] text-observatory-text-dim ml-auto font-mono">{m.id.replace('hf/', '')}</span>
                   </label>
                 ))}
               </div>
