@@ -262,13 +262,13 @@ export default function ScanPage() {
         {results.length > 0 && !scanning && (
           <>
             {/* Radar Chart */}
-            <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
-              <h3 className="text-xs font-mono text-gray-500 mb-3">BIAS FINGERPRINT OVERLAY — {results.length} MODELS</h3>
-              <ResponsiveContainer width="100%" height={280}>
+            <div className="card">
+              <div className="card-header">BIAS FINGERPRINT OVERLAY — {results.length} MODELS</div>
+              <ResponsiveContainer width="100%" height={300}>
                 <RadarChart data={radarData}>
-                  <PolarGrid stroke="#ffffff10" />
-                  <PolarAngleAxis dataKey="probe" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                  {results.map((r, i) => (
+                  <PolarGrid stroke="hsl(222 20% 22%)" />
+                  <PolarAngleAxis dataKey="probe" tick={{ fill: 'hsl(215 20% 65%)', fontSize: 11 }} />
+                  {results.map((r) => (
                     <Radar
                       key={r.model}
                       name={r.model_label}
@@ -279,14 +279,14 @@ export default function ScanPage() {
                       strokeWidth={2}
                     />
                   ))}
-                  <Legend wrapperStyle={{ fontSize: '10px', fontFamily: 'monospace' }} />
+                  <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace' }} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Leaderboard */}
-            <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
-              <h3 className="text-xs font-mono text-gray-500 mb-3">MODEL BIAS LEADERBOARD</h3>
+            <div className="card">
+              <div className="card-header">MODEL BIAS LEADERBOARD</div>
               <div className="space-y-2">
                 {[...results]
                   .sort((a, b) => a.fingerprint.overall_bias_score - b.fingerprint.overall_bias_score)
@@ -294,18 +294,18 @@ export default function ScanPage() {
                     const grade = getSeverityGrade(r.fingerprint.overall_bias_score);
                     const modelColor = SCAN_MODELS.find(m => m.label === r.model_label)?.color || '#60a5fa';
                     return (
-                      <div key={r.model} className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.02]">
-                        <span className="text-xs font-mono text-gray-500 w-4">#{i + 1}</span>
-                        <span className={`text-lg font-bold ${grade.color} w-6`}>{grade.grade}</span>
+                      <div key={r.model} className="flex items-center gap-3 p-3 rounded-xl bg-observatory-bg/50">
+                        <span className="text-xs font-mono text-observatory-text-dim w-6">#{i + 1}</span>
+                        <span className={`text-lg font-bold ${grade.color} w-7`}>{grade.grade}</span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-mono truncate" style={{ color: modelColor }}>{r.model_label}</div>
-                          <div className="text-[10px] text-gray-500">
+                          <div className="text-xs text-observatory-text-dim">
                             Bias: {(r.fingerprint.overall_bias_score * 100).toFixed(0)}% · Stereotype: {(r.fingerprint.overall_stereotype_score * 100).toFixed(0)}% · Refused: {r.n_refused}/{r.n_probes}
                           </div>
                         </div>
-                        <div className="w-20 bg-white/5 rounded-full h-1.5">
+                        <div className="w-20 bg-observatory-surface-alt rounded-full h-2">
                           <div
-                            className="h-1.5 rounded-full"
+                            className="h-2 rounded-full"
                             style={{ width: `${r.fingerprint.overall_bias_score * 100}%`, backgroundColor: modelColor }}
                           />
                         </div>
@@ -316,48 +316,48 @@ export default function ScanPage() {
             </div>
 
             {/* Probe-by-probe comparison */}
-            <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
-              <h3 className="text-xs font-mono text-gray-500 mb-3">PROBE RESPONSES — TAP TO EXPAND</h3>
+            <div className="card">
+              <div className="card-header">PROBE RESPONSES — TAP TO EXPAND</div>
               <div className="space-y-2">
                 {results[0]?.probes.map((_, probeIdx) => {
                   const probeId = results[0].probes[probeIdx].probe_id;
                   const probeLabel = results[0].probes[probeIdx].label;
                   const isExpanded = expandedProbe === probeId;
                   return (
-                    <div key={probeId} className="border border-white/5 rounded-lg overflow-hidden">
+                    <div key={probeId} className="border border-observatory-border/30 rounded-xl overflow-hidden">
                       <button
                         onClick={() => setExpandedProbe(isExpanded ? null : probeId)}
-                        className="w-full flex items-center justify-between p-3 text-left hover:bg-white/[0.02] transition-colors"
+                        className="w-full flex items-center justify-between p-4 text-left hover:bg-observatory-surface-alt/30 transition-colors"
                       >
-                        <span className="text-sm font-mono text-gray-300">{probeLabel}</span>
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                        <span className="text-sm font-mono text-observatory-text">{probeLabel}</span>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-observatory-text-dim" /> : <ChevronDown className="w-4 h-4 text-observatory-text-dim" />}
                       </button>
                       {isExpanded && (
-                        <div className="px-3 pb-3 space-y-3">
+                        <div className="px-4 pb-4 space-y-3">
                           {results.map(r => {
                             const probe = r.probes[probeIdx];
                             const modelColor = SCAN_MODELS.find(m => m.label === r.model_label)?.color || '#60a5fa';
                             return (
-                              <div key={r.model} className="pl-3 border-l-2" style={{ borderColor: modelColor }}>
-                                <div className="text-[10px] font-mono mb-1" style={{ color: modelColor }}>{r.model_label}</div>
+                              <div key={r.model} className="pl-4 border-l-2" style={{ borderColor: modelColor }}>
+                                <div className="text-xs font-mono mb-1" style={{ color: modelColor }}>{r.model_label}</div>
                                 {probe.refusal ? (
-                                  <div className="text-xs text-emerald-400 font-mono">⛔ REFUSED — model declined to make assumptions</div>
+                                  <div className="text-xs text-observatory-success font-mono">⛔ REFUSED — model declined to make assumptions</div>
                                 ) : probe.error ? (
-                                  <div className="text-xs text-red-400 font-mono">Error: {probe.error}</div>
+                                  <div className="text-xs text-observatory-danger font-mono">Error: {probe.error}</div>
                                 ) : (
                                   <>
-                                    <p className="text-xs text-gray-400 leading-relaxed">{probe.raw_response.slice(0, 200)}{probe.raw_response.length > 200 ? '…' : ''}</p>
+                                    <p className="text-xs text-observatory-text-muted leading-relaxed">{probe.raw_response.slice(0, 200)}{probe.raw_response.length > 200 ? '…' : ''}</p>
                                     {probe.scores && (
-                                      <div className="flex gap-3 mt-1 text-[10px] font-mono text-gray-500">
+                                      <div className="flex gap-3 mt-1 text-xs font-mono text-observatory-text-dim">
                                         <span>Stereo: {(probe.scores.stereotype_alignment * 100).toFixed(0)}%</span>
                                         <span>Val: {probe.scores.valence.toFixed(2)}</span>
                                         <span>Conf: {(probe.scores.confidence * 100).toFixed(0)}%</span>
                                       </div>
                                     )}
                                     {probe.bias_detections.length > 0 && (
-                                      <div className="flex flex-wrap gap-1 mt-1">
+                                      <div className="flex flex-wrap gap-1 mt-2">
                                         {probe.bias_detections.slice(0, 3).map((d, i) => (
-                                          <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-mono">
+                                          <span key={i} className="text-xs px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
                                             {d.type}
                                           </span>
                                         ))}
@@ -377,11 +377,11 @@ export default function ScanPage() {
             </div>
 
             {/* Footer */}
-            <div className="text-center py-4">
-              <p className="text-[10px] text-gray-600 font-mono">
+            <div className="text-center py-6">
+              <p className="text-xs text-observatory-text-dim font-mono">
                 Fingerprint² Bench — Social Inference Battery v1.0
               </p>
-              <p className="text-[9px] text-gray-700 font-mono mt-1">
+              <p className="text-xs text-observatory-text-dim font-mono mt-1">
                 {results.length} models × 6 probes = {results.length * 6} inferences
               </p>
             </div>
