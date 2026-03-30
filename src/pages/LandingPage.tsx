@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ExternalLink, QrCode } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { ArrowRight, ExternalLink } from 'lucide-react';
 import { LEADERBOARD, PROBES, FRAMEWORK_INFO, ACTIVE_MODELS } from '../data/benchmarkData';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
 import razije from '../assets/razije.jpg';
