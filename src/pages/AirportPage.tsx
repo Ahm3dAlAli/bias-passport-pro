@@ -336,7 +336,7 @@ export default function AirportPage() {
           <Shield className="w-6 h-6" /> AI Airport Security — Fingerprint² Live Scanner
         </h1>
         <p className="text-observatory-text-muted text-sm mt-1">
-          Capture face → 6 Social Inference Battery probes → LLM-as-Judge scoring → Bias Fingerprint + EU AI Act report
+          Capture face → 6 Social Inference Battery probes → Deterministic scoring → Bias Fingerprint + EU AI Act report
         </p>
       </header>
 
