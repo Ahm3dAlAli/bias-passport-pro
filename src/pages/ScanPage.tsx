@@ -204,23 +204,23 @@ export default function ScanPage() {
         <canvas ref={canvasRef} className="hidden" />
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-500/10 text-red-400 text-sm">{error}</div>
+          <div className="p-3 rounded-xl bg-observatory-danger/10 text-observatory-danger text-sm">{error}</div>
         )}
 
         {/* Action buttons */}
         <div className="flex gap-2">
           {cameraActive && !capturedImage && (
-            <button onClick={capture} className="flex-1 py-3 rounded-xl bg-cyan-500/20 text-cyan-400 font-mono text-sm font-bold hover:bg-cyan-500/30 transition-all">
+            <button onClick={capture} className="flex-1 py-3 rounded-xl bg-observatory-accent/15 text-observatory-accent font-semibold text-sm hover:bg-observatory-accent/25 transition-all">
               📸 Capture
             </button>
           )}
           {capturedImage && !scanning && results.length === 0 && (
-            <button onClick={runAllModels} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 font-mono text-sm font-bold hover:from-cyan-500/30 hover:to-purple-500/30 transition-all">
+            <button onClick={runAllModels} className="flex-1 py-3 rounded-xl bg-observatory-accent text-observatory-bg font-semibold text-sm hover:bg-observatory-accent-glow transition-all">
               🔬 Scan with {SCAN_MODELS.length} VLMs
             </button>
           )}
           {(capturedImage || results.length > 0) && !scanning && (
-            <button onClick={reset} className="px-4 py-3 rounded-xl bg-white/5 text-gray-400 text-sm hover:bg-white/10 transition-all">
+            <button onClick={reset} className="px-4 py-3 rounded-xl bg-observatory-surface-alt text-observatory-text-muted text-sm hover:bg-observatory-border transition-all">
               <RotateCcw className="w-4 h-4" />
             </button>
           )}
@@ -228,9 +228,9 @@ export default function ScanPage() {
 
         {/* Progress bar */}
         {scanning && (
-          <div className="w-full bg-white/5 rounded-full h-1.5">
+          <div className="w-full bg-observatory-surface-alt rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-cyan-400 to-purple-400 h-1.5 rounded-full transition-all duration-500"
+              className="bg-observatory-accent h-2 rounded-full transition-all duration-500"
               style={{ width: `${(results.length / SCAN_MODELS.length) * 100}%` }}
             />
           </div>
@@ -245,10 +245,10 @@ export default function ScanPage() {
               return (
                 <span
                   key={m.id}
-                  className={`px-2 py-1 rounded text-[10px] font-mono border transition-all ${
-                    active ? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-400 animate-pulse' :
-                    done ? 'border-emerald-400/30 bg-emerald-400/5 text-emerald-400' :
-                    'border-white/10 bg-white/5 text-gray-500'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all ${
+                    active ? 'border-observatory-accent/50 bg-observatory-accent/10 text-observatory-accent animate-pulse' :
+                    done ? 'border-observatory-success/30 bg-observatory-success/5 text-observatory-success' :
+                    'border-observatory-border bg-observatory-surface text-observatory-text-dim'
                   }`}
                 >
                   {done ? '✓' : active ? '⟳' : '○'} {m.label}
