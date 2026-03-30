@@ -7,11 +7,13 @@ import AirportPage from './pages/AirportPage';
 import EIDPage from './pages/EIDPage';
 import EUAIActPage from './pages/EUAIActPage';
 import MitigationPage from './pages/MitigationPage';
+import ScanPage from './pages/ScanPage';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/scan" element={<ScanPage />} />
       <Route element={<AppLayout />}>
         <Route path="/report" element={<BiasReportPage />} />
         <Route path="/lab" element={<LabPage />} />
