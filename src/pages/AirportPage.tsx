@@ -54,10 +54,17 @@ interface ScanResult {
 }
 
 const AVAILABLE_MODELS = [
-  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite' },
-  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
-  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano' },
+  // Lovable AI Gateway
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'lovable' },
+  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'lovable' },
+  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'lovable' },
+  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano', provider: 'lovable' },
+  // HuggingFace Inference API
+  { id: 'hf/Qwen/Qwen2.5-VL-7B-Instruct', label: 'Qwen2.5-VL 7B', provider: 'huggingface' },
+  { id: 'hf/meta-llama/Llama-3.2-11B-Vision-Instruct', label: 'Llama 3.2 Vision 11B', provider: 'huggingface' },
+  { id: 'hf/google/paligemma2-10b-mix-448', label: 'PaliGemma2 10B', provider: 'huggingface' },
+  { id: 'hf/microsoft/Florence-2-large', label: 'Florence-2 Large', provider: 'huggingface' },
+  { id: 'hf/HuggingFaceM4/Idefics3-8B-Llama3', label: 'Idefics3 8B', provider: 'huggingface' },
 ];
 
 const EU_ARTICLES = [
