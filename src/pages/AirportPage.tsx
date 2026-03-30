@@ -449,7 +449,7 @@ export default function AirportPage() {
           <div className="glass rounded-xl p-4 text-xs text-observatory-text-dim space-y-1">
             <div><span className="font-mono text-observatory-accent">Framework:</span> Fingerprint² Social Inference Battery</div>
             <div><span className="font-mono text-observatory-accent">Probes:</span> 6 (Occupation, Education, Dating, Leadership, Neighbourhood, Trust)</div>
-            <div><span className="font-mono text-observatory-accent">Scoring:</span> LLM-as-Judge (valence, stereotype alignment, confidence)</div>
+            <div><span className="font-mono text-observatory-accent">Scoring:</span> Deterministic (valence, stereotype alignment, confidence)</div>
           </div>
         </div>
 
