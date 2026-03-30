@@ -165,17 +165,16 @@ export default function ScanPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-gray-100">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-[#0a0e1a]/95 backdrop-blur border-b border-white/5 px-4 py-3">
-        <div className="max-w-lg mx-auto flex items-center gap-2">
-          <Fingerprint className="w-5 h-5 text-cyan-400" />
-          <span className="font-mono font-bold text-sm text-cyan-400">Fingerprint²</span>
-          <span className="text-[10px] text-gray-500 ml-auto font-mono">BIAS SCANNER</span>
-        </div>
-      </div>
+    <div className="page-container max-w-2xl">
+      <header className="page-header">
+        <h1 className="page-title">
+          <Camera className="w-7 h-7 text-observatory-accent" />
+          <span className="gradient-text">Scan Your Face</span>
+        </h1>
+        <p className="page-subtitle">Capture a photo → run 5 VLMs simultaneously → get instant bias fingerprint comparison</p>
+      </header>
 
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <div className="space-y-4">
         {/* Camera / Image */}
         <div className="relative aspect-[4/3] bg-black rounded-xl overflow-hidden border border-white/10">
           {!cameraActive && !capturedImage && (
