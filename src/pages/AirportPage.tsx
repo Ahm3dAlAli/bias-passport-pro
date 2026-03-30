@@ -243,7 +243,7 @@ export default function AirportPage() {
     setError(null);
     if (!model) {
       setResult(null);
-      setScanProgress('Running 6 Social Inference Battery probes + LLM-as-Judge scoring…');
+      setScanProgress('Running 6 Social Inference Battery probes + deterministic scoring…');
     }
 
     try {
