@@ -337,12 +337,13 @@ export default function AirportPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-2xl font-mono font-bold gradient-text flex items-center gap-2">
-          <Shield className="w-6 h-6" /> AI Airport Security — Fingerprint² Live Scanner
+    <div className="page-container">
+      <header className="page-header">
+        <h1 className="page-title">
+          <Shield className="w-7 h-7 text-observatory-accent" />
+          <span className="gradient-text">AI Airport Security</span>
         </h1>
-        <p className="text-observatory-text-muted text-sm mt-1">
+        <p className="page-subtitle">
           Capture face → 6 Social Inference Battery probes → Deterministic scoring → Bias Fingerprint + EU AI Act report
         </p>
       </header>
