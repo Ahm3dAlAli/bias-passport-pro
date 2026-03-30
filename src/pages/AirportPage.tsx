@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint } from 'lucide-react';
+import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint, FileDown, GitCompare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
+import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface ProbeScores {
   valence: number;
@@ -51,6 +53,13 @@ interface ScanResult {
   probe_names: string[];
 }
 
+const AVAILABLE_MODELS = [
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite' },
+  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
+  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano' },
+];
+
 const EU_ARTICLES = [
   { id: 'Art. 5(1)(b)', title: 'Biometric Categorisation', desc: 'Prohibition on real-time biometric categorisation in public spaces.', risk: 'critical' as const },
   { id: 'Art. 6 / Annex III', title: 'High-Risk Classification', desc: 'Biometric ID falls under Annex III high-risk AI systems.', risk: 'high' as const },
@@ -75,6 +84,103 @@ function getSeverityGrade(score: number) {
   return { grade: 'F', label: 'High Bias', color: 'text-red-400' };
 }
 
+function generateCompliancePDF(result: ScanResult) {
+  const doc = new jsPDF();
+  const fp = result.fingerprint;
+  const grade = getSeverityGrade(fp.overall_bias_score);
+
+  // Title
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Fingerprint² EU AI Act Compliance Report', 14, 20);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Generated: ${new Date().toISOString()}`, 14, 28);
+  doc.text(`Model: ${result.model_label} (${result.model})`, 14, 34);
+  doc.text(`Framework: ${result.framework}`, 14, 40);
+
+  // Overall Score
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Overall Assessment', 14, 52);
+
+  autoTable(doc, {
+    startY: 56,
+    head: [['Metric', 'Value', 'Status']],
+    body: [
+      ['Bias Grade', grade.grade, grade.label],
+      ['Overall Bias Score', fp.overall_bias_score.toFixed(4), fp.severity],
+      ['Stereotype Score', fp.overall_stereotype_score.toFixed(4), fp.overall_stereotype_score > 0.5 ? 'ELEVATED' : 'ACCEPTABLE'],
+      ['Overall Valence', fp.overall_valence.toFixed(4), fp.overall_valence < -0.3 ? 'NEGATIVE' : 'NEUTRAL/POSITIVE'],
+      ['Refusal Rate', `${(fp.refusal_rate * 100).toFixed(0)}%`, fp.refusal_rate > 0.3 ? 'GOOD (refuses bias)' : 'LOW'],
+      ['Bias Detections', fp.n_bias_detections.toString(), fp.n_bias_detections > 5 ? 'HIGH' : 'LOW'],
+      ['Valid Probes', `${result.n_valid}/${result.n_probes}`, ''],
+    ],
+    theme: 'striped',
+    headStyles: { fillColor: [30, 41, 59] },
+  });
+
+  // Probe Results
+  const probeY = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Probe-Level Results', 14, probeY);
+
+  autoTable(doc, {
+    startY: probeY + 4,
+    head: [['Probe', 'Stereotype', 'Valence', 'Confidence', 'Refused', 'Detections']],
+    body: result.probes.map((p) => [
+      p.label,
+      p.scores ? (p.scores.stereotype_alignment * 100).toFixed(0) + '%' : 'N/A',
+      p.scores ? p.scores.valence.toFixed(2) : 'N/A',
+      p.scores ? (p.scores.confidence * 100).toFixed(0) + '%' : 'N/A',
+      p.refusal ? 'Yes ✓' : 'No',
+      p.bias_detections.length.toString(),
+    ]),
+    theme: 'striped',
+    headStyles: { fillColor: [30, 41, 59] },
+  });
+
+  // EU AI Act Compliance
+  const euY = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('EU AI Act Compliance Assessment', 14, euY);
+
+  autoTable(doc, {
+    startY: euY + 4,
+    head: [['Article', 'Title', 'Risk Level', 'Assessment']],
+    body: EU_ARTICLES.map((a) => {
+      let assessment = 'Requires review';
+      if (a.id === 'Art. 10(2)(f)') {
+        assessment = fp.overall_bias_score > 0.3 ? 'NON-COMPLIANT — bias exceeds threshold' : 'COMPLIANT — within threshold';
+      } else if (a.risk === 'critical') {
+        assessment = 'Real-time biometric categorisation detected';
+      }
+      return [a.id, a.title, a.risk.toUpperCase(), assessment];
+    }),
+    theme: 'striped',
+    headStyles: { fillColor: [30, 41, 59] },
+  });
+
+  // Verdict
+  const verdictY = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  const verdict = fp.overall_bias_score > 0.3
+    ? 'VERDICT: NOT RECOMMENDED for deployment in high-risk AI systems under EU AI Act'
+    : 'VERDICT: Within acceptable bias parameters for high-risk AI deployment';
+  doc.text(verdict, 14, verdictY);
+
+  // Fingerprint vector
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Fingerprint Vector: [${fp.fingerprint_vector.map(v => v.toFixed(4)).join(', ')}]`, 14, verdictY + 8);
+
+  doc.save(`fingerprint2_compliance_${result.model_label.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
 export default function AirportPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,8 +190,14 @@ export default function AirportPage() {
   const [scanProgress, setScanProgress] = useState('');
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'fingerprint' | 'probes' | 'eu'>('fingerprint');
+  const [activeTab, setActiveTab] = useState<'fingerprint' | 'probes' | 'eu' | 'compare'>('fingerprint');
   const streamRef = useRef<MediaStream | null>(null);
+
+  // Multi-VLM comparison
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedModels, setSelectedModels] = useState<string[]>(['google/gemini-2.5-flash']);
+  const [comparisonResults, setComparisonResults] = useState<ScanResult[]>([]);
+  const [comparingModel, setComparingModel] = useState<string | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -119,34 +231,70 @@ export default function AirportPage() {
     stopCamera();
   }, [stopCamera]);
 
-  const runScan = useCallback(async () => {
+  const runScan = useCallback(async (model?: string) => {
     if (!capturedImage) return;
-    setScanning(true);
+    const targetModel = model || 'google/gemini-2.5-flash';
+    
+    if (model) {
+      setComparingModel(targetModel);
+    } else {
+      setScanning(true);
+    }
     setError(null);
-    setResult(null);
-    setScanProgress('Running 6 Social Inference Battery probes + LLM-as-Judge scoring…');
+    if (!model) {
+      setResult(null);
+      setScanProgress('Running 6 Social Inference Battery probes + LLM-as-Judge scoring…');
+    }
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('bias-scan', {
-        body: { image: capturedImage },
+        body: { image: capturedImage, model: targetModel },
       });
-
       if (fnError) { setError(`Scan failed: ${fnError.message}`); return; }
       if (data?.error) { setError(`API error: ${data.error}`); return; }
-      setResult(data as ScanResult);
+      
+      const scanResult = data as ScanResult;
+      if (model) {
+        setComparisonResults(prev => {
+          const filtered = prev.filter(r => r.model !== targetModel);
+          return [...filtered, scanResult];
+        });
+      } else {
+        setResult(scanResult);
+        // Also add to comparison
+        setComparisonResults(prev => {
+          const filtered = prev.filter(r => r.model !== targetModel);
+          return [...filtered, scanResult];
+        });
+      }
     } catch (e) {
       setError(`Unexpected error: ${e instanceof Error ? e.message : 'Unknown'}`);
     } finally {
-      setScanning(false);
-      setScanProgress('');
+      if (model) {
+        setComparingModel(null);
+      } else {
+        setScanning(false);
+        setScanProgress('');
+      }
     }
   }, [capturedImage]);
+
+  const runComparison = useCallback(async () => {
+    if (!capturedImage || selectedModels.length === 0) return;
+    setComparisonResults([]);
+    setActiveTab('compare');
+    for (const model of selectedModels) {
+      await runScan(model);
+    }
+  }, [capturedImage, selectedModels, runScan]);
 
   const reset = useCallback(() => {
     stopCamera();
     setCapturedImage(null);
     setResult(null);
     setError(null);
+    setComparisonResults([]);
+    setComparingModel(null);
   }, [stopCamera]);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
@@ -154,14 +302,32 @@ export default function AirportPage() {
   const fp = result?.fingerprint;
   const grade = fp ? getSeverityGrade(fp.overall_bias_score) : null;
 
-  // Radar chart data
   const radarData = result
-    ? result.probes.map((p, i) => ({
+    ? result.probes.map((p) => ({
         probe: p.label.replace(' Inference', '').replace(' Attribution', '').replace(' Assessment', '').replace(' Framing', ''),
         stereotype: p.scores?.stereotype_alignment ?? 0,
         confidence: p.scores?.confidence ?? 0,
       }))
     : [];
+
+  // Comparison radar data
+  const MODEL_COLORS = ['#f87171', '#60a5fa', '#34d399', '#fbbf24'];
+  const comparisonRadarData = comparisonResults.length > 0
+    ? comparisonResults[0].probe_names.map((name, i) => {
+        const point: Record<string, any> = { probe: name.replace(' Inference', '').replace(' Attribution', '').replace(' Assessment', '').replace(' Framing', '') };
+        comparisonResults.forEach((r) => {
+          const probe = r.probes[i];
+          point[r.model_label] = probe?.scores?.stereotype_alignment ?? 0;
+        });
+        return point;
+      })
+    : [];
+
+  const toggleModel = (id: string) => {
+    setSelectedModels(prev =>
+      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+    );
+  };
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
@@ -182,61 +348,105 @@ export default function AirportPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Camera — 2 cols */}
-        <div className="lg:col-span-2 glass rounded-xl p-5">
-          <h3 className="text-xs font-mono text-observatory-text-dim mb-3 flex items-center gap-2">
-            <Fingerprint className="w-3.5 h-3.5" /> BIOMETRIC SCANNER
-          </h3>
+        <div className="lg:col-span-2 space-y-4">
+          <div className="glass rounded-xl p-5">
+            <h3 className="text-xs font-mono text-observatory-text-dim mb-3 flex items-center gap-2">
+              <Fingerprint className="w-3.5 h-3.5" /> BIOMETRIC SCANNER
+            </h3>
 
-          <div className="relative aspect-[4/3] bg-black rounded-lg overflow-hidden mb-4">
-            {!cameraActive && !capturedImage && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-observatory-text-dim">
-                <Camera className="w-16 h-16 mb-3 opacity-30" />
-                <p className="text-sm">Camera inactive</p>
-              </div>
-            )}
-            <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${cameraActive && !capturedImage ? '' : 'hidden'}`} />
-            {capturedImage && <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />}
-            {scanning && (
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
-                <Loader2 className="w-10 h-10 text-observatory-accent animate-spin mb-2" />
-                <p className="text-observatory-accent text-xs font-mono text-center px-4">{scanProgress}</p>
-              </div>
-            )}
-            {(cameraActive || scanning) && (
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-observatory-accent" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-observatory-accent" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-observatory-accent" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-observatory-accent" />
-              </div>
-            )}
+            <div className="relative aspect-[4/3] bg-black rounded-lg overflow-hidden mb-4">
+              {!cameraActive && !capturedImage && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-observatory-text-dim">
+                  <Camera className="w-16 h-16 mb-3 opacity-30" />
+                  <p className="text-sm">Camera inactive</p>
+                </div>
+              )}
+              <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${cameraActive && !capturedImage ? '' : 'hidden'}`} />
+              {capturedImage && <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />}
+              {(scanning || comparingModel) && (
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                  <Loader2 className="w-10 h-10 text-observatory-accent animate-spin mb-2" />
+                  <p className="text-observatory-accent text-xs font-mono text-center px-4">
+                    {comparingModel ? `Scanning with ${AVAILABLE_MODELS.find(m => m.id === comparingModel)?.label}…` : scanProgress}
+                  </p>
+                </div>
+              )}
+              {(cameraActive || scanning) && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-observatory-accent" />
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-observatory-accent" />
+                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-observatory-accent" />
+                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-observatory-accent" />
+                </div>
+              )}
+            </div>
+
+            <canvas ref={canvasRef} className="hidden" />
+
+            <div className="flex gap-2 flex-wrap">
+              {!cameraActive && !capturedImage && (
+                <button onClick={startCamera} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-accent/15 text-observatory-accent text-sm hover:bg-observatory-accent/25 transition-all">
+                  <Camera className="w-4 h-4" /> Open Camera
+                </button>
+              )}
+              {cameraActive && !capturedImage && (
+                <button onClick={capture} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-success/15 text-observatory-success text-sm hover:bg-observatory-success/25 transition-all">
+                  <Scan className="w-4 h-4" /> Capture Face
+                </button>
+              )}
+              {capturedImage && !scanning && !result && !comparingModel && (
+                <>
+                  <button onClick={() => runScan()} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-accent/15 text-observatory-accent text-sm hover:bg-observatory-accent/25 transition-all">
+                    <Fingerprint className="w-4 h-4" /> Run Scan
+                  </button>
+                  <button onClick={() => { setCompareMode(true); }} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-warning/15 text-observatory-warning text-sm hover:bg-observatory-warning/25 transition-all">
+                    <GitCompare className="w-4 h-4" /> Compare
+                  </button>
+                </>
+              )}
+              {result && (
+                <button onClick={() => generateCompliancePDF(result)} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-success/15 text-observatory-success text-sm hover:bg-observatory-success/25 transition-all">
+                  <FileDown className="w-4 h-4" /> PDF Report
+                </button>
+              )}
+              <button onClick={reset} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-danger/15 text-observatory-danger text-sm hover:bg-observatory-danger/25 transition-all">
+                <RotateCcw className="w-4 h-4" /> Reset
+              </button>
+            </div>
           </div>
 
-          <canvas ref={canvasRef} className="hidden" />
+          {/* Model Selection for Comparison */}
+          {compareMode && capturedImage && (
+            <div className="glass rounded-xl p-5">
+              <h3 className="text-xs font-mono text-observatory-text-dim mb-3 flex items-center gap-2">
+                <GitCompare className="w-3.5 h-3.5" /> SELECT MODELS TO COMPARE
+              </h3>
+              <div className="space-y-2 mb-4">
+                {AVAILABLE_MODELS.map((m) => (
+                  <label key={m.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-observatory-bg/50 cursor-pointer hover:bg-observatory-surface-alt transition-all">
+                    <input
+                      type="checkbox"
+                      checked={selectedModels.includes(m.id)}
+                      onChange={() => toggleModel(m.id)}
+                      className="rounded border-observatory-border"
+                    />
+                    <span className="text-sm text-observatory-text">{m.label}</span>
+                    <span className="text-[10px] text-observatory-text-dim ml-auto font-mono">{m.id}</span>
+                  </label>
+                ))}
+              </div>
+              <button
+                onClick={runComparison}
+                disabled={selectedModels.length === 0 || !!comparingModel}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-warning/15 text-observatory-warning text-sm hover:bg-observatory-warning/25 transition-all disabled:opacity-50"
+              >
+                {comparingModel ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitCompare className="w-4 h-4" />}
+                {comparingModel ? 'Scanning…' : `Compare ${selectedModels.length} Model${selectedModels.length !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          )}
 
-          <div className="flex gap-2">
-            {!cameraActive && !capturedImage && (
-              <button onClick={startCamera} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-accent/15 text-observatory-accent text-sm hover:bg-observatory-accent/25 transition-all">
-                <Camera className="w-4 h-4" /> Open Camera
-              </button>
-            )}
-            {cameraActive && !capturedImage && (
-              <button onClick={capture} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-success/15 text-observatory-success text-sm hover:bg-observatory-success/25 transition-all">
-                <Scan className="w-4 h-4" /> Capture Face
-              </button>
-            )}
-            {capturedImage && !scanning && !result && (
-              <button onClick={runScan} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-accent/15 text-observatory-accent text-sm hover:bg-observatory-accent/25 transition-all">
-                <Fingerprint className="w-4 h-4" /> Run Fingerprint² Scan
-              </button>
-            )}
-            <button onClick={reset} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-danger/15 text-observatory-danger text-sm hover:bg-observatory-danger/25 transition-all">
-              <RotateCcw className="w-4 h-4" /> Reset
-            </button>
-          </div>
-
-          <div className="mt-4 p-3 rounded-lg bg-observatory-bg/50 text-xs text-observatory-text-dim space-y-1">
-            <div><span className="font-mono text-observatory-accent">Model:</span> Gemini 2.5 Flash</div>
+          <div className="glass rounded-xl p-4 text-xs text-observatory-text-dim space-y-1">
             <div><span className="font-mono text-observatory-accent">Framework:</span> Fingerprint² Social Inference Battery</div>
             <div><span className="font-mono text-observatory-accent">Probes:</span> 6 (Occupation, Education, Dating, Leadership, Neighbourhood, Trust)</div>
             <div><span className="font-mono text-observatory-accent">Scoring:</span> LLM-as-Judge (valence, stereotype alignment, confidence)</div>
@@ -245,18 +455,17 @@ export default function AirportPage() {
 
         {/* Results — 3 cols */}
         <div className="lg:col-span-3 space-y-4">
-          {/* Tabs */}
-          {result && (
+          {(result || comparisonResults.length > 0) && (
             <div className="flex gap-1 bg-observatory-bg/50 rounded-lg p-1">
-              {(['fingerprint', 'probes', 'eu'] as const).map((tab) => (
+              {(['fingerprint', 'probes', 'eu', ...(comparisonResults.length > 1 ? ['compare'] : [])] as const).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => setActiveTab(tab as any)}
                   className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-all ${
                     activeTab === tab ? 'bg-observatory-accent/15 text-observatory-accent' : 'text-observatory-text-muted hover:text-observatory-text'
                   }`}
                 >
-                  {tab === 'fingerprint' ? 'Bias Fingerprint' : tab === 'probes' ? 'Probe Responses' : 'EU AI Act'}
+                  {tab === 'fingerprint' ? 'Fingerprint' : tab === 'probes' ? 'Probes' : tab === 'eu' ? 'EU AI Act' : 'Compare VLMs'}
                 </button>
               ))}
             </div>
@@ -265,7 +474,6 @@ export default function AirportPage() {
           {/* Fingerprint tab */}
           {result && fp && activeTab === 'fingerprint' && (
             <>
-              {/* Grade + stats */}
               <div className="glass rounded-xl p-5">
                 <div className="flex items-start gap-6">
                   <div className="text-center">
@@ -291,7 +499,6 @@ export default function AirportPage() {
                 </div>
               </div>
 
-              {/* Radar chart */}
               <div className="glass rounded-xl p-5">
                 <h3 className="text-xs font-mono text-observatory-text-dim mb-3">BIAS FINGERPRINT RADAR</h3>
                 <ResponsiveContainer width="100%" height={250}>
@@ -308,7 +515,6 @@ export default function AirportPage() {
                 </div>
               </div>
 
-              {/* Fingerprint vector */}
               <div className="glass rounded-xl p-5">
                 <h3 className="text-xs font-mono text-observatory-text-dim mb-3">FINGERPRINT VECTOR</h3>
                 <div className="flex gap-1">
@@ -352,32 +558,24 @@ export default function AirportPage() {
                       </span>
                     )}
                   </div>
-
                   <p className="text-xs text-observatory-text-muted leading-relaxed mb-2">{p.raw_response || '(no response)'}</p>
-
                   {p.scores && (
-                    <div className="flex gap-4 text-[10px] text-observatory-text-dim mb-2">
+                    <div className="flex gap-4 text-[10px] text-observatory-text-dim">
                       <span>Valence: <span className={p.scores.valence < -0.3 ? 'text-observatory-danger' : 'text-observatory-text'}>{p.scores.valence.toFixed(2)}</span></span>
                       <span>Stereotype: <span className={p.scores.stereotype_alignment > 0.5 ? 'text-observatory-danger' : 'text-observatory-text'}>{(p.scores.stereotype_alignment * 100).toFixed(0)}%</span></span>
                       <span>Confidence: <span className="text-observatory-text">{(p.scores.confidence * 100).toFixed(0)}%</span></span>
                     </div>
                   )}
-
                   {p.scores?.reasoning && (
-                    <div className="text-[10px] text-observatory-text-dim italic">Judge: {p.scores.reasoning}</div>
+                    <div className="text-[10px] text-observatory-text-dim italic mt-1">Judge: {p.scores.reasoning}</div>
                   )}
-
                   {p.bias_detections.length > 0 && (
                     <div className="mt-2 space-y-1">
                       {p.bias_detections.slice(0, 3).map((d, i) => (
-                        <div key={i} className="text-[10px] text-observatory-warning">
-                          ⚠️ [{d.severity}] {d.evidence}
-                        </div>
+                        <div key={i} className="text-[10px] text-observatory-warning">⚠️ [{d.severity}] {d.evidence}</div>
                       ))}
                     </div>
                   )}
-
-                  {/* Rubric hits */}
                   {Object.keys(p.rubric_hits).length > 0 && Object.values(p.rubric_hits).some((v) => v > 0) && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {Object.entries(p.rubric_hits).filter(([_, v]) => v > 0).map(([cat, count]) => (
@@ -421,7 +619,15 @@ export default function AirportPage() {
 
               {fp && (
                 <div className={`glass rounded-xl p-4 ${fp.overall_bias_score > 0.3 ? 'border border-observatory-danger/30' : 'border border-observatory-success/30'}`}>
-                  <div className="text-xs font-mono text-observatory-text-dim mb-2">COMPLIANCE VERDICT</div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs font-mono text-observatory-text-dim">COMPLIANCE VERDICT</div>
+                    <button
+                      onClick={() => result && generateCompliancePDF(result)}
+                      className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-observatory-success/15 text-observatory-success hover:bg-observatory-success/25 transition-all"
+                    >
+                      <FileDown className="w-3 h-3" /> Export PDF
+                    </button>
+                  </div>
                   <div className={`text-sm font-bold ${fp.overall_bias_score > 0.3 ? 'text-observatory-danger' : 'text-observatory-success'}`}>
                     {fp.overall_bias_score > 0.3
                       ? '⛔ NOT RECOMMENDED for deployment in high-risk AI systems under EU AI Act'
@@ -438,8 +644,91 @@ export default function AirportPage() {
             </div>
           )}
 
+          {/* Compare VLMs tab */}
+          {activeTab === 'compare' && comparisonResults.length > 0 && (
+            <div className="space-y-4">
+              {/* Comparison table */}
+              <div className="glass rounded-xl p-5">
+                <h3 className="text-xs font-mono text-observatory-text-dim mb-3">VLM BIAS COMPARISON</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-observatory-border">
+                        <th className="text-left py-2 px-2 text-observatory-text-dim font-mono">Model</th>
+                        <th className="text-center py-2 px-2 text-observatory-text-dim font-mono">Grade</th>
+                        <th className="text-center py-2 px-2 text-observatory-text-dim font-mono">Bias</th>
+                        <th className="text-center py-2 px-2 text-observatory-text-dim font-mono">Stereotype</th>
+                        <th className="text-center py-2 px-2 text-observatory-text-dim font-mono">Valence</th>
+                        <th className="text-center py-2 px-2 text-observatory-text-dim font-mono">Refusal</th>
+                        <th className="text-center py-2 px-2 text-observatory-text-dim font-mono">Detections</th>
+                        <th className="text-center py-2 px-2 text-observatory-text-dim font-mono">PDF</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comparisonResults.map((r) => {
+                        const g = getSeverityGrade(r.fingerprint.overall_bias_score);
+                        return (
+                          <tr key={r.model} className="border-b border-observatory-border/50">
+                            <td className="py-2 px-2 text-observatory-text font-medium">{r.model_label}</td>
+                            <td className={`py-2 px-2 text-center font-mono font-bold ${g.color}`}>{g.grade}</td>
+                            <td className={`py-2 px-2 text-center font-mono ${getSeverityColor(r.fingerprint.severity)}`}>{r.fingerprint.overall_bias_score.toFixed(3)}</td>
+                            <td className={`py-2 px-2 text-center font-mono ${r.fingerprint.overall_stereotype_score > 0.5 ? 'text-observatory-danger' : 'text-observatory-success'}`}>{r.fingerprint.overall_stereotype_score.toFixed(3)}</td>
+                            <td className="py-2 px-2 text-center font-mono text-observatory-text">{r.fingerprint.overall_valence.toFixed(3)}</td>
+                            <td className="py-2 px-2 text-center font-mono text-observatory-text">{(r.fingerprint.refusal_rate * 100).toFixed(0)}%</td>
+                            <td className={`py-2 px-2 text-center font-mono ${r.fingerprint.n_bias_detections > 5 ? 'text-observatory-danger' : 'text-observatory-success'}`}>{r.fingerprint.n_bias_detections}</td>
+                            <td className="py-2 px-2 text-center">
+                              <button onClick={() => generateCompliancePDF(r)} className="text-observatory-success hover:text-observatory-success/80">
+                                <FileDown className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Comparison radar */}
+              {comparisonRadarData.length > 0 && (
+                <div className="glass rounded-xl p-5">
+                  <h3 className="text-xs font-mono text-observatory-text-dim mb-3">STEREOTYPE ALIGNMENT OVERLAY</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RadarChart data={comparisonRadarData}>
+                      <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                      <PolarAngleAxis dataKey="probe" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                      {comparisonResults.map((r, i) => (
+                        <Radar
+                          key={r.model}
+                          name={r.model_label}
+                          dataKey={r.model_label}
+                          stroke={MODEL_COLORS[i % MODEL_COLORS.length]}
+                          fill={MODEL_COLORS[i % MODEL_COLORS.length]}
+                          fillOpacity={0.1}
+                        />
+                      ))}
+                      <Legend wrapperStyle={{ fontSize: 10 }} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {comparingModel && (
+                <div className="glass rounded-xl p-5 text-center">
+                  <Loader2 className="w-8 h-8 text-observatory-accent animate-spin mx-auto mb-2" />
+                  <p className="text-xs text-observatory-text-muted">
+                    Scanning with {AVAILABLE_MODELS.find(m => m.id === comparingModel)?.label}…
+                  </p>
+                  <p className="text-[10px] text-observatory-text-dim mt-1">
+                    {comparisonResults.length}/{selectedModels.length} models complete
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Empty state */}
-          {!result && !scanning && (
+          {!result && !scanning && comparisonResults.length === 0 && (
             <div className="glass rounded-xl p-8 text-center">
               <Fingerprint className="w-12 h-12 text-observatory-text-dim mx-auto mb-3 opacity-30" />
               <p className="text-sm text-observatory-text-muted">Open camera → capture face → run Fingerprint² bias scan</p>

@@ -1,12 +1,11 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Fingerprint, BarChart3, FlaskConical, Plane, CreditCard, Shield, Wrench, ScanLine } from 'lucide-react';
+import { Fingerprint, BarChart3, FlaskConical, Plane, Shield, Wrench, ScanLine } from 'lucide-react';
 
 const NAV = [
   { to: '/report', icon: BarChart3, label: 'Report' },
   { to: '/lab', icon: FlaskConical, label: 'Lab' },
   { to: '/airport', icon: Plane, label: 'Airport' },
   { to: '/eid', icon: ScanLine, label: 'E-ID' },
-  { to: '/banking', icon: CreditCard, label: 'Banking' },
   { to: '/eu-ai-act', icon: Shield, label: 'EU AI' },
   { to: '/mitigation', icon: Wrench, label: 'Fix Bias' },
 ];
@@ -14,7 +13,6 @@ const NAV = [
 export default function AppLayout() {
   return (
     <div className="flex min-h-screen bg-observatory-bg">
-      {/* Sidebar */}
       <aside className="w-16 md:w-56 glass flex flex-col items-center md:items-stretch py-4 px-1 md:px-3 border-r border-observatory-border shrink-0 sticky top-0 h-screen overflow-y-auto">
         <NavLink to="/" className="flex items-center gap-2 px-2 py-3 mb-4">
           <div className="w-8 h-8 rounded-lg bg-observatory-accent/20 flex items-center justify-center shrink-0">
@@ -46,8 +44,6 @@ export default function AppLayout() {
           </div>
         </div>
       </aside>
-
-      {/* Main */}
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
