@@ -13,8 +13,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/scan" element={<ScanPage />} />
       <Route element={<AppLayout />}>
+        <Route path="/scan" element={<ScanPage />} />
         <Route path="/report" element={<BiasReportPage />} />
         <Route path="/lab" element={<LabPage />} />
         <Route path="/airport" element={<AirportPage />} />
