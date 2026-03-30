@@ -243,7 +243,7 @@ export default function AirportPage() {
     setError(null);
     if (!model) {
       setResult(null);
-      setScanProgress('Running 6 Social Inference Battery probes + LLM-as-Judge scoring…');
+      setScanProgress('Running 6 Social Inference Battery probes + deterministic scoring…');
     }
 
     try {
@@ -336,7 +336,7 @@ export default function AirportPage() {
           <Shield className="w-6 h-6" /> AI Airport Security — Fingerprint² Live Scanner
         </h1>
         <p className="text-observatory-text-muted text-sm mt-1">
-          Capture face → 6 Social Inference Battery probes → LLM-as-Judge scoring → Bias Fingerprint + EU AI Act report
+          Capture face → 6 Social Inference Battery probes → Deterministic scoring → Bias Fingerprint + EU AI Act report
         </p>
       </header>
 
@@ -449,7 +449,7 @@ export default function AirportPage() {
           <div className="glass rounded-xl p-4 text-xs text-observatory-text-dim space-y-1">
             <div><span className="font-mono text-observatory-accent">Framework:</span> Fingerprint² Social Inference Battery</div>
             <div><span className="font-mono text-observatory-accent">Probes:</span> 6 (Occupation, Education, Dating, Leadership, Neighbourhood, Trust)</div>
-            <div><span className="font-mono text-observatory-accent">Scoring:</span> LLM-as-Judge (valence, stereotype alignment, confidence)</div>
+            <div><span className="font-mono text-observatory-accent">Scoring:</span> Deterministic (valence, stereotype alignment, confidence)</div>
           </div>
         </div>
 
