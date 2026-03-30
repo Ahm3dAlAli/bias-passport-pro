@@ -350,8 +350,37 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* QR Code Scan Section */}
+      <div className="relative border-t border-observatory-border/50 mt-4 px-4 py-6">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-6 justify-center">
+          <div className="bg-white p-3 rounded-xl">
+            <QRCodeSVG
+              value={`${window.location.origin}/scan`}
+              size={120}
+              bgColor="#ffffff"
+              fgColor="#0a0e1a"
+              level="M"
+            />
+          </div>
+          <div className="text-center sm:text-left">
+            <h3 className="text-sm font-mono font-bold text-cyan-400 flex items-center gap-2 justify-center sm:justify-start">
+              <QrCode className="w-4 h-4" /> SCAN YOUR FACE
+            </h3>
+            <p className="text-xs text-observatory-text-muted mt-1 max-w-xs">
+              Open on your phone → capture your face → get bias probe results from 5 VLMs (Gemini, GPT-5, Qwen, Llama, Idefics)
+            </p>
+            <Link
+              to="/scan"
+              className="inline-flex items-center gap-1 mt-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              Or open here <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Footer bar */}
-      <div className="relative border-t border-observatory-border/50 mt-4 px-4 py-3 flex items-center justify-between text-[10px] font-mono">
+      <div className="relative border-t border-observatory-border/50 px-4 py-3 flex items-center justify-between text-[10px] font-mono">
         <span className="font-bold text-yellow-400">FINGERPRINT² BENCH</span>
         <span className="text-observatory-text-dim hidden sm:block">
           Composite 0.045→0.316 · 7× range · Africa worst group 14/25 · Cohen's d=1.44
