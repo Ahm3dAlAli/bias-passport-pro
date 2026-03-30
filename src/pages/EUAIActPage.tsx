@@ -6,7 +6,9 @@ type Tab = 'risks' | 'airport' | 'checker' | 'timeline';
 const RISK_CATEGORIES = [
   {
     level: 'UNACCEPTABLE RISK',
-    color: 'bg-red-500/20 text-red-400 border-red-500/30',
+    color: 'border-red-500/30',
+    textColor: 'text-red-400',
+    bgColor: 'bg-red-500/5',
     airport: 2,
     items: [
       { name: 'Social scoring by public authorities', airport: false },
@@ -17,7 +19,9 @@ const RISK_CATEGORIES = [
   },
   {
     level: 'HIGH RISK',
-    color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    color: 'border-orange-500/30',
+    textColor: 'text-orange-400',
+    bgColor: 'bg-orange-500/5',
     airport: 5,
     items: [
       { name: 'Biometric identification and categorisation (Annex III.1)', airport: true, desc: 'E-ID verification, passport matching, face recognition at gates.' },
@@ -30,7 +34,9 @@ const RISK_CATEGORIES = [
   },
   {
     level: 'LIMITED RISK',
-    color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    color: 'border-yellow-500/30',
+    textColor: 'text-yellow-400',
+    bgColor: 'bg-yellow-500/5',
     airport: 2,
     items: [
       { name: 'Chatbots and virtual assistants', airport: true, desc: 'Airport info kiosks must disclose AI nature.' },
@@ -39,7 +45,9 @@ const RISK_CATEGORIES = [
   },
   {
     level: 'MINIMAL RISK',
-    color: 'bg-green-500/20 text-green-400 border-green-500/30',
+    color: 'border-green-500/30',
+    textColor: 'text-green-400',
+    bgColor: 'bg-green-500/5',
     airport: 0,
     items: [
       { name: 'AI-enabled video games', airport: false },
@@ -52,24 +60,19 @@ export default function EUAIActPage() {
   const [tab, setTab] = useState<Tab>('risks');
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-2xl font-mono font-bold gradient-text flex items-center gap-2">
-          <Shield className="w-6 h-6" /> EU AI Act — Compliance Framework
+    <div className="page-container">
+      <header className="page-header">
+        <h1 className="page-title">
+          <Shield className="w-7 h-7 text-observatory-accent" />
+          <span className="gradient-text">EU AI Act</span>
         </h1>
-        <p className="text-observatory-text-muted text-sm mt-1">Regulation (EU) 2024/1689 · Entered into force 1 August 2024</p>
+        <p className="page-subtitle">Regulation (EU) 2024/1689 · Entered into force 1 August 2024</p>
       </header>
 
-      <div className="flex gap-1 mb-6">
-        {(['risks', 'airport', 'checker', 'timeline'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === t ? 'bg-observatory-accent/15 text-observatory-accent' : 'text-observatory-text-muted hover:text-observatory-text'
-            }`}
-          >
-            {t === 'risks' ? 'Risk Categories' : t === 'airport' ? 'Airport AI Rules' : t === 'checker' ? 'Compliance Checker' : 'Timeline'}
+      <div className="tab-group">
+        {([['risks', 'Risk Categories'], ['airport', 'Airport AI Rules'], ['checker', 'Compliance Checker'], ['timeline', 'Timeline']] as [Tab, string][]).map(([t, label]) => (
+          <button key={t} onClick={() => setTab(t)} className={`tab-button ${tab === t ? 'tab-active' : 'tab-inactive'}`}>
+            {label}
           </button>
         ))}
       </div>
@@ -77,24 +80,20 @@ export default function EUAIActPage() {
       {tab === 'risks' && (
         <div className="space-y-6">
           {RISK_CATEGORIES.map(cat => (
-            <div key={cat.level} className={`glass rounded-xl p-6 border ${cat.color.split(' ')[2]}`}>
+            <div key={cat.level} className={`card border ${cat.color} ${cat.bgColor}`}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className={`font-mono font-bold text-sm ${cat.color.split(' ')[1]}`}>{cat.level}</h3>
+                <h3 className={`font-mono font-bold ${cat.textColor}`}>{cat.level}</h3>
                 {cat.airport > 0 && (
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-observatory-surface-alt text-observatory-text-muted">
+                  <span className="text-xs font-mono px-3 py-1 rounded-lg bg-observatory-surface-alt text-observatory-text-muted">
                     ✈️ {cat.airport} airport-relevant
                   </span>
                 )}
               </div>
               <div className="space-y-2">
                 {cat.items.map(item => (
-                  <div key={item.name} className="bg-observatory-bg/50 rounded-lg px-4 py-3">
+                  <div key={item.name} className="bg-observatory-bg/40 rounded-xl px-5 py-3">
                     <div className="flex items-start gap-2">
-                      {item.airport ? (
-                        <span className="text-xs mt-0.5">✈️</span>
-                      ) : (
-                        <span className="text-xs mt-0.5 text-observatory-text-dim">·</span>
-                      )}
+                      {item.airport ? <span className="text-xs mt-0.5">✈️</span> : <span className="text-xs mt-0.5 text-observatory-text-dim">·</span>}
                       <div>
                         <div className="text-sm text-observatory-text">{item.name}</div>
                         {item.desc && <div className="text-xs text-observatory-text-dim mt-1">{item.desc}</div>}
@@ -109,8 +108,8 @@ export default function EUAIActPage() {
       )}
 
       {tab === 'airport' && (
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-mono font-bold text-observatory-text mb-4">Airport AI — High-Risk Classification</h3>
+        <div className="card">
+          <div className="card-header">Airport AI — High-Risk Classification</div>
           <div className="space-y-4 text-sm text-observatory-text-muted">
             <p>Airport AI systems involving biometric identification, border control, and risk profiling are classified as <b className="text-observatory-danger">High-Risk AI</b> under Annex III.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -120,9 +119,9 @@ export default function EUAIActPage() {
                 { article: 'Art. 10', title: 'Data Governance', items: ['Training data must be representative', 'Bias detection and mitigation required', 'This is where Fingerprint² helps'] },
                 { article: 'Art. 14', title: 'Human Oversight', items: ['Human-in-the-loop for high-impact decisions', 'Override capability required', 'Audit trails mandatory'] },
               ].map(s => (
-                <div key={s.article} className="bg-observatory-bg/50 rounded-lg p-4">
+                <div key={s.article} className="bg-observatory-bg/50 rounded-xl p-5">
                   <div className="font-mono text-observatory-accent text-xs mb-1">{s.article}</div>
-                  <div className="font-medium text-observatory-text text-sm mb-2">{s.title}</div>
+                  <div className="font-semibold text-observatory-text mb-2">{s.title}</div>
                   <ul className="space-y-1">
                     {s.items.map(item => <li key={item} className="text-xs text-observatory-text-muted">• {item}</li>)}
                   </ul>
@@ -136,8 +135,8 @@ export default function EUAIActPage() {
       {tab === 'checker' && <ComplianceChecker />}
 
       {tab === 'timeline' && (
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-mono font-bold text-observatory-text mb-4">EU AI Act Timeline</h3>
+        <div className="card">
+          <div className="card-header">EU AI Act Timeline</div>
           <div className="space-y-4">
             {[
               { date: '1 Aug 2024', event: 'Regulation enters into force', status: 'done' },
@@ -146,13 +145,13 @@ export default function EUAIActPage() {
               { date: '2 Aug 2026', event: 'High-risk AI obligations apply', status: 'upcoming' },
               { date: '2 Aug 2027', event: 'Full enforcement for all AI systems', status: 'upcoming' },
             ].map(t => (
-              <div key={t.date} className="flex items-center gap-4">
+              <div key={t.date} className="flex items-center gap-4 bg-observatory-bg/50 rounded-xl px-5 py-4">
                 <div className={`w-3 h-3 rounded-full shrink-0 ${t.status === 'done' ? 'bg-observatory-success' : 'bg-observatory-warning'}`} />
                 <div className="flex-1">
-                  <div className="text-sm text-observatory-text">{t.event}</div>
+                  <div className="text-sm text-observatory-text font-medium">{t.event}</div>
                   <div className="text-xs text-observatory-text-dim font-mono">{t.date}</div>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${t.status === 'done' ? 'bg-observatory-success/10 text-observatory-success' : 'bg-observatory-warning/10 text-observatory-warning'}`}>
+                <span className={`text-xs px-3 py-1 rounded-lg ${t.status === 'done' ? 'bg-observatory-success/10 text-observatory-success' : 'bg-observatory-warning/10 text-observatory-warning'}`}>
                   {t.status === 'done' ? 'Active' : 'Upcoming'}
                 </span>
               </div>
@@ -176,22 +175,22 @@ function ComplianceChecker() {
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
 
   return (
-    <div className="glass rounded-xl p-6">
-      <h3 className="font-mono font-bold text-observatory-text mb-4">Quick Compliance Check</h3>
+    <div className="card">
+      <div className="card-header">Quick Compliance Check</div>
       <div className="space-y-3">
         {checks.map((c, i) => (
-          <div key={i} className="flex items-center justify-between bg-observatory-bg/50 rounded-lg px-4 py-3">
+          <div key={i} className="flex items-center justify-between bg-observatory-bg/50 rounded-xl px-5 py-4">
             <span className="text-sm text-observatory-text-muted flex-1">{c.q}</span>
             <div className="flex gap-2">
               <button
                 onClick={() => setAnswers({ ...answers, [i]: true })}
-                className={`px-3 py-1 rounded text-xs ${answers[i] === true ? 'bg-observatory-success/20 text-observatory-success' : 'text-observatory-text-dim hover:bg-observatory-surface-alt'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-medium ${answers[i] === true ? 'bg-observatory-success/20 text-observatory-success' : 'text-observatory-text-dim hover:bg-observatory-surface-alt'}`}
               >
                 Yes
               </button>
               <button
                 onClick={() => setAnswers({ ...answers, [i]: false })}
-                className={`px-3 py-1 rounded text-xs ${answers[i] === false ? 'bg-observatory-danger/20 text-observatory-danger' : 'text-observatory-text-dim hover:bg-observatory-surface-alt'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-medium ${answers[i] === false ? 'bg-observatory-danger/20 text-observatory-danger' : 'text-observatory-text-dim hover:bg-observatory-surface-alt'}`}
               >
                 No
               </button>
@@ -200,9 +199,9 @@ function ComplianceChecker() {
         ))}
       </div>
       {Object.keys(answers).length >= 4 && (
-        <div className="mt-4 p-4 rounded-lg bg-observatory-accent/10">
-          <div className="text-sm text-observatory-accent font-mono">Assessment Result</div>
-          <div className="text-xs text-observatory-text-muted mt-1">
+        <div className="mt-6 p-5 rounded-xl bg-observatory-accent/10 border border-observatory-accent/20">
+          <div className="text-sm text-observatory-accent font-semibold">Assessment Result</div>
+          <div className="text-sm text-observatory-text-muted mt-1">
             Based on your answers, this system likely falls under <b className="text-observatory-warning">High-Risk</b> classification.
             Fingerprint² can help with Art. 10 bias testing requirements.
           </div>

@@ -47,24 +47,19 @@ export default function MitigationPage() {
   const impactColor = (i: string) => i === 'Very High' ? 'text-observatory-accent' : i === 'High' ? 'text-observatory-success' : 'text-observatory-warning';
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-2xl font-mono font-bold gradient-text flex items-center gap-2">
-          <Wrench className="w-6 h-6" /> Bias Mitigation — Solutions & Strategies
+    <div className="page-container">
+      <header className="page-header">
+        <h1 className="page-title">
+          <Wrench className="w-7 h-7 text-observatory-accent" />
+          <span className="gradient-text">Fix Bias</span>
         </h1>
-        <p className="text-observatory-text-muted text-sm mt-1">Evidence-based techniques to reduce AI bias in VLMs</p>
+        <p className="page-subtitle">Evidence-based techniques to reduce AI bias in vision-language models</p>
       </header>
 
-      <div className="flex gap-1 mb-6">
-        {(['strategies', 'metrics', 'before-after'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === t ? 'bg-observatory-accent/15 text-observatory-accent' : 'text-observatory-text-muted hover:text-observatory-text'
-            }`}
-          >
-            {t === 'strategies' ? 'Mitigation Strategies' : t === 'metrics' ? 'Fairness Metrics' : 'Before vs After'}
+      <div className="tab-group">
+        {([['strategies', 'Mitigation Strategies'], ['metrics', 'Fairness Metrics'], ['before-after', 'Before vs After']] as [Tab, string][]).map(([t, label]) => (
+          <button key={t} onClick={() => setTab(t)} className={`tab-button ${tab === t ? 'tab-active' : 'tab-inactive'}`}>
+            {label}
           </button>
         ))}
       </div>
@@ -72,18 +67,18 @@ export default function MitigationPage() {
       {tab === 'strategies' && (
         <div className="space-y-6">
           {CATEGORIES.map(cat => (
-            <div key={cat.title} className="glass rounded-xl p-6">
-              <h3 className="flex items-center gap-2 font-mono font-bold text-observatory-text mb-4">
-                <cat.icon className="w-4 h-4 text-observatory-accent" />
+            <div key={cat.title} className="card">
+              <h3 className="flex items-center gap-3 font-bold text-observatory-text mb-5">
+                <cat.icon className="w-5 h-5 text-observatory-accent" />
                 {cat.title}
-                <span className="text-xs text-observatory-text-dim font-normal">{cat.techniques.length} techniques</span>
+                <span className="text-xs text-observatory-text-dim font-normal ml-auto">{cat.techniques.length} techniques</span>
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {cat.techniques.map(t => (
-                  <div key={t.name} className="bg-observatory-bg/50 rounded-lg p-4">
-                    <div className="font-medium text-sm text-observatory-text mb-1">{t.name}</div>
-                    <p className="text-xs text-observatory-text-muted mb-2">{t.desc}</p>
-                    <div className="flex gap-3 text-[10px]">
+                  <div key={t.name} className="bg-observatory-bg/50 rounded-xl p-5">
+                    <div className="font-semibold text-sm text-observatory-text mb-1">{t.name}</div>
+                    <p className="text-sm text-observatory-text-muted mb-3">{t.desc}</p>
+                    <div className="flex gap-4 text-xs">
                       <span className="text-observatory-text-dim">Effort: <b>{t.effort}</b></span>
                       <span className={impactColor(t.impact)}>Impact: <b>{t.impact}</b></span>
                     </div>
@@ -96,9 +91,9 @@ export default function MitigationPage() {
       )}
 
       {tab === 'metrics' && (
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-mono font-bold text-observatory-text mb-4">Key Fairness Metrics</h3>
-          <div className="space-y-4">
+        <div className="card">
+          <div className="card-header">Key Fairness Metrics</div>
+          <div className="space-y-3">
             {[
               { name: 'Demographic Parity', formula: 'P(Ŷ=1|A=a) = P(Ŷ=1|A=b)', desc: 'Equal positive prediction rate across groups.' },
               { name: 'Equalized Odds', formula: 'P(Ŷ=1|Y=y,A=a) = P(Ŷ=1|Y=y,A=b)', desc: 'Equal TPR and FPR across groups.' },
@@ -106,10 +101,10 @@ export default function MitigationPage() {
               { name: 'Counterfactual Fairness', formula: 'P(Ŷ_A←a = ŷ) = P(Ŷ_A←b = ŷ)', desc: 'Same prediction if demographic attribute were different.' },
               { name: 'Individual Fairness', formula: 'd(f(x),f(x′)) ≤ ε for similar x,x′', desc: 'Similar individuals get similar predictions.' },
             ].map(m => (
-              <div key={m.name} className="bg-observatory-bg/50 rounded-lg p-4">
-                <div className="font-medium text-sm text-observatory-text">{m.name}</div>
-                <div className="font-mono text-xs text-observatory-accent mt-1">{m.formula}</div>
-                <div className="text-xs text-observatory-text-muted mt-1">{m.desc}</div>
+              <div key={m.name} className="bg-observatory-bg/50 rounded-xl p-5">
+                <div className="font-semibold text-sm text-observatory-text">{m.name}</div>
+                <div className="font-mono text-sm text-observatory-accent mt-1">{m.formula}</div>
+                <div className="text-sm text-observatory-text-muted mt-1">{m.desc}</div>
               </div>
             ))}
           </div>
@@ -117,8 +112,8 @@ export default function MitigationPage() {
       )}
 
       {tab === 'before-after' && (
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-mono font-bold text-observatory-text mb-4">Before vs After — Mitigation Impact</h3>
+        <div className="card">
+          <div className="card-header">Before vs After — Mitigation Impact</div>
           <div className="space-y-4">
             {[
               { probe: 'P4 · Lifestyle', model: 'moondream2', before: 0.434, after: 0.12, technique: 'Counterfactual Data Augmentation' },
@@ -126,11 +121,14 @@ export default function MitigationPage() {
               { probe: 'P1 · Occupation', model: 'Qwen2.5-VL-3B', before: 0.306, after: 0.08, technique: 'Balanced Dataset Curation' },
               { probe: 'P2 · Education', model: 'InternVL2-2B', before: 0.365, after: 0.09, technique: 'Fairness Constraints in Training' },
             ].map(item => (
-              <div key={`${item.model}-${item.probe}`} className="bg-observatory-bg/50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
+              <div key={`${item.model}-${item.probe}`} className="bg-observatory-bg/50 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <div className="text-sm text-observatory-text font-medium">{item.probe} · {item.model}</div>
-                    <div className="text-xs text-observatory-text-dim">Technique: {item.technique}</div>
+                    <div className="font-semibold text-observatory-text">{item.probe} · {item.model}</div>
+                    <div className="text-xs text-observatory-text-dim mt-0.5">Technique: {item.technique}</div>
+                  </div>
+                  <div className="text-sm font-mono font-bold text-observatory-accent">
+                    -{((1 - item.after / item.before) * 100).toFixed(0)}%
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -139,18 +137,15 @@ export default function MitigationPage() {
                     <div className="h-3 bg-observatory-border rounded-full overflow-hidden">
                       <div className="h-full bg-observatory-danger rounded-full" style={{ width: `${item.before * 100}%` }} />
                     </div>
-                    <div className="text-xs font-mono text-observatory-danger mt-0.5">{item.before.toFixed(3)}</div>
+                    <div className="text-xs font-mono text-observatory-danger mt-1">{item.before.toFixed(3)}</div>
                   </div>
-                  <div className="text-observatory-text-dim">→</div>
+                  <div className="text-observatory-text-dim text-lg">→</div>
                   <div className="flex-1">
                     <div className="text-xs text-observatory-text-dim mb-1">After</div>
                     <div className="h-3 bg-observatory-border rounded-full overflow-hidden">
                       <div className="h-full bg-observatory-success rounded-full" style={{ width: `${item.after * 100}%` }} />
                     </div>
-                    <div className="text-xs font-mono text-observatory-success mt-0.5">{item.after.toFixed(3)}</div>
-                  </div>
-                  <div className="text-xs font-mono text-observatory-accent">
-                    -{((1 - item.after / item.before) * 100).toFixed(0)}%
+                    <div className="text-xs font-mono text-observatory-success mt-1">{item.after.toFixed(3)}</div>
                   </div>
                 </div>
               </div>

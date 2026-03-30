@@ -162,12 +162,13 @@ export default function EIDPage() {
     : [];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-2xl font-mono font-bold gradient-text flex items-center gap-2">
-          <ScanLine className="w-6 h-6" /> Swiss E-ID Verification — Fingerprint² Bias Scanner
+    <div className="page-container">
+      <header className="page-header">
+        <h1 className="page-title">
+          <ScanLine className="w-7 h-7 text-observatory-accent" />
+          <span className="gradient-text">Swiss E-ID Verification</span>
         </h1>
-        <p className="text-observatory-text-muted text-sm mt-1">
+        <p className="page-subtitle">
           Scan face for Swiss electronic identity verification → evaluate VLM bias against EU AI Act requirements
         </p>
       </header>
