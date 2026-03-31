@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import ModelComplianceReport from '@/components/euaiact/ModelComplianceReport';
 
-type Tab = 'risks' | 'airport' | 'checker' | 'timeline';
+type Tab = 'risks' | 'airport' | 'checker' | 'model' | 'timeline';
 
 const RISK_CATEGORIES = [
   {
