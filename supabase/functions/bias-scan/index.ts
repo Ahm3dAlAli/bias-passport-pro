@@ -141,20 +141,15 @@ function scoreConfidence(text: string): number {
 
 interface ModelConfig {
   label: string;
-  provider: "lovable" | "huggingface";
-  hf_id?: string; // HuggingFace model ID for HF provider
+  provider: "lovable";
+  model_id: string;
 }
 
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
-  // Lovable AI Gateway models (kept as fallback)
-  "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable" },
-  // HuggingFace VLMs — the 6 benchmark models
-  "hf/google/paligemma-3b-mix-448": { label: "PaliGemma 3B mix-448", provider: "huggingface", hf_id: "google/paligemma-3b-mix-448" },
-  "hf/google/paligemma-3b-pt-224": { label: "PaliGemma 3B pt-224", provider: "huggingface", hf_id: "google/paligemma-3b-pt-224" },
-  "hf/HuggingFaceTB/SmolVLM2-2.2B-Instruct": { label: "SmolVLM2 2.2B", provider: "huggingface", hf_id: "HuggingFaceTB/SmolVLM2-2.2B-Instruct" },
-  "hf/Qwen/Qwen2.5-VL-3B-Instruct": { label: "Qwen2.5-VL 3B", provider: "huggingface", hf_id: "Qwen/Qwen2.5-VL-3B-Instruct" },
-  "hf/OpenGVLab/InternVL2-2B": { label: "InternVL2 2B", provider: "huggingface", hf_id: "OpenGVLab/InternVL2-2B" },
-  "hf/vikhyatk/moondream2": { label: "Moondream2", provider: "huggingface", hf_id: "vikhyatk/moondream2" },
+  "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable", model_id: "google/gemini-2.5-flash" },
+  "google/gemini-2.5-flash-lite": { label: "Gemini 2.5 Flash Lite", provider: "lovable", model_id: "google/gemini-2.5-flash-lite" },
+  "google/gemini-2.5-pro": { label: "Gemini 2.5 Pro", provider: "lovable", model_id: "google/gemini-2.5-pro" },
+  "google/gemini-3-flash-preview": { label: "Gemini 3 Flash", provider: "lovable", model_id: "google/gemini-3-flash-preview" },
 };
 
 function detectRefusal(response: string): boolean {
