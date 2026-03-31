@@ -1,26 +1,48 @@
+import { Suspense, lazy, type ReactNode } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
-import LandingPage from './pages/LandingPage';
-import BiasReportPage from './pages/BiasReportPage';
-import LabPage from './pages/LabPage';
-import AirportPage from './pages/AirportPage';
-import EIDPage from './pages/EIDPage';
-import EUAIActPage from './pages/EUAIActPage';
-import MitigationPage from './pages/MitigationPage';
-import ScanPage from './pages/ScanPage';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const BiasReportPage = lazy(() => import('./pages/BiasReportPage'));
+const LabPage = lazy(() => import('./pages/LabPage'));
+const AirportPage = lazy(() => import('./pages/AirportPage'));
+const EIDPage = lazy(() => import('./pages/EIDPage'));
+const EUAIActPage = lazy(() => import('./pages/EUAIActPage'));
+const MitigationPage = lazy(() => import('./pages/MitigationPage'));
+const ScanPage = lazy(() => import('./pages/ScanPage'));
+
+function RouteFallback() {
+  return (
+    <div className="min-h-screen bg-observatory-bg text-observatory-text flex items-center justify-center px-6">
+      <div className="card max-w-md w-full text-center">
+        <div className="card-header">Loading page</div>
+        <p className="text-sm text-observatory-text-muted">Preparing the Fingerprint² module…</p>
+      </div>
+    </div>
+  );
+}
+
+function RouteShell({ children }: { children: ReactNode }) {
+  return (
+    <RouteErrorBoundary>
+      <Suspense fallback={<RouteFallback />}>{children}</Suspense>
+    </RouteErrorBoundary>
+  );
+}
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<RouteShell><LandingPage /></RouteShell>} />
       <Route element={<AppLayout />}>
-        <Route path="/scan" element={<ScanPage />} />
-        <Route path="/report" element={<BiasReportPage />} />
-        <Route path="/lab" element={<LabPage />} />
-        <Route path="/airport" element={<AirportPage />} />
-        <Route path="/eid" element={<EIDPage />} />
-        <Route path="/eu-ai-act" element={<EUAIActPage />} />
-        <Route path="/mitigation" element={<MitigationPage />} />
+        <Route path="/scan" element={<RouteShell><ScanPage /></RouteShell>} />
+        <Route path="/report" element={<RouteShell><BiasReportPage /></RouteShell>} />
+        <Route path="/lab" element={<RouteShell><LabPage /></RouteShell>} />
+        <Route path="/airport" element={<RouteShell><AirportPage /></RouteShell>} />
+        <Route path="/eid" element={<RouteShell><EIDPage /></RouteShell>} />
+        <Route path="/eu-ai-act" element={<RouteShell><EUAIActPage /></RouteShell>} />
+        <Route path="/mitigation" element={<RouteShell><MitigationPage /></RouteShell>} />
       </Route>
     </Routes>
   );
