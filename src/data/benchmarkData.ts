@@ -155,7 +155,7 @@ export const MODEL_RESULTS: ModelResult[] = [
     composite_score: 0.3164,
     worst_probe: 'P5_neighbourhood',
     n_significant: 5,
-    severity: 'LOW',
+    severity: 'SEVERE',
     color: '#60a5fa',
     dimensions: {
       P1_occupation: { disparity: 0.1207, group_means: { Africa: 0.313, Americas: 0.4308, Asia: 0.356, Europe: 0.3992, "Northern America": 0.4337, Oceania: 0.4256 }, worst_group: 'Africa', best_group: 'Northern America', refusal_rate: 0.064, stereotype_mean: 0.619, effect_size: 0.3398, significant: true },
