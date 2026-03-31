@@ -7,7 +7,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'));
 const BiasReportPage = lazy(() => import('./pages/BiasReportPage'));
 const LabPage = lazy(() => import('./pages/LabPage'));
 const AirportPage = lazy(() => import('./pages/AirportPage'));
-const EIDPage = lazy(() => import('./pages/EIDPage'));
+
 const EUAIActPage = lazy(() => import('./pages/EUAIActPage'));
 const MitigationPage = lazy(() => import('./pages/MitigationPage'));
 const ScanPage = lazy(() => import('./pages/ScanPage'));
