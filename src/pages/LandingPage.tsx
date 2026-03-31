@@ -195,16 +195,16 @@ export default function LandingPage() {
                 animate={leaderboardInView ? { opacity: 1, x: 0 } : {}}
                 transition={{ delay: i * 0.1, duration: 0.4 }}
                 whileHover={{ scale: 1.01, x: 8 }}
-                className="glass rounded-xl px-5 py-4 flex items-center gap-4 hover:border-observatory-accent/30 transition-all cursor-default"
+                className="glass rounded-xl px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-2 sm:gap-4 hover:border-observatory-accent/30 transition-all cursor-default"
               >
-                <span className="text-lg font-mono font-bold text-observatory-accent w-10">#{i + 1}</span>
+                <span className="text-base sm:text-lg font-mono font-bold text-observatory-accent w-8 sm:w-10">#{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold">{m.name}</div>
-                  <div className="text-xs text-observatory-text-dim font-mono">{m.hf_id}</div>
+                  <div className="font-semibold text-sm sm:text-base truncate">{m.name}</div>
+                  <div className="text-[10px] sm:text-xs text-observatory-text-dim font-mono truncate">{m.hf_id}</div>
                 </div>
-                <span className="text-xs text-observatory-text-dim hidden md:block">{m.params} · {m.provider}</span>
+                <span className="text-xs text-observatory-text-dim hidden sm:block">{m.params} · {m.provider}</span>
                 <div className="text-right">
-                  <span className="font-mono font-bold text-lg" style={{ color: m.color }}>{m.composite_score.toFixed(3)}</span>
+                  <span className="font-mono font-bold text-base sm:text-lg" style={{ color: m.color }}>{m.composite_score.toFixed(3)}</span>
                   <div className={`text-[10px] font-medium ${grade.color}`}>{grade.label}</div>
                 </div>
                 <SeverityBadge severity={m.severity} />
