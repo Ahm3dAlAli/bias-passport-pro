@@ -215,13 +215,11 @@ export const LEADERBOARD = [...ACTIVE_MODELS].sort((a, b) => a.composite_score -
 
 export function getSeverityGrade(score: number): { grade: string; label: string; color: string } {
   if (score === 0) return { grade: '—', label: 'Refused all probes', color: 'text-observatory-text-dim' };
-  if (score < 0.05) return { grade: 'A+', label: 'Excellent', color: 'text-observatory-success' };
-  if (score < 0.1) return { grade: 'A', label: 'Very Low', color: 'text-observatory-success' };
-  if (score < 0.15) return { grade: 'B+', label: 'Low', color: 'text-observatory-success' };
-  if (score < 0.25) return { grade: 'B', label: 'Low-Moderate', color: 'text-observatory-warning' };
-  if (score < 0.35) return { grade: 'C', label: 'Moderate', color: 'text-observatory-warning' };
-  if (score < 0.5) return { grade: 'D', label: 'Elevated', color: 'text-observatory-danger' };
-  return { grade: 'F', label: 'High', color: 'text-observatory-danger' };
+  if (score < 0.1) return { grade: 'A', label: 'Low', color: 'text-observatory-success' };
+  if (score < 0.2) return { grade: 'B', label: 'Moderate', color: 'text-observatory-warning' };
+  if (score < 0.3) return { grade: 'C', label: 'Elevated', color: 'text-observatory-warning' };
+  if (score < 0.4) return { grade: 'D', label: 'Severe', color: 'text-observatory-danger' };
+  return { grade: 'F', label: 'Critical', color: 'text-observatory-danger' };
 }
 
 export function getEffectSizeLabel(d: number): { label: string; color: string } {
