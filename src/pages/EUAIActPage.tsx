@@ -183,7 +183,7 @@ function ComplianceChecker() {
       <div className="space-y-3">
         {checks.map((c, i) => (
           <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-observatory-bg/50 rounded-xl px-3 sm:px-5 py-3 sm:py-4">
-            <span className="text-sm text-observatory-text-muted flex-1">{c.q}</span>
+            <span className="text-xs sm:text-sm text-observatory-text-muted flex-1">{c.q}</span>
             <div className="flex gap-2">
               <button
                 onClick={() => setAnswers({ ...answers, [i]: true })}
