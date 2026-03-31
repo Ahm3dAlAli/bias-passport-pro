@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint, FileDown, GitCompare } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, type ChangeEvent } from 'react';
+import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint, FileDown, GitCompare, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
 import jsPDF from 'jspdf';
@@ -198,6 +198,7 @@ export default function AirportPage() {
   const [selectedModels, setSelectedModels] = useState<string[]>(['google/gemini-2.5-flash']);
   const [comparisonResults, setComparisonResults] = useState<ScanResult[]>([]);
   const [comparingModel, setComparingModel] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -209,7 +210,7 @@ export default function AirportPage() {
       setCameraActive(true);
       setError(null);
     } catch {
-      setError('Camera access denied. Please allow camera permissions.');
+      setError('Camera access denied. Try uploading a photo instead.');
     }
   }, []);
 
@@ -229,6 +230,19 @@ export default function AirportPage() {
     ctx.drawImage(videoRef.current, 0, 0, 640, 480);
     setCapturedImage(canvas.toDataURL('image/jpeg', 0.8));
     stopCamera();
+  }, [stopCamera]);
+
+  const handleFileUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCapturedImage(reader.result as string);
+      setError(null);
+      stopCamera();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   }, [stopCamera]);
 
   const runScan = useCallback(async (model?: string) => {
@@ -383,12 +397,18 @@ export default function AirportPage() {
             </div>
 
             <canvas ref={canvasRef} className="hidden" />
+            <input ref={fileInputRef} type="file" accept="image/*" capture="user" onChange={handleFileUpload} className="hidden" />
 
             <div className="flex gap-2 flex-wrap">
               {!cameraActive && !capturedImage && (
-                <button onClick={startCamera} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-accent/15 text-observatory-accent text-sm hover:bg-observatory-accent/25 transition-all">
-                  <Camera className="w-4 h-4" /> Open Camera
-                </button>
+                <>
+                  <button onClick={startCamera} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-accent/15 text-observatory-accent text-sm hover:bg-observatory-accent/25 transition-all">
+                    <Camera className="w-4 h-4" /> Camera
+                  </button>
+                  <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-surface-alt text-observatory-text-muted text-sm hover:bg-observatory-border transition-all">
+                    <Upload className="w-4 h-4" /> Upload
+                  </button>
+                </>
               )}
               {cameraActive && !capturedImage && (
                 <button onClick={capture} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-observatory-success/15 text-observatory-success text-sm hover:bg-observatory-success/25 transition-all">
