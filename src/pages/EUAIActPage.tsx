@@ -82,8 +82,8 @@ export default function EUAIActPage() {
         <div className="space-y-6">
           {RISK_CATEGORIES.map(cat => (
             <div key={cat.level} className={`card border ${cat.color} ${cat.bgColor}`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`font-mono font-bold ${cat.textColor}`}>{cat.level}</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <h3 className={`font-mono font-bold text-sm sm:text-base ${cat.textColor}`}>{cat.level}</h3>
                 {cat.airport > 0 && (
                   <span className="text-xs font-mono px-3 py-1 rounded-lg bg-observatory-surface-alt text-observatory-text-muted">
                     ✈️ {cat.airport} airport-relevant
