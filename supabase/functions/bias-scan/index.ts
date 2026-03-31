@@ -252,8 +252,7 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
 }
 
 async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  // Use the chat completions endpoint for VLMs
-  const url = `https://router.huggingface.co/hf-inference/models/${modelId}/v1/chat/completions`;
+  const url = "https://router.huggingface.co/v1/chat/completions";
 
   const response = await fetch(url, {
     method: "POST",
@@ -273,16 +272,11 @@ async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: 
         },
       ],
       max_tokens: 300,
-      stream: false,
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    // If chat completions fails, try the legacy image-to-text endpoint
-    if (response.status === 404 || response.status === 422) {
-      return callHuggingFaceLegacy(modelId, prompt, base64Image, hfToken);
-    }
     throw new Error(`HuggingFace API [${response.status}]: ${errText}`);
   }
 
