@@ -265,7 +265,7 @@ export default function LandingPage() {
               whileHover={{ y: -4 }}
               className="glass rounded-2xl p-4 sm:p-6 flex items-center gap-4 sm:gap-5 hover:border-observatory-accent/20 transition-all"
             >
-              <img src={p.photo} alt={p.name} className="w-20 h-20 rounded-xl object-cover border border-observatory-border/40" />
+              <img src={p.photo} alt={p.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-observatory-border/40" />
               <div>
                 <h3 className="text-lg font-bold">{p.name}</h3>
                 <p className="text-sm text-observatory-text-muted">{p.role}</p>
