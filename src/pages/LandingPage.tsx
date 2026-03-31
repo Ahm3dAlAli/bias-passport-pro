@@ -41,7 +41,7 @@ function AnimatedCounter({ target, suffix = '' }: { target: string; suffix?: str
   }, [isInView, numericTarget]);
 
   return (
-    <div ref={ref} className="text-3xl font-black font-mono text-observatory-text">
+    <div ref={ref} className="text-2xl sm:text-3xl font-black font-mono text-observatory-text">
       {count.toLocaleString()}{suffix}
     </div>
   );
