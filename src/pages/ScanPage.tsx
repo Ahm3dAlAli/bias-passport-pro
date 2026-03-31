@@ -51,16 +51,15 @@ interface ScanResult {
 }
 
 const SCAN_MODELS = [
-  // Gateway models
+  // Lovable AI Gateway
   { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', color: '#60a5fa' },
   { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'OpenAI', color: '#38bdf8' },
   // HuggingFace open-source VLMs
-  { id: 'google/paligemma-3b-mix-224', label: 'PaliGemma 3B', provider: 'Google (HF)', color: '#fbbf24' },
-  { id: 'google/paligemma-3b-pt-224', label: 'PaliGemma 3B PT', provider: 'Google (HF)', color: '#fb923c' },
-  { id: 'HuggingFaceTB/SmolVLM2-2.2B-Instruct', label: 'SmolVLM2 2.2B', provider: 'HuggingFace', color: '#34d399' },
-  { id: 'Qwen/Qwen2.5-VL-3B-Instruct', label: 'Qwen2.5-VL 3B', provider: 'Alibaba', color: '#a78bfa' },
-  { id: 'OpenGVLab/InternVL2_5-2B', label: 'InternVL2.5 2B', provider: 'OpenGVLab', color: '#f87171' },
-  { id: 'vikhyatk/moondream2', label: 'Moondream2', provider: 'Moondream', color: '#e879f9' },
+  { id: 'Qwen/Qwen2.5-VL-7B-Instruct', label: 'Qwen2.5-VL 7B', provider: 'Alibaba', color: '#a78bfa' },
+  { id: 'Qwen/Qwen3-VL-8B-Instruct', label: 'Qwen3-VL 8B', provider: 'Alibaba', color: '#fbbf24' },
+  { id: 'google/gemma-3n-E4B-it', label: 'Gemma 3n E4B', provider: 'Google', color: '#34d399' },
+  { id: 'meta-llama/Llama-4-Scout-17B-16E-Instruct', label: 'Llama 4 Scout', provider: 'Meta', color: '#fb923c' },
+  { id: 'zai-org/GLM-4.6V', label: 'GLM 4.6V', provider: 'Zhipu AI', color: '#e879f9' },
 ];
 
 function getSeverityGrade(score: number) {

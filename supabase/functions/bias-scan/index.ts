@@ -146,17 +146,15 @@ interface ModelConfig {
 }
 
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
-  // Gemini (gateway)
+  // Lovable AI Gateway
   "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable", model_id: "google/gemini-2.5-flash" },
-  // OpenAI (gateway)
   "openai/gpt-5-mini": { label: "GPT-5 Mini", provider: "lovable", model_id: "openai/gpt-5-mini" },
-  // HuggingFace open-source VLMs
-  "google/paligemma-3b-mix-224": { label: "PaliGemma 3B", provider: "huggingface", model_id: "google/paligemma-3b-mix-224" },
-  "google/paligemma-3b-pt-224": { label: "PaliGemma 3B PT", provider: "huggingface", model_id: "google/paligemma-3b-pt-224" },
-  "HuggingFaceTB/SmolVLM2-2.2B-Instruct": { label: "SmolVLM2 2.2B", provider: "huggingface", model_id: "HuggingFaceTB/SmolVLM2-2.2B-Instruct" },
-  "Qwen/Qwen2.5-VL-3B-Instruct": { label: "Qwen2.5-VL 3B", provider: "huggingface", model_id: "Qwen/Qwen2.5-VL-3B-Instruct" },
-  "OpenGVLab/InternVL2_5-2B": { label: "InternVL2.5 2B", provider: "huggingface", model_id: "OpenGVLab/InternVL2_5-2B" },
-  "vikhyatk/moondream2": { label: "Moondream2", provider: "huggingface", model_id: "vikhyatk/moondream2" },
+  // HuggingFace Serverless Inference (open-source VLMs)
+  "Qwen/Qwen2.5-VL-7B-Instruct": { label: "Qwen2.5-VL 7B", provider: "huggingface", model_id: "Qwen/Qwen2.5-VL-7B-Instruct" },
+  "Qwen/Qwen3-VL-8B-Instruct": { label: "Qwen3-VL 8B", provider: "huggingface", model_id: "Qwen/Qwen3-VL-8B-Instruct" },
+  "google/gemma-3n-E4B-it": { label: "Gemma 3n E4B", provider: "huggingface", model_id: "google/gemma-3n-E4B-it" },
+  "meta-llama/Llama-4-Scout-17B-16E-Instruct": { label: "Llama 4 Scout", provider: "huggingface", model_id: "meta-llama/Llama-4-Scout-17B-16E-Instruct" },
+  "zai-org/GLM-4.6V": { label: "GLM 4.6V", provider: "huggingface", model_id: "zai-org/GLM-4.6V" },
 };
 
 function detectRefusal(response: string): boolean {
@@ -254,8 +252,7 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
 }
 
 async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  // Use the chat completions endpoint for VLMs
-  const url = `https://router.huggingface.co/hf-inference/models/${modelId}/v1/chat/completions`;
+  const url = "https://router.huggingface.co/v1/chat/completions";
 
   const response = await fetch(url, {
     method: "POST",
@@ -275,50 +272,16 @@ async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: 
         },
       ],
       max_tokens: 300,
-      stream: false,
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    // If chat completions fails, try the legacy image-to-text endpoint
-    if (response.status === 404 || response.status === 422) {
-      return callHuggingFaceLegacy(modelId, prompt, base64Image, hfToken);
-    }
     throw new Error(`HuggingFace API [${response.status}]: ${errText}`);
   }
 
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
-}
-
-async function callHuggingFaceLegacy(modelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  const url = `https://api-inference.huggingface.co/models/${modelId}`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${hfToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      inputs: `${prompt}\n[image]`,
-      parameters: { max_new_tokens: 300 },
-      image: base64Image,
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`HuggingFace Legacy API [${response.status}]: ${errText}`);
-  }
-
-  const data = await response.json();
-  if (typeof data === "string") return data;
-  if (Array.isArray(data) && data[0]?.generated_text) return data[0].generated_text;
-  if (data?.generated_text) return data.generated_text;
-  if (Array.isArray(data) && data[0]?.answer) return data[0].answer;
-  return JSON.stringify(data);
 }
 
 async function callVLM(config: ModelConfig, prompt: string, base64Image: string, lovableKey: string, hfToken: string | null): Promise<string> {
