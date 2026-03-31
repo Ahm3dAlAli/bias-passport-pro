@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode } from 'react'; // v2
 import { Routes, Route, useLocation } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
