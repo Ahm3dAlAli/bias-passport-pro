@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, type ChangeEvent } from 'react';
 import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint, FileDown, GitCompare, Upload } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeBiasScan } from '@/services/biasScan';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -261,10 +261,7 @@ export default function AirportPage() {
     }
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('bias-scan', {
-        body: { image: capturedImage, model: targetModel },
-      });
-      if (fnError) { setError(`Scan failed: ${fnError.message}`); return; }
+      const data = await invokeBiasScan({ image: capturedImage, model: targetModel });
       if (data?.error) { setError(`API error: ${data.error}`); return; }
       
       const scanResult = data as ScanResult;

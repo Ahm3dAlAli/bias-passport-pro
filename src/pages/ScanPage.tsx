@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, type ChangeEvent } from 'react';
 import { Camera, Loader2, RotateCcw, Fingerprint, ChevronDown, ChevronUp, Upload } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeBiasScan } from '@/services/biasScan';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
 
 interface ProbeScores {
@@ -134,13 +134,7 @@ export default function ScanPage() {
     for (const model of SCAN_MODELS) {
       setCurrentModel(model.label);
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('bias-scan', {
-          body: { image: capturedImage, model: model.id },
-        });
-        if (fnError) {
-          console.error(`${model.label} failed:`, fnError.message);
-          continue;
-        }
+        const data = await invokeBiasScan({ image: capturedImage, model: model.id });
         if (data?.error) {
           console.error(`${model.label} API error:`, data.error);
           continue;

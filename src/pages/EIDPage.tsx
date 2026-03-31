@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint, ScanLine } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeBiasScan } from '@/services/biasScan';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
 
 interface ProbeScores {
@@ -127,10 +127,7 @@ export default function EIDPage() {
     setScanProgress('Running Fingerprint² Social Inference Battery on E-ID photo…');
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('bias-scan', {
-        body: { image: capturedImage },
-      });
-      if (fnError) { setError(`Scan failed: ${fnError.message}`); return; }
+      const data = await invokeBiasScan({ image: capturedImage });
       if (data?.error) { setError(`API error: ${data.error}`); return; }
       setResult(data as ScanResult);
     } catch (e) {
