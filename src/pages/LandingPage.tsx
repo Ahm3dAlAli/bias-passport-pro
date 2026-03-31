@@ -277,17 +277,17 @@ export default function LandingPage() {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-observatory-border/30 px-6 py-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-observatory-text-dim">
+      <div className="border-t border-observatory-border/30 px-4 sm:px-6 py-4 sm:py-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-observatory-text-dim">
           <span className="font-mono font-bold">Fingerprint² Bench</span>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
             <a href={FRAMEWORK_INFO.repo} target="_blank" rel="noopener" className="hover:text-observatory-text-muted transition-colors flex items-center gap-1">
               <ExternalLink className="w-3 h-3" /> GitHub
             </a>
             <a href={FRAMEWORK_INFO.datasetUrl} target="_blank" rel="noopener" className="hover:text-observatory-text-muted transition-colors flex items-center gap-1">
               <ExternalLink className="w-3 h-3" /> FHIBE Dataset
             </a>
-            <span>March 2026 · Ethical AI Track</span>
+            <span>March 2026</span>
           </div>
         </div>
       </div>
