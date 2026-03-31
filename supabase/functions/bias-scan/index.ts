@@ -304,6 +304,7 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const HF_API_TOKEN = Deno.env.get("HF_API_TOKEN");
 
     if (!LOVABLE_API_KEY) {
       return new Response(
