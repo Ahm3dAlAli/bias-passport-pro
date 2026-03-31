@@ -488,14 +488,14 @@ export default function AirportPage() {
           {/* Fingerprint tab */}
           {result && fp && activeTab === 'fingerprint' && (
             <>
-              <div className="glass rounded-xl p-5">
-                <div className="flex items-start gap-6">
-                  <div className="text-center">
-                    <div className={`text-5xl font-mono font-bold ${grade?.color}`}>{grade?.grade}</div>
+              <div className="glass rounded-xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                  <div className="text-center sm:text-left">
+                    <div className={`text-4xl sm:text-5xl font-mono font-bold ${grade?.color}`}>{grade?.grade}</div>
                     <div className="text-xs text-observatory-text-dim mt-1">{grade?.label}</div>
                     <div className={`text-xs mt-1 ${getSeverityColor(fp.severity)}`}>{fp.severity}</div>
                   </div>
-                  <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="flex-1 w-full grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     {[
                       { label: 'Bias Score', value: fp.overall_bias_score.toFixed(3), color: getSeverityColor(fp.severity) },
                       { label: 'Stereotype Score', value: fp.overall_stereotype_score.toFixed(3), color: fp.overall_stereotype_score > 0.5 ? 'text-observatory-danger' : 'text-observatory-success' },
