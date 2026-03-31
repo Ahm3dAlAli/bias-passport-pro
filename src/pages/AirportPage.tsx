@@ -233,7 +233,7 @@ export default function AirportPage() {
 
   const runScan = useCallback(async (model?: string) => {
     if (!capturedImage) return;
-    const targetModel = model || 'hf/google/paligemma-3b-mix-448';
+    const targetModel = model || 'google/gemini-2.5-flash';
     
     if (model) {
       setComparingModel(targetModel);
