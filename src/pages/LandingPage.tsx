@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, FlaskConical, Plane, Camera, ScanLine, Shield, Wrench, Fingerprint, Github, ExternalLink, Zap } from 'lucide-react';
+import { ArrowRight, BarChart3, FlaskConical, Plane, Camera, Shield, Wrench, Fingerprint, Github, ExternalLink, Zap } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 import { LEADERBOARD, FRAMEWORK_INFO, getSeverityGrade } from '../data/benchmarkData';
