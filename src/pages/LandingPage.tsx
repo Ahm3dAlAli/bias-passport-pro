@@ -117,7 +117,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-black tracking-tight leading-[0.95] mb-6"
+            className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight leading-[0.95] mb-6"
           >
             Finger<span className="gradient-text">print</span><sup className="text-observatory-accent text-2xl align-super">²</sup>
           </motion.h1>
