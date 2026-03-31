@@ -54,13 +54,10 @@ interface ScanResult {
 }
 
 const AVAILABLE_MODELS = [
-  // HuggingFace VLMs — the 6 benchmark models
-  { id: 'hf/google/paligemma-3b-mix-448', label: 'PaliGemma 3B mix-448', provider: 'huggingface' },
-  { id: 'hf/google/paligemma-3b-pt-224', label: 'PaliGemma 3B pt-224', provider: 'huggingface' },
-  { id: 'hf/HuggingFaceTB/SmolVLM2-2.2B-Instruct', label: 'SmolVLM2 2.2B', provider: 'huggingface' },
-  { id: 'hf/Qwen/Qwen2.5-VL-3B-Instruct', label: 'Qwen2.5-VL 3B', provider: 'huggingface' },
-  { id: 'hf/OpenGVLab/InternVL2-2B', label: 'InternVL2 2B', provider: 'huggingface' },
-  { id: 'hf/vikhyatk/moondream2', label: 'Moondream2', provider: 'huggingface' },
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'google' },
+  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'google' },
+  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'google' },
+  { id: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', provider: 'google' },
 ];
 
 const EU_ARTICLES = [
@@ -198,7 +195,7 @@ export default function AirportPage() {
 
   // Multi-VLM comparison
   const [compareMode, setCompareMode] = useState(false);
-  const [selectedModels, setSelectedModels] = useState<string[]>(['hf/google/paligemma-3b-mix-448']);
+  const [selectedModels, setSelectedModels] = useState<string[]>(['google/gemini-2.5-flash']);
   const [comparisonResults, setComparisonResults] = useState<ScanResult[]>([]);
   const [comparingModel, setComparingModel] = useState<string | null>(null);
 

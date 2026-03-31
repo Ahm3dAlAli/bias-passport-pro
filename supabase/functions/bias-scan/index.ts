@@ -141,20 +141,15 @@ function scoreConfidence(text: string): number {
 
 interface ModelConfig {
   label: string;
-  provider: "lovable" | "huggingface";
-  hf_id?: string; // HuggingFace model ID for HF provider
+  provider: "lovable";
+  model_id: string;
 }
 
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
-  // Lovable AI Gateway models (kept as fallback)
-  "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable" },
-  // HuggingFace VLMs — the 6 benchmark models
-  "hf/google/paligemma-3b-mix-448": { label: "PaliGemma 3B mix-448", provider: "huggingface", hf_id: "google/paligemma-3b-mix-448" },
-  "hf/google/paligemma-3b-pt-224": { label: "PaliGemma 3B pt-224", provider: "huggingface", hf_id: "google/paligemma-3b-pt-224" },
-  "hf/HuggingFaceTB/SmolVLM2-2.2B-Instruct": { label: "SmolVLM2 2.2B", provider: "huggingface", hf_id: "HuggingFaceTB/SmolVLM2-2.2B-Instruct" },
-  "hf/Qwen/Qwen2.5-VL-3B-Instruct": { label: "Qwen2.5-VL 3B", provider: "huggingface", hf_id: "Qwen/Qwen2.5-VL-3B-Instruct" },
-  "hf/OpenGVLab/InternVL2-2B": { label: "InternVL2 2B", provider: "huggingface", hf_id: "OpenGVLab/InternVL2-2B" },
-  "hf/vikhyatk/moondream2": { label: "Moondream2", provider: "huggingface", hf_id: "vikhyatk/moondream2" },
+  "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable", model_id: "google/gemini-2.5-flash" },
+  "google/gemini-2.5-flash-lite": { label: "Gemini 2.5 Flash Lite", provider: "lovable", model_id: "google/gemini-2.5-flash-lite" },
+  "google/gemini-2.5-pro": { label: "Gemini 2.5 Pro", provider: "lovable", model_id: "google/gemini-2.5-pro" },
+  "google/gemini-3-flash-preview": { label: "Gemini 3 Flash", provider: "lovable", model_id: "google/gemini-3-flash-preview" },
 };
 
 function detectRefusal(response: string): boolean {
@@ -245,81 +240,6 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
   return data.choices?.[0]?.message?.content || "";
 }
 
-async function callHuggingFaceVLM(hfModelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  // Use HF Inference API with OpenAI-compatible chat completions endpoint
-  const url = `https://router.huggingface.co/hf-inference/models/${hfModelId}/v1/chat/completions`;
-  
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${hfToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: hfModelId,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
-          ],
-        },
-      ],
-      max_tokens: 300,
-      temperature: 0.3,
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    // If chat completions endpoint fails, try the legacy inference endpoint
-    if (response.status === 404 || response.status === 422) {
-      return await callHuggingFaceLegacy(hfModelId, prompt, base64Image, hfToken);
-    }
-    throw new Error(`HuggingFace API [${response.status}]: ${errText}`);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-async function callHuggingFaceLegacy(hfModelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  // HF Inference API via router (legacy format for models without chat completions)
-  const url = `https://router.huggingface.co/hf-inference/models/${hfModelId}`;
-  
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${hfToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      inputs: {
-        image: base64Image,
-        text: prompt,
-      },
-      parameters: {
-        max_new_tokens: 300,
-        temperature: 0.3,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`HuggingFace Legacy API [${response.status}]: ${errText}`);
-  }
-
-  const data = await response.json();
-  // Handle various HF response formats
-  if (typeof data === "string") return data;
-  if (Array.isArray(data) && data[0]?.generated_text) return data[0].generated_text;
-  if (data?.generated_text) return data.generated_text;
-  if (data?.[0]?.answer) return data[0].answer;
-  return JSON.stringify(data);
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -335,7 +255,13 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const HF_TOKEN = Deno.env.get("HUGGINGFACE_API_TOKEN");
+
+    if (!LOVABLE_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Resolve model config
     const modelKey = requestedModel && MODEL_REGISTRY[requestedModel] ? requestedModel : "google/gemini-2.5-flash";
@@ -343,22 +269,8 @@ serve(async (req) => {
 
     if (!modelConfig) {
       return new Response(
-        JSON.stringify({ error: `Unknown model: ${requestedModel}` }),
+        JSON.stringify({ error: `Unknown model: ${requestedModel}. Available: ${Object.keys(MODEL_REGISTRY).join(", ")}` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Validate required API keys
-    if (modelConfig.provider === "lovable" && !LOVABLE_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    if (modelConfig.provider === "huggingface" && !HF_TOKEN) {
-      return new Response(
-        JSON.stringify({ error: "HUGGINGFACE_API_TOKEN not configured. Please add your HuggingFace API token." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -369,13 +281,7 @@ serve(async (req) => {
 
     for (const probe of PROBES) {
       try {
-        let rawResponse: string;
-
-        if (modelConfig.provider === "huggingface") {
-          rawResponse = await callHuggingFaceVLM(modelConfig.hf_id!, probe.prompt, base64Image, HF_TOKEN!);
-        } else {
-          rawResponse = await callLovableVLM(modelKey, probe.prompt, base64Image, LOVABLE_API_KEY!);
-        }
+        const rawResponse = await callLovableVLM(modelConfig.model_id, probe.prompt, base64Image, LOVABLE_API_KEY);
 
         const refusal = detectRefusal(rawResponse);
         const rubricHits = analyseRubric(rawResponse, probe.scoring_rubric);
@@ -463,7 +369,7 @@ serve(async (req) => {
         model: modelKey,
         model_label: modelConfig.label,
         provider: modelConfig.provider,
-        hf_model_id: modelConfig.hf_id || null,
+        hf_model_id: null,
         fingerprint: {
           overall_bias_score: parseFloat(overallBiasScore.toFixed(4)),
           overall_stereotype_score: parseFloat(overallStereotype.toFixed(4)),
