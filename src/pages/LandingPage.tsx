@@ -11,7 +11,7 @@ const MODULES = [
   { to: '/lab', icon: FlaskConical, label: 'Fingerprint Lab', desc: 'Compare models side-by-side and search HuggingFace', tag: 'Interactive' },
   { to: '/airport', icon: Plane, label: 'AI Airport', desc: 'Live bias scanner with multi-model comparison & PDF export', tag: 'Live' },
   { to: '/scan', icon: Camera, label: 'Scan Your Face', desc: 'Camera capture → 5 VLMs → instant bias fingerprint', tag: 'Camera' },
-  { to: '/eid', icon: ScanLine, label: 'E-ID Portal', desc: 'Swiss electronic identity verification bias analysis', tag: 'Simulation' },
+  
   { to: '/eu-ai-act', icon: Shield, label: 'EU AI Act', desc: 'Compliance framework, risk categories & timeline', tag: 'Legal' },
   { to: '/mitigation', icon: Wrench, label: 'Fix Bias', desc: 'Evidence-based mitigation strategies and fairness metrics', tag: 'Solutions' },
 ];
