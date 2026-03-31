@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, FlaskConical, Plane, Camera, ScanLine, Shield, Wrench, Fingerprint, Github, ExternalLink } from 'lucide-react';
-import { LEADERBOARD, FRAMEWORK_INFO } from '../data/benchmarkData';
+import { ArrowRight, BarChart3, FlaskConical, Plane, Camera, ScanLine, Shield, Wrench, Fingerprint, Github, ExternalLink, Zap } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
+import { useRef, useEffect, useState } from 'react';
+import { LEADERBOARD, FRAMEWORK_INFO, getSeverityGrade } from '../data/benchmarkData';
 import razije from '../assets/razije.jpg';
 import ahmed from '../assets/ahmed.jpg';
 
@@ -14,7 +16,69 @@ const MODULES = [
   { to: '/mitigation', icon: Wrench, label: 'Fix Bias', desc: 'Evidence-based mitigation strategies and fairness metrics', tag: 'Solutions' },
 ];
 
+function AnimatedCounter({ target, suffix = '' }: { target: string; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true });
+  const numericTarget = parseInt(target.replace(/,/g, ''));
+
+  useEffect(() => {
+    if (!isInView) return;
+    const duration = 1500;
+    const steps = 40;
+    const increment = numericTarget / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= numericTarget) {
+        setCount(numericTarget);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [isInView, numericTarget]);
+
+  return (
+    <div ref={ref} className="text-3xl font-black font-mono text-observatory-text">
+      {count.toLocaleString()}{suffix}
+    </div>
+  );
+}
+
+function SeverityBadge({ severity }: { severity: string }) {
+  const colorMap: Record<string, string> = {
+    LOW: 'bg-observatory-success/15 text-observatory-success border-observatory-success/30',
+    MODERATE: 'bg-observatory-warning/15 text-observatory-warning border-observatory-warning/30',
+    SEVERE: 'bg-observatory-danger/15 text-observatory-danger border-observatory-danger/30',
+    ELEVATED: 'bg-observatory-warning/15 text-observatory-warning border-observatory-warning/30',
+    REFUSED: 'bg-observatory-surface-alt text-observatory-text-dim border-observatory-border',
+  };
+  return (
+    <span className={`text-xs px-2.5 py-1 rounded-lg border font-medium ${colorMap[severity] || colorMap.LOW}`}>
+      {severity}
+    </span>
+  );
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
+
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06 } },
+};
+
 export default function LandingPage() {
+  const leaderboardRef = useRef(null);
+  const leaderboardInView = useInView(leaderboardRef, { once: true, margin: '-50px' });
+
   return (
     <div className="min-h-screen bg-observatory-bg text-observatory-text">
       {/* Hero */}
@@ -23,72 +87,130 @@ export default function LandingPage() {
           backgroundImage: 'radial-gradient(circle at 1px 1px, hsl(var(--obs-accent)) 1px, transparent 0)',
           backgroundSize: '40px 40px',
         }} />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-observatory-accent/5 rounded-full blur-[120px]" />
+        <motion.div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-observatory-accent/5 rounded-full blur-[120px]"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        />
 
         <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-16">
-          <div className="flex items-center gap-3 mb-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-3 mb-6"
+          >
             <div className="w-12 h-12 rounded-2xl bg-observatory-accent/15 flex items-center justify-center">
               <Fingerprint className="w-7 h-7 text-observatory-accent" />
             </div>
-            <span className="text-xs font-mono px-3 py-1 rounded-full bg-observatory-warning/10 text-observatory-warning border border-observatory-warning/20">
+            <motion.span
+              className="text-xs font-mono px-3 py-1 rounded-full bg-observatory-warning/10 text-observatory-warning border border-observatory-warning/20"
+              animate={{ opacity: [1, 0.6, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Zap className="w-3 h-3 inline mr-1" />
               Ethical & Responsible GenAI Track · March 2026
-            </span>
-          </div>
+            </motion.span>
+          </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-[0.95] mb-6">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-black tracking-tight leading-[0.95] mb-6"
+          >
             Finger<span className="gradient-text">print</span><sup className="text-observatory-accent text-2xl align-super">²</sup>
-          </h1>
-          <p className="text-xl text-observatory-text-muted max-w-2xl mb-8 leading-relaxed">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-xl text-observatory-text-muted max-w-2xl mb-8 leading-relaxed"
+          >
             Multi-dimensional bias fingerprinting for vision-language models. 
             Benchmark, detect, and mitigate bias with real data from Sony FHIBE.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-wrap gap-3 mb-12">
-            <Link to="/report" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-observatory-accent text-observatory-bg font-semibold text-sm hover:bg-observatory-accent-glow transition-all">
-              View Bias Report <ArrowRight className="w-4 h-4" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-wrap gap-3 mb-12"
+          >
+            <Link to="/report" className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-observatory-accent text-observatory-bg font-semibold text-sm hover:bg-observatory-accent-glow transition-all hover:shadow-[0_0_30px_hsl(var(--obs-accent)/0.3)]">
+              View Bias Report <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link to="/scan" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-observatory-border text-observatory-text-muted font-medium text-sm hover:border-observatory-accent/50 hover:text-observatory-accent transition-all">
-              <Camera className="w-4 h-4" /> Scan Your Face
+            <Link to="/scan" className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-observatory-border text-observatory-text-muted font-medium text-sm hover:border-observatory-accent/50 hover:text-observatory-accent transition-all">
+              <Camera className="w-4 h-4 group-hover:scale-110 transition-transform" /> Scan Your Face
             </Link>
             <a href={FRAMEWORK_INFO.repo} target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-observatory-border text-observatory-text-muted font-medium text-sm hover:border-observatory-text-dim transition-all">
               <Github className="w-4 h-4" /> GitHub
             </a>
-          </div>
+          </motion.div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Animated Stats */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
             {[
-              { value: '3,000', label: 'Images' },
-              { value: '6', label: 'Regions' },
-              { value: '5', label: 'Probes' },
-              { value: '6', label: 'VLMs' },
-            ].map(s => (
-              <div key={s.label} className="glass rounded-2xl px-5 py-4">
-                <div className="text-3xl font-black font-mono text-observatory-text">{s.value}</div>
-                <div className="text-xs text-observatory-text-dim uppercase tracking-wider mt-1">{s.label}</div>
-              </div>
+              { value: '3000', label: 'Images', suffix: '' },
+              { value: '6', label: 'Regions', suffix: '' },
+              { value: '5', label: 'Probes', suffix: '' },
+              { value: '6', label: 'VLMs', suffix: '' },
+            ].map((s, i) => (
+              <motion.div key={s.label} variants={fadeUp} custom={i} className="glass rounded-2xl px-5 py-4 hover:border-observatory-accent/20 transition-all cursor-default group">
+                <AnimatedCounter target={s.value} suffix={s.suffix} />
+                <div className="text-xs text-observatory-text-dim uppercase tracking-wider mt-1 group-hover:text-observatory-text-muted transition-colors">{s.label}</div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Leaderboard Preview */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <h2 className="text-2xl font-bold mb-2">Bias Leaderboard</h2>
-        <p className="text-sm text-observatory-text-muted mb-6">Lower composite score = less biased · All models ranked on FHIBE benchmark</p>
+      {/* Leaderboard */}
+      <div ref={leaderboardRef} className="max-w-6xl mx-auto px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={leaderboardInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-2xl font-bold mb-2">Bias Leaderboard</h2>
+          <p className="text-sm text-observatory-text-muted mb-2">Lower composite score = less biased · All models ranked on FHIBE benchmark</p>
+          <div className="flex flex-wrap gap-3 text-xs text-observatory-text-dim mb-6">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-observatory-success" /> 0.0–0.1 Low</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-observatory-warning" /> 0.1–0.2 Moderate</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-observatory-danger" /> 0.3–0.4 Severe</span>
+          </div>
+        </motion.div>
         <div className="space-y-2">
-          {LEADERBOARD.map((m, i) => (
-            <div key={m.id} className="glass rounded-xl px-5 py-4 flex items-center gap-4 hover:border-observatory-accent/20 transition-all">
-              <span className="text-lg font-mono font-bold text-observatory-accent w-10">#{i + 1}</span>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold">{m.name}</div>
-                <div className="text-xs text-observatory-text-dim font-mono">{m.hf_id}</div>
-              </div>
-              <span className="text-xs text-observatory-text-dim hidden md:block">{m.params} · {m.provider}</span>
-              <span className="font-mono font-bold text-lg" style={{ color: m.color }}>{m.composite_score.toFixed(3)}</span>
-              <span className="text-xs px-2.5 py-1 rounded-lg bg-observatory-surface-alt text-observatory-text-muted">{m.severity}</span>
-            </div>
-          ))}
+          {LEADERBOARD.map((m, i) => {
+            const grade = getSeverityGrade(m.composite_score);
+            return (
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, x: -30 }}
+                animate={leaderboardInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ delay: i * 0.1, duration: 0.4 }}
+                whileHover={{ scale: 1.01, x: 8 }}
+                className="glass rounded-xl px-5 py-4 flex items-center gap-4 hover:border-observatory-accent/30 transition-all cursor-default"
+              >
+                <span className="text-lg font-mono font-bold text-observatory-accent w-10">#{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold">{m.name}</div>
+                  <div className="text-xs text-observatory-text-dim font-mono">{m.hf_id}</div>
+                </div>
+                <span className="text-xs text-observatory-text-dim hidden md:block">{m.params} · {m.provider}</span>
+                <div className="text-right">
+                  <span className="font-mono font-bold text-lg" style={{ color: m.color }}>{m.composite_score.toFixed(3)}</span>
+                  <div className={`text-[10px] font-medium ${grade.color}`}>{grade.label}</div>
+                </div>
+                <SeverityBadge severity={m.severity} />
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
@@ -96,27 +218,34 @@ export default function LandingPage() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         <h2 className="text-2xl font-bold mb-2">Explore Modules</h2>
         <p className="text-sm text-observatory-text-muted mb-6">Each module demonstrates a different aspect of VLM bias analysis</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MODULES.map(m => (
-            <Link
-              key={m.to}
-              to={m.to}
-              className="glass rounded-2xl p-6 hover:border-observatory-accent/30 transition-all group"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-observatory-accent/10 flex items-center justify-center">
-                  <m.icon className="w-5 h-5 text-observatory-accent" />
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          {MODULES.map((m, i) => (
+            <motion.div key={m.to} variants={fadeUp} custom={i}>
+              <Link
+                to={m.to}
+                className="glass rounded-2xl p-6 hover:border-observatory-accent/30 transition-all group block hover:shadow-[0_0_40px_hsl(var(--obs-accent)/0.08)]"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-observatory-accent/10 flex items-center justify-center group-hover:bg-observatory-accent/20 transition-colors">
+                    <m.icon className="w-5 h-5 text-observatory-accent group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-observatory-surface-alt text-observatory-text-dim uppercase">{m.tag}</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-observatory-surface-alt text-observatory-text-dim uppercase">{m.tag}</span>
-              </div>
-              <h3 className="font-semibold text-lg mb-1 group-hover:text-observatory-accent transition-colors">{m.label}</h3>
-              <p className="text-sm text-observatory-text-muted">{m.desc}</p>
-              <div className="mt-4 flex items-center gap-1 text-xs text-observatory-accent opacity-0 group-hover:opacity-100 transition-opacity">
-                Open <ArrowRight className="w-3 h-3" />
-              </div>
-            </Link>
+                <h3 className="font-semibold text-lg mb-1 group-hover:text-observatory-accent transition-colors">{m.label}</h3>
+                <p className="text-sm text-observatory-text-muted">{m.desc}</p>
+                <div className="mt-4 flex items-center gap-1 text-xs text-observatory-accent opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all">
+                  Open <ArrowRight className="w-3 h-3" />
+                </div>
+              </Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Team */}
@@ -126,15 +255,23 @@ export default function LandingPage() {
           {[
             { name: 'Razije', role: 'PhD Researcher', from: 'Switzerland', age: '30–38', photo: razije },
             { name: 'Ahmed', role: 'PhD Researcher', from: 'UAE', age: '20–28', photo: ahmed },
-          ].map(p => (
-            <div key={p.name} className="glass rounded-2xl p-6 flex items-center gap-5">
+          ].map((p, i) => (
+            <motion.div
+              key={p.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15 }}
+              whileHover={{ y: -4 }}
+              className="glass rounded-2xl p-6 flex items-center gap-5 hover:border-observatory-accent/20 transition-all"
+            >
               <img src={p.photo} alt={p.name} className="w-20 h-20 rounded-xl object-cover border border-observatory-border/40" />
               <div>
                 <h3 className="text-lg font-bold">{p.name}</h3>
                 <p className="text-sm text-observatory-text-muted">{p.role}</p>
                 <p className="text-xs text-observatory-text-dim mt-1">{p.from} · Age: {p.age}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
