@@ -233,7 +233,7 @@ export default function AirportPage() {
 
   const runScan = useCallback(async (model?: string) => {
     if (!capturedImage) return;
-    const targetModel = model || 'hf/google/paligemma-3b-mix-448';
+    const targetModel = model || 'google/gemini-2.5-flash';
     
     if (model) {
       setComparingModel(targetModel);
@@ -423,8 +423,8 @@ export default function AirportPage() {
                 <GitCompare className="w-3.5 h-3.5" /> SELECT MODELS TO COMPARE
               </h3>
                <div className="space-y-1 mb-4 max-h-64 overflow-y-auto">
-                <div className="text-[10px] font-mono text-observatory-accent mb-1">LOVABLE AI GATEWAY</div>
-                {AVAILABLE_MODELS.filter(m => m.provider === 'lovable').map((m) => (
+                <div className="text-[10px] font-mono text-observatory-accent mb-1">AVAILABLE MODELS</div>
+                {AVAILABLE_MODELS.map((m) => (
                   <label key={m.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-observatory-bg/50 cursor-pointer hover:bg-observatory-surface-alt transition-all">
                     <input
                       type="checkbox"
@@ -433,19 +433,7 @@ export default function AirportPage() {
                       className="rounded border-observatory-border"
                     />
                     <span className="text-sm text-observatory-text">{m.label}</span>
-                  </label>
-                ))}
-                <div className="text-[10px] font-mono text-observatory-warning mt-3 mb-1">HUGGINGFACE INFERENCE API</div>
-                {AVAILABLE_MODELS.filter(m => m.provider === 'huggingface').map((m) => (
-                  <label key={m.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-observatory-bg/50 cursor-pointer hover:bg-observatory-surface-alt transition-all">
-                    <input
-                      type="checkbox"
-                      checked={selectedModels.includes(m.id)}
-                      onChange={() => toggleModel(m.id)}
-                      className="rounded border-observatory-border"
-                    />
-                    <span className="text-sm text-observatory-text">{m.label}</span>
-                    <span className="text-[9px] text-observatory-text-dim ml-auto font-mono">{m.id.replace('hf/', '')}</span>
+                    <span className="text-[9px] text-observatory-text-dim ml-auto font-mono">{m.provider}</span>
                   </label>
                 ))}
               </div>
@@ -488,14 +476,14 @@ export default function AirportPage() {
           {/* Fingerprint tab */}
           {result && fp && activeTab === 'fingerprint' && (
             <>
-              <div className="glass rounded-xl p-5">
-                <div className="flex items-start gap-6">
-                  <div className="text-center">
-                    <div className={`text-5xl font-mono font-bold ${grade?.color}`}>{grade?.grade}</div>
+              <div className="glass rounded-xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                  <div className="text-center sm:text-left">
+                    <div className={`text-4xl sm:text-5xl font-mono font-bold ${grade?.color}`}>{grade?.grade}</div>
                     <div className="text-xs text-observatory-text-dim mt-1">{grade?.label}</div>
                     <div className={`text-xs mt-1 ${getSeverityColor(fp.severity)}`}>{fp.severity}</div>
                   </div>
-                  <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="flex-1 w-full grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     {[
                       { label: 'Bias Score', value: fp.overall_bias_score.toFixed(3), color: getSeverityColor(fp.severity) },
                       { label: 'Stereotype Score', value: fp.overall_stereotype_score.toFixed(3), color: fp.overall_stereotype_score > 0.5 ? 'text-observatory-danger' : 'text-observatory-success' },

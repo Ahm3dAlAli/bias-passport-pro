@@ -71,7 +71,7 @@ export default function EUAIActPage() {
       </header>
 
       <div className="tab-group">
-        {([['risks', 'Risk Categories'], ['model', 'Model Report'], ['airport', 'Airport AI Rules'], ['checker', 'Compliance Checker'], ['timeline', 'Timeline']] as [Tab, string][]).map(([t, label]) => (
+        {([['risks', 'Risks'], ['model', 'Model Report'], ['airport', 'Airport'], ['checker', 'Checker'], ['timeline', 'Timeline']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-button ${tab === t ? 'tab-active' : 'tab-inactive'}`}>
             {label}
           </button>
@@ -82,8 +82,8 @@ export default function EUAIActPage() {
         <div className="space-y-6">
           {RISK_CATEGORIES.map(cat => (
             <div key={cat.level} className={`card border ${cat.color} ${cat.bgColor}`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`font-mono font-bold ${cat.textColor}`}>{cat.level}</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <h3 className={`font-mono font-bold text-sm sm:text-base ${cat.textColor}`}>{cat.level}</h3>
                 {cat.airport > 0 && (
                   <span className="text-xs font-mono px-3 py-1 rounded-lg bg-observatory-surface-alt text-observatory-text-muted">
                     ✈️ {cat.airport} airport-relevant
@@ -92,7 +92,7 @@ export default function EUAIActPage() {
               </div>
               <div className="space-y-2">
                 {cat.items.map(item => (
-                  <div key={item.name} className="bg-observatory-bg/40 rounded-xl px-5 py-3">
+                  <div key={item.name} className="bg-observatory-bg/40 rounded-xl px-3 sm:px-5 py-2.5 sm:py-3">
                     <div className="flex items-start gap-2">
                       {item.airport ? <span className="text-xs mt-0.5">✈️</span> : <span className="text-xs mt-0.5 text-observatory-text-dim">·</span>}
                       <div>
@@ -148,7 +148,7 @@ export default function EUAIActPage() {
               { date: '2 Aug 2026', event: 'High-risk AI obligations apply', status: 'upcoming' },
               { date: '2 Aug 2027', event: 'Full enforcement for all AI systems', status: 'upcoming' },
             ].map(t => (
-              <div key={t.date} className="flex items-center gap-4 bg-observatory-bg/50 rounded-xl px-5 py-4">
+              <div key={t.date} className="flex items-center gap-3 sm:gap-4 bg-observatory-bg/50 rounded-xl px-3 sm:px-5 py-3 sm:py-4">
                 <div className={`w-3 h-3 rounded-full shrink-0 ${t.status === 'done' ? 'bg-observatory-success' : 'bg-observatory-warning'}`} />
                 <div className="flex-1">
                   <div className="text-sm text-observatory-text font-medium">{t.event}</div>
@@ -182,8 +182,8 @@ function ComplianceChecker() {
       <div className="card-header">Quick Compliance Check</div>
       <div className="space-y-3">
         {checks.map((c, i) => (
-          <div key={i} className="flex items-center justify-between bg-observatory-bg/50 rounded-xl px-5 py-4">
-            <span className="text-sm text-observatory-text-muted flex-1">{c.q}</span>
+          <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-observatory-bg/50 rounded-xl px-3 sm:px-5 py-3 sm:py-4">
+            <span className="text-xs sm:text-sm text-observatory-text-muted flex-1">{c.q}</span>
             <div className="flex gap-2">
               <button
                 onClick={() => setAnswers({ ...answers, [i]: true })}
