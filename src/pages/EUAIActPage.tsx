@@ -182,7 +182,7 @@ function ComplianceChecker() {
       <div className="card-header">Quick Compliance Check</div>
       <div className="space-y-3">
         {checks.map((c, i) => (
-          <div key={i} className="flex items-center justify-between bg-observatory-bg/50 rounded-xl px-5 py-4">
+          <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-observatory-bg/50 rounded-xl px-3 sm:px-5 py-3 sm:py-4">
             <span className="text-sm text-observatory-text-muted flex-1">{c.q}</span>
             <div className="flex gap-2">
               <button
