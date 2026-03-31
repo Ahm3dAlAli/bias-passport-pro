@@ -71,7 +71,7 @@ export default function EUAIActPage() {
       </header>
 
       <div className="tab-group">
-        {([['risks', 'Risk Categories'], ['model', 'Model Report'], ['airport', 'Airport AI Rules'], ['checker', 'Compliance Checker'], ['timeline', 'Timeline']] as [Tab, string][]).map(([t, label]) => (
+        {([['risks', 'Risks'], ['model', 'Model Report'], ['airport', 'Airport'], ['checker', 'Checker'], ['timeline', 'Timeline']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-button ${tab === t ? 'tab-active' : 'tab-inactive'}`}>
             {label}
           </button>
