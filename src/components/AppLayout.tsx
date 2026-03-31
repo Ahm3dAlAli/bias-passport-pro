@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Fingerprint, BarChart3, FlaskConical, Plane, Shield, Wrench, ScanLine, Camera } from 'lucide-react';
+import { Fingerprint, BarChart3, FlaskConical, Plane, Shield, Wrench, Camera } from 'lucide-react';
 
 const NAV = [
   { to: '/report', icon: BarChart3, label: 'Bias Report' },
