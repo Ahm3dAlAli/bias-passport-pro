@@ -92,7 +92,7 @@ export default function EUAIActPage() {
               </div>
               <div className="space-y-2">
                 {cat.items.map(item => (
-                  <div key={item.name} className="bg-observatory-bg/40 rounded-xl px-5 py-3">
+                  <div key={item.name} className="bg-observatory-bg/40 rounded-xl px-3 sm:px-5 py-2.5 sm:py-3">
                     <div className="flex items-start gap-2">
                       {item.airport ? <span className="text-xs mt-0.5">✈️</span> : <span className="text-xs mt-0.5 text-observatory-text-dim">·</span>}
                       <div>
