@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Loader2, RotateCcw, Fingerprint, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, type ChangeEvent } from 'react';
+import { Camera, Loader2, RotateCcw, Fingerprint, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
 
@@ -77,6 +77,7 @@ export default function ScanPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedProbe, setExpandedProbe] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -88,7 +89,7 @@ export default function ScanPage() {
       setCameraActive(true);
       setError(null);
     } catch {
-      setError('Camera access denied.');
+      setError('Camera access denied. Try uploading a photo instead.');
     }
   }, []);
 
@@ -108,6 +109,20 @@ export default function ScanPage() {
     ctx.drawImage(videoRef.current, 0, 0, 640, 480);
     setCapturedImage(canvas.toDataURL('image/jpeg', 0.8));
     stopCamera();
+  }, [stopCamera]);
+
+  const handleFileUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCapturedImage(reader.result as string);
+      setError(null);
+      stopCamera();
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
   }, [stopCamera]);
 
   const runAllModels = useCallback(async () => {
@@ -177,10 +192,10 @@ export default function ScanPage() {
         {/* Camera / Image */}
         <div className="relative aspect-[4/3] bg-black rounded-2xl overflow-hidden border border-observatory-border">
           {!cameraActive && !capturedImage && (
-            <button onClick={startCamera} className="absolute inset-0 flex flex-col items-center justify-center">
-              <Camera className="w-16 h-16 text-observatory-text-dim mb-2" />
-              <span className="text-observatory-text-muted text-sm">Tap to open camera</span>
-            </button>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              <Camera className="w-12 h-12 text-observatory-text-dim" />
+              <span className="text-observatory-text-muted text-sm">Use camera or upload a photo</span>
+            </div>
           )}
           <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${cameraActive && !capturedImage ? '' : 'hidden'}`} />
           {capturedImage && <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />}
@@ -201,6 +216,7 @@ export default function ScanPage() {
           )}
         </div>
         <canvas ref={canvasRef} className="hidden" />
+        <input ref={fileInputRef} type="file" accept="image/*" capture="user" onChange={handleFileUpload} className="hidden" />
 
         {error && (
           <div className="p-3 rounded-xl bg-observatory-danger/10 text-observatory-danger text-sm">{error}</div>
@@ -208,6 +224,16 @@ export default function ScanPage() {
 
         {/* Action buttons */}
         <div className="flex gap-2">
+          {!cameraActive && !capturedImage && !scanning && (
+            <>
+              <button onClick={startCamera} className="flex-1 py-3 rounded-xl bg-observatory-accent/15 text-observatory-accent font-semibold text-sm hover:bg-observatory-accent/25 transition-all flex items-center justify-center gap-2">
+                <Camera className="w-4 h-4" /> Camera
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-3 rounded-xl bg-observatory-surface-alt text-observatory-text-muted font-semibold text-sm hover:bg-observatory-border transition-all flex items-center justify-center gap-2">
+                <Upload className="w-4 h-4" /> Upload Photo
+              </button>
+            </>
+          )}
           {cameraActive && !capturedImage && (
             <button onClick={capture} className="flex-1 py-3 rounded-xl bg-observatory-accent/15 text-observatory-accent font-semibold text-sm hover:bg-observatory-accent/25 transition-all">
               📸 Capture
