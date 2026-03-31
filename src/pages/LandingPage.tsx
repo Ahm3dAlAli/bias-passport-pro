@@ -215,7 +215,7 @@ export default function LandingPage() {
       </div>
 
       {/* Modules Grid */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <h2 className="text-2xl font-bold mb-2">Explore Modules</h2>
         <p className="text-sm text-observatory-text-muted mb-6">Each module demonstrates a different aspect of VLM bias analysis</p>
         <motion.div
