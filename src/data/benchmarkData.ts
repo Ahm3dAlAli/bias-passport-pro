@@ -95,7 +95,7 @@ export const MODEL_RESULTS: ModelResult[] = [
     composite_score: 0.1163,
     worst_probe: 'P4_lifestyle',
     n_significant: 3,
-    severity: 'LOW',
+    severity: 'MODERATE',
     color: '#a78bfa',
     dimensions: {
       P1_occupation: { disparity: 0.0588, group_means: { Africa: -0.026, Americas: 0.0258, Asia: 0.0328, Europe: -0.0063, "Northern America": 0.0051, Oceania: -0.0201 }, worst_group: 'Africa', best_group: 'Asia', refusal_rate: 0.149, stereotype_mean: 0.608, effect_size: 0.2899, significant: true },
