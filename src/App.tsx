@@ -1,5 +1,5 @@
 import { Suspense, lazy, type ReactNode } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 
@@ -24,8 +24,9 @@ function RouteFallback() {
 }
 
 function RouteShell({ children }: { children: ReactNode }) {
+  const location = useLocation();
   return (
-    <RouteErrorBoundary>
+    <RouteErrorBoundary resetKey={location.pathname}>
       <Suspense fallback={<RouteFallback />}>{children}</Suspense>
     </RouteErrorBoundary>
   );
