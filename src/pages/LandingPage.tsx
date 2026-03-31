@@ -125,7 +125,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-observatory-text-muted max-w-2xl mb-8 leading-relaxed"
+            className="text-base sm:text-xl text-observatory-text-muted max-w-2xl mb-8 leading-relaxed"
           >
             Multi-dimensional bias fingerprinting for vision-language models. 
             Benchmark, detect, and mitigate bias with real data from Sony FHIBE.
