@@ -1,20 +1,31 @@
-import { type ReactNode } from 'react'; // v2
+import { Suspense, lazy, type ReactNode } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 import LandingPage from './pages/LandingPage';
 import BiasReportPage from './pages/BiasReportPage';
 import LabPage from './pages/LabPage';
-import AirportPage from './pages/AirportPage';
 import EUAIActPage from './pages/EUAIActPage';
 import MitigationPage from './pages/MitigationPage';
-import ScanPage from './pages/ScanPage';
+
+const AirportPage = lazy(() => import('./pages/AirportPage'));
+const ScanPage = lazy(() => import('./pages/ScanPage'));
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center px-6 text-center text-sm text-observatory-text-muted">
+      Loading module…
+    </div>
+  );
+}
 
 function RouteShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   return (
     <RouteErrorBoundary resetKey={location.pathname}>
-      {children}
+      <Suspense fallback={<RouteFallback />}>
+        {children}
+      </Suspense>
     </RouteErrorBoundary>
   );
 }
