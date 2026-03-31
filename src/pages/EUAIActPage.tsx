@@ -148,7 +148,7 @@ export default function EUAIActPage() {
               { date: '2 Aug 2026', event: 'High-risk AI obligations apply', status: 'upcoming' },
               { date: '2 Aug 2027', event: 'Full enforcement for all AI systems', status: 'upcoming' },
             ].map(t => (
-              <div key={t.date} className="flex items-center gap-4 bg-observatory-bg/50 rounded-xl px-5 py-4">
+              <div key={t.date} className="flex items-center gap-3 sm:gap-4 bg-observatory-bg/50 rounded-xl px-3 sm:px-5 py-3 sm:py-4">
                 <div className={`w-3 h-3 rounded-full shrink-0 ${t.status === 'done' ? 'bg-observatory-success' : 'bg-observatory-warning'}`} />
                 <div className="flex-1">
                   <div className="text-sm text-observatory-text font-medium">{t.event}</div>
