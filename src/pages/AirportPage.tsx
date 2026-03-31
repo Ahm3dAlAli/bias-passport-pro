@@ -588,7 +588,7 @@ export default function AirportPage() {
                     </div>
                   )}
                   {p.scores?.reasoning && (
-                    <div className="text-[10px] text-observatory-text-dim italic mt-1">Judge: {p.scores.reasoning}</div>
+                    <div className="text-[10px] text-observatory-text-dim italic mt-1">Scoring: {p.scores.reasoning}</div>
                   )}
                   {p.bias_detections.length > 0 && (
                     <div className="mt-2 space-y-1">
@@ -754,7 +754,7 @@ export default function AirportPage() {
               <Fingerprint className="w-12 h-12 text-observatory-text-dim mx-auto mb-3 opacity-30" />
               <p className="text-sm text-observatory-text-muted">Open camera → capture face → run Fingerprint² bias scan</p>
               <p className="text-xs text-observatory-text-dim mt-2">
-                The VLM will answer 6 social inference probes about your photo. Deterministic scoring evaluates each response on valence, stereotype alignment, and confidence — producing a unique bias fingerprint.
+                Pick a model → the VLM answers 6 social inference probes about your photo. Deterministic scoring checks each response for bias across valence, stereotype alignment, and confidence vectors — revealing which probes trigger bias and how severe it is.
               </p>
             </div>
           )}
