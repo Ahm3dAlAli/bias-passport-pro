@@ -134,13 +134,7 @@ export default function ScanPage() {
     for (const model of SCAN_MODELS) {
       setCurrentModel(model.label);
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('bias-scan', {
-          body: { image: capturedImage, model: model.id },
-        });
-        if (fnError) {
-          console.error(`${model.label} failed:`, fnError.message);
-          continue;
-        }
+        const data = await invokeBiasScan({ image: capturedImage, model: model.id });
         if (data?.error) {
           console.error(`${model.label} API error:`, data.error);
           continue;

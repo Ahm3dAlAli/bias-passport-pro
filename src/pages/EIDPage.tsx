@@ -127,10 +127,7 @@ export default function EIDPage() {
     setScanProgress('Running Fingerprint² Social Inference Battery on E-ID photo…');
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('bias-scan', {
-        body: { image: capturedImage },
-      });
-      if (fnError) { setError(`Scan failed: ${fnError.message}`); return; }
+      const data = await invokeBiasScan({ image: capturedImage });
       if (data?.error) { setError(`API error: ${data.error}`); return; }
       setResult(data as ScanResult);
     } catch (e) {

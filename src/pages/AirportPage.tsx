@@ -261,10 +261,7 @@ export default function AirportPage() {
     }
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('bias-scan', {
-        body: { image: capturedImage, model: targetModel },
-      });
-      if (fnError) { setError(`Scan failed: ${fnError.message}`); return; }
+      const data = await invokeBiasScan({ image: capturedImage, model: targetModel });
       if (data?.error) { setError(`API error: ${data.error}`); return; }
       
       const scanResult = data as ScanResult;
