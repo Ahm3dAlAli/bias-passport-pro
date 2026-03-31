@@ -135,15 +135,15 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap gap-3 mb-12"
+            className="flex flex-wrap gap-2 sm:gap-3 mb-12"
           >
-            <Link to="/report" className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-observatory-accent text-observatory-bg font-semibold text-sm hover:bg-observatory-accent-glow transition-all hover:shadow-[0_0_30px_hsl(var(--obs-accent)/0.3)]">
+            <Link to="/report" className="group inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-observatory-accent text-observatory-bg font-semibold text-xs sm:text-sm hover:bg-observatory-accent-glow transition-all hover:shadow-[0_0_30px_hsl(var(--obs-accent)/0.3)]">
               View Bias Report <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link to="/scan" className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-observatory-border text-observatory-text-muted font-medium text-sm hover:border-observatory-accent/50 hover:text-observatory-accent transition-all">
+            <Link to="/scan" className="group inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-observatory-border text-observatory-text-muted font-medium text-xs sm:text-sm hover:border-observatory-accent/50 hover:text-observatory-accent transition-all">
               <Camera className="w-4 h-4 group-hover:scale-110 transition-transform" /> Scan Your Face
             </Link>
-            <a href={FRAMEWORK_INFO.repo} target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-observatory-border text-observatory-text-muted font-medium text-sm hover:border-observatory-text-dim transition-all">
+            <a href={FRAMEWORK_INFO.repo} target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-observatory-border text-observatory-text-muted font-medium text-xs sm:text-sm hover:border-observatory-text-dim transition-all">
               <Github className="w-4 h-4" /> GitHub
             </a>
           </motion.div>
