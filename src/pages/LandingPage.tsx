@@ -124,7 +124,7 @@ export default function LandingPage() {
         <h2 className="text-2xl font-bold mb-6">Team</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[
-            { name: 'Razije', role: 'Professional', from: 'Switzerland', age: '30–38', photo: razije },
+            { name: 'Razije', role: 'PhD Researcher', from: 'Switzerland', age: '30–38', photo: razije },
             { name: 'Ahmed', role: 'PhD Researcher', from: 'UAE', age: '20–28', photo: ahmed },
           ].map(p => (
             <div key={p.name} className="glass rounded-2xl p-6 flex items-center gap-5">
