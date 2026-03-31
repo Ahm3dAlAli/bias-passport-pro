@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, type ChangeEvent } from 'react';
 import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint, FileDown, GitCompare, Upload } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeBiasScan } from '@/services/biasScan';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';

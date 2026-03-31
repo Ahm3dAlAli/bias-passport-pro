@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, Scan, Shield, AlertTriangle, CheckCircle, RotateCcw, Loader2, Fingerprint, ScanLine } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeBiasScan } from '@/services/biasScan';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
 
 interface ProbeScores {
