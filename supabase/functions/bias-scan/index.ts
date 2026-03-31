@@ -146,17 +146,15 @@ interface ModelConfig {
 }
 
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
-  // Lovable AI Gateway models
+  // Lovable AI Gateway models (kept as fallback)
   "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable" },
-  "google/gemini-2.5-flash-lite": { label: "Gemini 2.5 Flash Lite", provider: "lovable" },
-  "openai/gpt-5-mini": { label: "GPT-5 Mini", provider: "lovable" },
-  "openai/gpt-5-nano": { label: "GPT-5 Nano", provider: "lovable" },
-  // HuggingFace Inference API models
-  "hf/Qwen/Qwen2.5-VL-7B-Instruct": { label: "Qwen2.5-VL 7B", provider: "huggingface", hf_id: "Qwen/Qwen2.5-VL-7B-Instruct" },
-  "hf/meta-llama/Llama-3.2-11B-Vision-Instruct": { label: "Llama 3.2 Vision 11B", provider: "huggingface", hf_id: "meta-llama/Llama-3.2-11B-Vision-Instruct" },
-  "hf/google/paligemma2-10b-mix-448": { label: "PaliGemma2 10B", provider: "huggingface", hf_id: "google/paligemma2-10b-mix-448" },
-  "hf/microsoft/Florence-2-large": { label: "Florence-2 Large", provider: "huggingface", hf_id: "microsoft/Florence-2-large" },
-  "hf/HuggingFaceM4/Idefics3-8B-Llama3": { label: "Idefics3 8B", provider: "huggingface", hf_id: "HuggingFaceM4/Idefics3-8B-Llama3" },
+  // HuggingFace VLMs — the 6 benchmark models
+  "hf/google/paligemma-3b-mix-448": { label: "PaliGemma 3B mix-448", provider: "huggingface", hf_id: "google/paligemma-3b-mix-448" },
+  "hf/google/paligemma-3b-pt-224": { label: "PaliGemma 3B pt-224", provider: "huggingface", hf_id: "google/paligemma-3b-pt-224" },
+  "hf/HuggingFaceTB/SmolVLM2-2.2B-Instruct": { label: "SmolVLM2 2.2B", provider: "huggingface", hf_id: "HuggingFaceTB/SmolVLM2-2.2B-Instruct" },
+  "hf/Qwen/Qwen2.5-VL-3B-Instruct": { label: "Qwen2.5-VL 3B", provider: "huggingface", hf_id: "Qwen/Qwen2.5-VL-3B-Instruct" },
+  "hf/OpenGVLab/InternVL2-2B": { label: "InternVL2 2B", provider: "huggingface", hf_id: "OpenGVLab/InternVL2-2B" },
+  "hf/vikhyatk/moondream2": { label: "Moondream2", provider: "huggingface", hf_id: "vikhyatk/moondream2" },
 };
 
 function detectRefusal(response: string): boolean {
