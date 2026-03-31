@@ -284,35 +284,6 @@ async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: 
   return data.choices?.[0]?.message?.content || "";
 }
 
-async function callHuggingFaceLegacy(modelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  const url = `https://api-inference.huggingface.co/models/${modelId}`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${hfToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      inputs: `${prompt}\n[image]`,
-      parameters: { max_new_tokens: 300 },
-      image: base64Image,
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`HuggingFace Legacy API [${response.status}]: ${errText}`);
-  }
-
-  const data = await response.json();
-  if (typeof data === "string") return data;
-  if (Array.isArray(data) && data[0]?.generated_text) return data[0].generated_text;
-  if (data?.generated_text) return data.generated_text;
-  if (Array.isArray(data) && data[0]?.answer) return data[0].answer;
-  return JSON.stringify(data);
-}
-
 async function callVLM(config: ModelConfig, prompt: string, base64Image: string, lovableKey: string, hfToken: string | null): Promise<string> {
   if (config.provider === "huggingface") {
     if (!hfToken) throw new Error("HF_API_TOKEN not configured — needed for open-source models");
