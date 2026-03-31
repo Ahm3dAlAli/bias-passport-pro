@@ -51,10 +51,16 @@ interface ScanResult {
 }
 
 const SCAN_MODELS = [
-  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'google', color: '#60a5fa' },
-  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'google', color: '#34d399' },
-  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'google', color: '#fbbf24' },
-  { id: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', provider: 'google', color: '#f87171' },
+  // Gemini family
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', color: '#60a5fa' },
+  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'Google', color: '#34d399' },
+  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'Google', color: '#fbbf24' },
+  { id: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', provider: 'Google', color: '#f87171' },
+  { id: 'google/gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro', provider: 'Google', color: '#a78bfa' },
+  // OpenAI family
+  { id: 'openai/gpt-5', label: 'GPT-5', provider: 'OpenAI', color: '#38bdf8' },
+  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'OpenAI', color: '#fb923c' },
+  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano', provider: 'OpenAI', color: '#e879f9' },
 ];
 
 function getSeverityGrade(score: number) {
@@ -179,7 +185,7 @@ export default function ScanPage() {
           <Camera className="w-7 h-7 text-observatory-accent" />
           <span className="gradient-text">Scan Your Face</span>
         </h1>
-        <p className="page-subtitle">Capture a photo → run 5 VLMs simultaneously → get instant bias fingerprint comparison</p>
+        <p className="page-subtitle">Capture a photo → run {SCAN_MODELS.length} VLMs simultaneously → get instant bias fingerprint comparison</p>
       </header>
 
       <div className="space-y-4">

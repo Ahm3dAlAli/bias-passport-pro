@@ -146,10 +146,16 @@ interface ModelConfig {
 }
 
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
+  // Gemini family
   "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable", model_id: "google/gemini-2.5-flash" },
   "google/gemini-2.5-flash-lite": { label: "Gemini 2.5 Flash Lite", provider: "lovable", model_id: "google/gemini-2.5-flash-lite" },
   "google/gemini-2.5-pro": { label: "Gemini 2.5 Pro", provider: "lovable", model_id: "google/gemini-2.5-pro" },
   "google/gemini-3-flash-preview": { label: "Gemini 3 Flash", provider: "lovable", model_id: "google/gemini-3-flash-preview" },
+  "google/gemini-3.1-pro-preview": { label: "Gemini 3.1 Pro", provider: "lovable", model_id: "google/gemini-3.1-pro-preview" },
+  // OpenAI family (for open-source comparison baseline)
+  "openai/gpt-5": { label: "GPT-5", provider: "lovable", model_id: "openai/gpt-5" },
+  "openai/gpt-5-mini": { label: "GPT-5 Mini", provider: "lovable", model_id: "openai/gpt-5-mini" },
+  "openai/gpt-5-nano": { label: "GPT-5 Nano", provider: "lovable", model_id: "openai/gpt-5-nano" },
 };
 
 function detectRefusal(response: string): boolean {
