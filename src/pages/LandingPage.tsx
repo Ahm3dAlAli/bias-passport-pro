@@ -161,7 +161,7 @@ export default function LandingPage() {
               { value: '5', label: 'Probes', suffix: '' },
               { value: '6', label: 'VLMs', suffix: '' },
             ].map((s, i) => (
-              <motion.div key={s.label} variants={fadeUp} custom={i} className="glass rounded-2xl px-5 py-4 hover:border-observatory-accent/20 transition-all cursor-default group">
+              <motion.div key={s.label} variants={fadeUp} custom={i} className="glass rounded-2xl px-4 sm:px-5 py-3 sm:py-4 hover:border-observatory-accent/20 transition-all cursor-default group">
                 <AnimatedCounter target={s.value} suffix={s.suffix} />
                 <div className="text-xs text-observatory-text-dim uppercase tracking-wider mt-1 group-hover:text-observatory-text-muted transition-colors">{s.label}</div>
               </motion.div>
