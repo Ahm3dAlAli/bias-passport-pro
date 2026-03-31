@@ -588,7 +588,7 @@ export default function AirportPage() {
                     </div>
                   )}
                   {p.scores?.reasoning && (
-                    <div className="text-[10px] text-observatory-text-dim italic mt-1">Judge: {p.scores.reasoning}</div>
+                    <div className="text-[10px] text-observatory-text-dim italic mt-1">Scoring: {p.scores.reasoning}</div>
                   )}
                   {p.bias_detections.length > 0 && (
                     <div className="mt-2 space-y-1">
