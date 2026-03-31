@@ -247,6 +247,48 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
   return data.choices?.[0]?.message?.content || "";
 }
 
+async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
+  const url = `https://router.huggingface.co/hf-inference/models/${modelId}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${hfToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      inputs: {
+        image: base64Image,
+        text: prompt,
+      },
+      parameters: {
+        max_new_tokens: 300,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`HuggingFace API [${response.status}]: ${errText}`);
+  }
+
+  const data = await response.json();
+  // HF Inference API returns different formats depending on the model
+  if (typeof data === "string") return data;
+  if (Array.isArray(data) && data[0]?.generated_text) return data[0].generated_text;
+  if (data?.generated_text) return data.generated_text;
+  if (Array.isArray(data) && data[0]?.answer) return data[0].answer;
+  return JSON.stringify(data);
+}
+
+async function callVLM(config: ModelConfig, prompt: string, base64Image: string, lovableKey: string, hfToken: string | null): Promise<string> {
+  if (config.provider === "huggingface") {
+    if (!hfToken) throw new Error("HF_API_TOKEN not configured — needed for open-source models");
+    return callHuggingFaceVLM(config.model_id, prompt, base64Image, hfToken);
+  }
+  return callLovableVLM(config.model_id, prompt, base64Image, lovableKey);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
