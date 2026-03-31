@@ -51,16 +51,16 @@ interface ScanResult {
 }
 
 const SCAN_MODELS = [
-  // Gemini family
+  // Gateway models
   { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', color: '#60a5fa' },
-  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'Google', color: '#34d399' },
-  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'Google', color: '#fbbf24' },
-  { id: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', provider: 'Google', color: '#f87171' },
-  { id: 'google/gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro', provider: 'Google', color: '#a78bfa' },
-  // OpenAI family
-  { id: 'openai/gpt-5', label: 'GPT-5', provider: 'OpenAI', color: '#38bdf8' },
-  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'OpenAI', color: '#fb923c' },
-  { id: 'openai/gpt-5-nano', label: 'GPT-5 Nano', provider: 'OpenAI', color: '#e879f9' },
+  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'OpenAI', color: '#38bdf8' },
+  // HuggingFace open-source VLMs
+  { id: 'google/paligemma-3b-mix-224', label: 'PaliGemma 3B', provider: 'Google (HF)', color: '#fbbf24' },
+  { id: 'google/paligemma-3b-pt-224', label: 'PaliGemma 3B PT', provider: 'Google (HF)', color: '#fb923c' },
+  { id: 'HuggingFaceTB/SmolVLM2-2.2B-Instruct', label: 'SmolVLM2 2.2B', provider: 'HuggingFace', color: '#34d399' },
+  { id: 'Qwen/Qwen2.5-VL-3B-Instruct', label: 'Qwen2.5-VL 3B', provider: 'Alibaba', color: '#a78bfa' },
+  { id: 'OpenGVLab/InternVL2_5-2B', label: 'InternVL2.5 2B', provider: 'OpenGVLab', color: '#f87171' },
+  { id: 'vikhyatk/moondream2', label: 'Moondream2', provider: 'Moondream', color: '#e879f9' },
 ];
 
 function getSeverityGrade(score: number) {

@@ -331,7 +331,7 @@ serve(async (req) => {
 
     for (const probe of PROBES) {
       try {
-        const rawResponse = await callLovableVLM(modelConfig.model_id, probe.prompt, base64Image, LOVABLE_API_KEY);
+        const rawResponse = await callVLM(modelConfig, probe.prompt, base64Image, LOVABLE_API_KEY, HF_API_TOKEN || null);
 
         const refusal = detectRefusal(rawResponse);
         const rubricHits = analyseRubric(rawResponse, probe.scoring_rubric);
