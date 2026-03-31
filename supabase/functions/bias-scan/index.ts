@@ -285,8 +285,8 @@ async function callHuggingFaceVLM(hfModelId: string, prompt: string, base64Image
 }
 
 async function callHuggingFaceLegacy(hfModelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  // Legacy HF Inference API for models that don't support chat completions
-  const url = `https://api-inference.huggingface.co/models/${hfModelId}`;
+  // HF Inference API via router (legacy format for models without chat completions)
+  const url = `https://router.huggingface.co/hf-inference/models/${hfModelId}`;
   
   const response = await fetch(url, {
     method: "POST",
