@@ -369,7 +369,7 @@ serve(async (req) => {
         model: modelKey,
         model_label: modelConfig.label,
         provider: modelConfig.provider,
-        hf_model_id: modelConfig.hf_id || null,
+        hf_model_id: null,
         fingerprint: {
           overall_bias_score: parseFloat(overallBiasScore.toFixed(4)),
           overall_stereotype_score: parseFloat(overallStereotype.toFixed(4)),
