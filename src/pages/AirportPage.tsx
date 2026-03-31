@@ -195,7 +195,7 @@ export default function AirportPage() {
 
   // Multi-VLM comparison
   const [compareMode, setCompareMode] = useState(false);
-  const [selectedModels, setSelectedModels] = useState<string[]>(['hf/google/paligemma-3b-mix-448']);
+  const [selectedModels, setSelectedModels] = useState<string[]>(['google/gemini-2.5-flash']);
   const [comparisonResults, setComparisonResults] = useState<ScanResult[]>([]);
   const [comparingModel, setComparingModel] = useState<string | null>(null);
 
