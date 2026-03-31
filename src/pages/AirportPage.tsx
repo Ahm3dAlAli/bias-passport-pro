@@ -423,8 +423,8 @@ export default function AirportPage() {
                 <GitCompare className="w-3.5 h-3.5" /> SELECT MODELS TO COMPARE
               </h3>
                <div className="space-y-1 mb-4 max-h-64 overflow-y-auto">
-                <div className="text-[10px] font-mono text-observatory-accent mb-1">LOVABLE AI GATEWAY</div>
-                {AVAILABLE_MODELS.filter(m => m.provider === 'lovable').map((m) => (
+                <div className="text-[10px] font-mono text-observatory-accent mb-1">AVAILABLE MODELS</div>
+                {AVAILABLE_MODELS.map((m) => (
                   <label key={m.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-observatory-bg/50 cursor-pointer hover:bg-observatory-surface-alt transition-all">
                     <input
                       type="checkbox"
@@ -433,6 +433,7 @@ export default function AirportPage() {
                       className="rounded border-observatory-border"
                     />
                     <span className="text-sm text-observatory-text">{m.label}</span>
+                    <span className="text-[9px] text-observatory-text-dim ml-auto font-mono">{m.provider}</span>
                   </label>
                 ))}
                 <div className="text-[10px] font-mono text-observatory-warning mt-3 mb-1">HUGGINGFACE INFERENCE API</div>
