@@ -141,21 +141,22 @@ function scoreConfidence(text: string): number {
 
 interface ModelConfig {
   label: string;
-  provider: "lovable";
+  provider: "lovable" | "huggingface";
   model_id: string;
 }
 
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
-  // Gemini family
+  // Gemini (gateway)
   "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable", model_id: "google/gemini-2.5-flash" },
-  "google/gemini-2.5-flash-lite": { label: "Gemini 2.5 Flash Lite", provider: "lovable", model_id: "google/gemini-2.5-flash-lite" },
-  "google/gemini-2.5-pro": { label: "Gemini 2.5 Pro", provider: "lovable", model_id: "google/gemini-2.5-pro" },
-  "google/gemini-3-flash-preview": { label: "Gemini 3 Flash", provider: "lovable", model_id: "google/gemini-3-flash-preview" },
-  "google/gemini-3.1-pro-preview": { label: "Gemini 3.1 Pro", provider: "lovable", model_id: "google/gemini-3.1-pro-preview" },
-  // OpenAI family (for open-source comparison baseline)
-  "openai/gpt-5": { label: "GPT-5", provider: "lovable", model_id: "openai/gpt-5" },
+  // OpenAI (gateway)
   "openai/gpt-5-mini": { label: "GPT-5 Mini", provider: "lovable", model_id: "openai/gpt-5-mini" },
-  "openai/gpt-5-nano": { label: "GPT-5 Nano", provider: "lovable", model_id: "openai/gpt-5-nano" },
+  // HuggingFace open-source VLMs
+  "google/paligemma-3b-mix-224": { label: "PaliGemma 3B", provider: "huggingface", model_id: "google/paligemma-3b-mix-224" },
+  "google/paligemma-3b-pt-224": { label: "PaliGemma 3B PT", provider: "huggingface", model_id: "google/paligemma-3b-pt-224" },
+  "HuggingFaceTB/SmolVLM2-2.2B-Instruct": { label: "SmolVLM2 2.2B", provider: "huggingface", model_id: "HuggingFaceTB/SmolVLM2-2.2B-Instruct" },
+  "Qwen/Qwen2.5-VL-3B-Instruct": { label: "Qwen2.5-VL 3B", provider: "huggingface", model_id: "Qwen/Qwen2.5-VL-3B-Instruct" },
+  "OpenGVLab/InternVL2_5-2B": { label: "InternVL2.5 2B", provider: "huggingface", model_id: "OpenGVLab/InternVL2_5-2B" },
+  "vikhyatk/moondream2": { label: "Moondream2", provider: "huggingface", model_id: "vikhyatk/moondream2" },
 };
 
 function detectRefusal(response: string): boolean {
