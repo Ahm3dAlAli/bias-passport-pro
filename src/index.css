@@ -76,7 +76,7 @@ body {
 }
 
 .tab-button {
-  @apply px-5 py-2.5 rounded-lg text-sm font-medium transition-all;
+  @apply px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap;
 }
 
 .tab-active {
