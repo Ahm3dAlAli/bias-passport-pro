@@ -51,12 +51,10 @@ interface ScanResult {
 }
 
 const SCAN_MODELS = [
-  { id: 'hf/google/paligemma-3b-mix-448', label: 'PaliGemma 3B mix-448', provider: 'huggingface', color: '#60a5fa' },
-  { id: 'hf/google/paligemma-3b-pt-224', label: 'PaliGemma 3B pt-224', provider: 'huggingface', color: '#34d399' },
-  { id: 'hf/HuggingFaceTB/SmolVLM2-2.2B-Instruct', label: 'SmolVLM2 2.2B', provider: 'huggingface', color: '#fbbf24' },
-  { id: 'hf/Qwen/Qwen2.5-VL-3B-Instruct', label: 'Qwen2.5-VL 3B', provider: 'huggingface', color: '#f87171' },
-  { id: 'hf/OpenGVLab/InternVL2-2B', label: 'InternVL2 2B', provider: 'huggingface', color: '#c084fc' },
-  { id: 'hf/vikhyatk/moondream2', label: 'Moondream2', provider: 'huggingface', color: '#fb923c' },
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'google', color: '#60a5fa' },
+  { id: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'google', color: '#34d399' },
+  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'google', color: '#fbbf24' },
+  { id: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash', provider: 'google', color: '#f87171' },
 ];
 
 function getSeverityGrade(score: number) {
