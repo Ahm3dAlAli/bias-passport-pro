@@ -1,8 +1,9 @@
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, RotateCcw } from 'lucide-react';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface RouteErrorBoundaryProps {
   children: ReactNode;
+  resetKey?: string;
 }
 
 interface RouteErrorBoundaryState {
@@ -16,9 +17,19 @@ export default class RouteErrorBoundary extends Component<RouteErrorBoundaryProp
     return { hasError: true };
   }
 
+  componentDidUpdate(prevProps: RouteErrorBoundaryProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false });
+    }
+  }
+
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Route render failed:', error, errorInfo);
   }
+
+  handleRetry = () => {
+    this.setState({ hasError: false });
+  };
 
   handleReload = () => {
     window.location.reload();
@@ -34,16 +45,26 @@ export default class RouteErrorBoundary extends Component<RouteErrorBoundaryProp
             </div>
             <h1 className="text-xl font-semibold text-observatory-text">This page failed to load</h1>
             <p className="mt-2 text-sm text-observatory-text-muted">
-              The rest of the app is protected now, so one broken page will not blank the entire website.
+              Try again or reload the page.
             </p>
-            <button
-              type="button"
-              onClick={this.handleReload}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-observatory-accent px-4 py-2.5 text-sm font-semibold text-observatory-bg transition-all hover:bg-observatory-accent-glow"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reload page
-            </button>
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={this.handleRetry}
+                className="inline-flex items-center gap-2 rounded-xl bg-observatory-accent px-4 py-2.5 text-sm font-semibold text-observatory-bg transition-all hover:bg-observatory-accent-glow"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Try again
+              </button>
+              <button
+                type="button"
+                onClick={this.handleReload}
+                className="inline-flex items-center gap-2 rounded-xl border border-observatory-border px-4 py-2.5 text-sm font-medium text-observatory-text-muted transition-all hover:border-observatory-accent/50"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reload
+              </button>
+            </div>
           </div>
         </div>
       );
