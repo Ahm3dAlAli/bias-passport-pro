@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import ModelComplianceReport from '@/components/euaiact/ModelComplianceReport';
 
-type Tab = 'risks' | 'airport' | 'checker' | 'timeline';
+type Tab = 'risks' | 'airport' | 'checker' | 'model' | 'timeline';
 
 const RISK_CATEGORIES = [
   {
@@ -70,7 +71,7 @@ export default function EUAIActPage() {
       </header>
 
       <div className="tab-group">
-        {([['risks', 'Risk Categories'], ['airport', 'Airport AI Rules'], ['checker', 'Compliance Checker'], ['timeline', 'Timeline']] as [Tab, string][]).map(([t, label]) => (
+        {([['risks', 'Risk Categories'], ['model', 'Model Report'], ['airport', 'Airport AI Rules'], ['checker', 'Compliance Checker'], ['timeline', 'Timeline']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)} className={`tab-button ${tab === t ? 'tab-active' : 'tab-inactive'}`}>
             {label}
           </button>
@@ -131,6 +132,8 @@ export default function EUAIActPage() {
           </div>
         </div>
       )}
+
+      {tab === 'model' && <ModelComplianceReport />}
 
       {tab === 'checker' && <ComplianceChecker />}
 
