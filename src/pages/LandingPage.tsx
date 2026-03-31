@@ -229,7 +229,7 @@ export default function LandingPage() {
             <motion.div key={m.to} variants={fadeUp} custom={i}>
               <Link
                 to={m.to}
-                className="glass rounded-2xl p-6 hover:border-observatory-accent/30 transition-all group block hover:shadow-[0_0_40px_hsl(var(--obs-accent)/0.08)]"
+                className="glass rounded-2xl p-4 sm:p-6 hover:border-observatory-accent/30 transition-all group block hover:shadow-[0_0_40px_hsl(var(--obs-accent)/0.08)]"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-observatory-accent/10 flex items-center justify-center group-hover:bg-observatory-accent/20 transition-colors">
