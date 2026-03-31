@@ -6,7 +6,7 @@ const NAV = [
   { to: '/lab', icon: FlaskConical, label: 'Lab' },
   { to: '/airport', icon: Plane, label: 'Airport' },
   { to: '/scan', icon: Camera, label: 'Scan Face' },
-  { to: '/eid', icon: ScanLine, label: 'E-ID' },
+  
   { to: '/eu-ai-act', icon: Shield, label: 'EU AI Act' },
   { to: '/mitigation', icon: Wrench, label: 'Fix Bias' },
 ];

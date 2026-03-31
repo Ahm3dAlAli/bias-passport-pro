@@ -40,7 +40,7 @@ export default function App() {
         <Route path="/report" element={<RouteShell><BiasReportPage /></RouteShell>} />
         <Route path="/lab" element={<RouteShell><LabPage /></RouteShell>} />
         <Route path="/airport" element={<RouteShell><AirportPage /></RouteShell>} />
-        <Route path="/eid" element={<RouteShell><EIDPage /></RouteShell>} />
+        
         <Route path="/eu-ai-act" element={<RouteShell><EUAIActPage /></RouteShell>} />
         <Route path="/mitigation" element={<RouteShell><MitigationPage /></RouteShell>} />
       </Route>
