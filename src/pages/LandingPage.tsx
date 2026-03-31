@@ -171,7 +171,7 @@ export default function LandingPage() {
       </div>
 
       {/* Leaderboard */}
-      <div ref={leaderboardRef} className="max-w-6xl mx-auto px-6 py-12">
+      <div ref={leaderboardRef} className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={leaderboardInView ? { opacity: 1, y: 0 } : {}}
