@@ -216,6 +216,12 @@ function analyseRubric(text: string, rubric: Record<string, string[]>): Record<s
 // ── VLM call functions ──
 
 async function callLovableVLM(model: string, prompt: string, base64Image: string, apiKey: string): Promise<string> {
+  // GPT-5 family requires max_completion_tokens; Gemini uses max_tokens
+  const isOpenAI = model.startsWith("openai/");
+  const tokenParam = isOpenAI
+    ? { max_completion_tokens: 300 }
+    : { max_tokens: 300 };
+
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -233,7 +239,7 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
           ],
         },
       ],
-      max_tokens: 300,
+      ...tokenParam,
       temperature: 0.3,
     }),
   });
@@ -248,7 +254,8 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
 }
 
 async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
-  const url = `https://router.huggingface.co/hf-inference/models/${modelId}`;
+  // Use the chat completions endpoint for VLMs
+  const url = `https://router.huggingface.co/hf-inference/models/${modelId}/v1/chat/completions`;
 
   const response = await fetch(url, {
     method: "POST",
@@ -257,23 +264,56 @@ async function callHuggingFaceVLM(modelId: string, prompt: string, base64Image: 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      inputs: {
-        image: base64Image,
-        text: prompt,
-      },
-      parameters: {
-        max_new_tokens: 300,
-      },
+      model: modelId,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+          ],
+        },
+      ],
+      max_tokens: 300,
+      stream: false,
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
+    // If chat completions fails, try the legacy image-to-text endpoint
+    if (response.status === 404 || response.status === 422) {
+      return callHuggingFaceLegacy(modelId, prompt, base64Image, hfToken);
+    }
     throw new Error(`HuggingFace API [${response.status}]: ${errText}`);
   }
 
   const data = await response.json();
-  // HF Inference API returns different formats depending on the model
+  return data.choices?.[0]?.message?.content || "";
+}
+
+async function callHuggingFaceLegacy(modelId: string, prompt: string, base64Image: string, hfToken: string): Promise<string> {
+  const url = `https://api-inference.huggingface.co/models/${modelId}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${hfToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      inputs: `${prompt}\n[image]`,
+      parameters: { max_new_tokens: 300 },
+      image: base64Image,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`HuggingFace Legacy API [${response.status}]: ${errText}`);
+  }
+
+  const data = await response.json();
   if (typeof data === "string") return data;
   if (Array.isArray(data) && data[0]?.generated_text) return data[0].generated_text;
   if (data?.generated_text) return data.generated_text;
