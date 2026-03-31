@@ -133,6 +133,8 @@ export default function EUAIActPage() {
         </div>
       )}
 
+      {tab === 'model' && <ModelComplianceReport />}
+
       {tab === 'checker' && <ComplianceChecker />}
 
       {tab === 'timeline' && (
