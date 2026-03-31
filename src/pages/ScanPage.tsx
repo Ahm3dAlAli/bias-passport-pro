@@ -185,7 +185,7 @@ export default function ScanPage() {
           <Camera className="w-7 h-7 text-observatory-accent" />
           <span className="gradient-text">Scan Your Face</span>
         </h1>
-        <p className="page-subtitle">Capture a photo → run 5 VLMs simultaneously → get instant bias fingerprint comparison</p>
+        <p className="page-subtitle">Capture a photo → run {SCAN_MODELS.length} VLMs simultaneously → get instant bias fingerprint comparison</p>
       </header>
 
       <div className="space-y-4">
