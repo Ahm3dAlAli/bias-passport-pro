@@ -51,11 +51,12 @@ interface ScanResult {
 }
 
 const SCAN_MODELS = [
-  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'lovable', color: '#60a5fa' },
-  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'lovable', color: '#34d399' },
-  { id: 'hf/Qwen/Qwen2.5-VL-7B-Instruct', label: 'Qwen2.5-VL 7B', provider: 'huggingface', color: '#fbbf24' },
-  { id: 'hf/meta-llama/Llama-3.2-11B-Vision-Instruct', label: 'Llama 3.2 11B', provider: 'huggingface', color: '#f87171' },
-  { id: 'hf/HuggingFaceM4/Idefics3-8B-Llama3', label: 'Idefics3 8B', provider: 'huggingface', color: '#c084fc' },
+  { id: 'hf/google/paligemma-3b-mix-448', label: 'PaliGemma 3B mix-448', provider: 'huggingface', color: '#60a5fa' },
+  { id: 'hf/google/paligemma-3b-pt-224', label: 'PaliGemma 3B pt-224', provider: 'huggingface', color: '#34d399' },
+  { id: 'hf/HuggingFaceTB/SmolVLM2-2.2B-Instruct', label: 'SmolVLM2 2.2B', provider: 'huggingface', color: '#fbbf24' },
+  { id: 'hf/Qwen/Qwen2.5-VL-3B-Instruct', label: 'Qwen2.5-VL 3B', provider: 'huggingface', color: '#f87171' },
+  { id: 'hf/OpenGVLab/InternVL2-2B', label: 'InternVL2 2B', provider: 'huggingface', color: '#c084fc' },
+  { id: 'hf/vikhyatk/moondream2', label: 'Moondream2', provider: 'huggingface', color: '#fb923c' },
 ];
 
 function getSeverityGrade(score: number) {
