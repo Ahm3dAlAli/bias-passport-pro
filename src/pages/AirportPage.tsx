@@ -754,7 +754,7 @@ export default function AirportPage() {
               <Fingerprint className="w-12 h-12 text-observatory-text-dim mx-auto mb-3 opacity-30" />
               <p className="text-sm text-observatory-text-muted">Open camera → capture face → run Fingerprint² bias scan</p>
               <p className="text-xs text-observatory-text-dim mt-2">
-                The VLM will answer 6 social inference probes about your photo. An LLM judge scores each response on valence, stereotype alignment, and confidence — producing a unique bias fingerprint.
+                The VLM will answer 6 social inference probes about your photo. Deterministic scoring evaluates each response on valence, stereotype alignment, and confidence — producing a unique bias fingerprint.
               </p>
             </div>
           )}
