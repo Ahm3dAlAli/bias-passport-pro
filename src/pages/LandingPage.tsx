@@ -263,7 +263,7 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.15 }}
               whileHover={{ y: -4 }}
-              className="glass rounded-2xl p-6 flex items-center gap-5 hover:border-observatory-accent/20 transition-all"
+              className="glass rounded-2xl p-4 sm:p-6 flex items-center gap-4 sm:gap-5 hover:border-observatory-accent/20 transition-all"
             >
               <img src={p.photo} alt={p.name} className="w-20 h-20 rounded-xl object-cover border border-observatory-border/40" />
               <div>
