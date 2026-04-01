@@ -430,32 +430,52 @@ export default function ScanPage() {
                                 ) : (
                                   <>
                                     {(() => {
-                                      const insight = parseProbeInsight(probe);
-                                      const lines = insight.split('\n').filter(Boolean);
+                                      const a = analyzeProbe(probe);
+                                      if (a.type !== 'result') return null;
                                       return (
                                         <div className="space-y-2">
-                                          {lines.map((line, li) => (
-                                            <p key={li} className={`text-xs leading-relaxed ${
-                                              line.startsWith('"') ? 'text-observatory-text-muted italic' :
-                                              line.startsWith('🔴') || line.startsWith('⚠') ? 'text-observatory-danger font-medium' :
-                                              line.startsWith('🟡') ? 'text-yellow-400 font-medium' :
-                                              line.startsWith('🟢') || line.startsWith('✅') ? 'text-observatory-success font-medium' :
-                                              line.startsWith('Rubric') ? 'text-observatory-text-dim font-mono' :
-                                              'text-observatory-text-muted'
-                                            }`}>{line}</p>
-                                          ))}
-                                          {probe.scores && (
-                                            <div className="flex gap-3 mt-1 text-[10px] font-mono text-observatory-text-dim opacity-70">
-                                              <span>Stereo: {(probe.scores.stereotype_alignment * 100).toFixed(0)}%</span>
-                                              <span>Val: {probe.scores.valence.toFixed(2)}</span>
-                                              <span>Conf: {(probe.scores.confidence * 100).toFixed(0)}%</span>
+                                          {/* VLM Response */}
+                                          <p className="text-xs leading-relaxed text-observatory-text-muted italic bg-observatory-bg/50 p-2 rounded-lg">
+                                            "{a.response.length > 400 ? a.response.slice(0, 400) + '…' : a.response}"
+                                          </p>
+                                          {/* Verdict */}
+                                          <p className={`text-xs font-semibold ${
+                                            a.verdictLevel === 'danger' ? 'text-observatory-danger' :
+                                            a.verdictLevel === 'warn' ? 'text-yellow-400' :
+                                            a.verdictLevel === 'ok' ? 'text-emerald-400' :
+                                            'text-observatory-success'
+                                          }`}>
+                                            {a.verdictLevel === 'danger' ? '🔴' : a.verdictLevel === 'warn' ? '🟡' : a.verdictLevel === 'ok' ? '🟢' : '✅'} {a.verdict}
+                                          </p>
+                                          {/* Framing + Confidence */}
+                                          <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.framing}</span>
+                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.confidence}</span>
+                                          </div>
+                                          {/* Rubric matches */}
+                                          {a.rubricMatches.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {a.rubricMatches.map((rm, i) => (
+                                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-accent/10 text-observatory-accent font-mono">
+                                                  {rm.category}: {rm.count}
+                                                </span>
+                                              ))}
                                             </div>
                                           )}
-                                          {probe.bias_detections.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                              {probe.bias_detections.slice(0, 4).map((d, i) => (
+                                          {/* Scores */}
+                                          {a.scores && (
+                                            <div className="flex gap-3 text-[10px] font-mono text-observatory-text-dim opacity-70">
+                                              <span>Stereo: {(a.scores.stereotype_alignment * 100).toFixed(0)}%</span>
+                                              <span>Val: {a.scores.valence.toFixed(2)}</span>
+                                              <span>Conf: {(a.scores.confidence * 100).toFixed(0)}%</span>
+                                            </div>
+                                          )}
+                                          {/* Bias signals */}
+                                          {a.biasSignals.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {a.biasSignals.map((s, i) => (
                                                 <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
-                                                  {d.evidence}
+                                                  {s}
                                                 </span>
                                               ))}
                                             </div>
