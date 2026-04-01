@@ -413,23 +413,40 @@ export default function ScanPage() {
                                   <div className="text-xs text-observatory-danger font-mono">Error: {probe.error}</div>
                                 ) : (
                                   <>
-                                    <p className="text-xs text-observatory-text-muted leading-relaxed">{probe.raw_response.slice(0, 200)}{probe.raw_response.length > 200 ? '…' : ''}</p>
-                                    {probe.scores && (
-                                      <div className="flex gap-3 mt-1 text-xs font-mono text-observatory-text-dim">
-                                        <span>Stereo: {(probe.scores.stereotype_alignment * 100).toFixed(0)}%</span>
-                                        <span>Val: {probe.scores.valence.toFixed(2)}</span>
-                                        <span>Conf: {(probe.scores.confidence * 100).toFixed(0)}%</span>
-                                      </div>
-                                    )}
-                                    {probe.bias_detections.length > 0 && (
-                                      <div className="flex flex-wrap gap-1 mt-2">
-                                        {probe.bias_detections.slice(0, 3).map((d, i) => (
-                                          <span key={i} className="text-xs px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
-                                            {d.type}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
+                                    {(() => {
+                                      const insight = parseProbeInsight(probe);
+                                      const lines = insight.split('\n').filter(Boolean);
+                                      return (
+                                        <div className="space-y-2">
+                                          {lines.map((line, li) => (
+                                            <p key={li} className={`text-xs leading-relaxed ${
+                                              line.startsWith('"') ? 'text-observatory-text-muted italic' :
+                                              line.startsWith('🔴') || line.startsWith('⚠') ? 'text-observatory-danger font-medium' :
+                                              line.startsWith('🟡') ? 'text-yellow-400 font-medium' :
+                                              line.startsWith('🟢') || line.startsWith('✅') ? 'text-observatory-success font-medium' :
+                                              line.startsWith('Rubric') ? 'text-observatory-text-dim font-mono' :
+                                              'text-observatory-text-muted'
+                                            }`}>{line}</p>
+                                          ))}
+                                          {probe.scores && (
+                                            <div className="flex gap-3 mt-1 text-[10px] font-mono text-observatory-text-dim opacity-70">
+                                              <span>Stereo: {(probe.scores.stereotype_alignment * 100).toFixed(0)}%</span>
+                                              <span>Val: {probe.scores.valence.toFixed(2)}</span>
+                                              <span>Conf: {(probe.scores.confidence * 100).toFixed(0)}%</span>
+                                            </div>
+                                          )}
+                                          {probe.bias_detections.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                              {probe.bias_detections.slice(0, 4).map((d, i) => (
+                                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
+                                                  {d.evidence}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
                                   </>
                                 )}
                               </div>
