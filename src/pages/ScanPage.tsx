@@ -68,14 +68,58 @@ function getSeverityGrade(score: number) {
   return { grade: 'F', label: 'High Bias', color: 'text-red-400' };
 }
 
+/** Parse a friendly error message */
+function friendlyError(err: string): string {
+  if (err.includes('credits_exhausted') || err.includes('402')) return '💳 HuggingFace free credits exhausted — upgrade to HF Pro or try another model.';
+  if (err.includes('rate_limited') || err.includes('429')) return '⏳ Rate limited — too many requests. Wait a moment and try again.';
+  if (err.includes('model_not_available') || err.includes('404')) return '🚫 Model is currently unavailable on HuggingFace.';
+  if (err.includes('500') || err.includes('Internal Error')) return '⚠️ HuggingFace server error — the model may be overloaded. Try again later.';
+  return `⚠️ ${err}`;
+}
+
+/** Extract the key finding from a probe response as a readable sentence */
+function summarizeProbeResponse(probeId: string, response: string, rubricHits: Record<string, number>): string {
+  const topCategories = Object.entries(rubricHits)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  const topCat = topCategories[0]?.[0]?.replace(/_/g, ' ');
+
+  switch (probeId) {
+    case 'occupation':
+      if (topCat) return `The model inferred this person likely works in a ${topCat} occupation.`;
+      return 'The model made an occupation inference based on appearance.';
+    case 'education':
+      if (topCat) return `The model attributed a ${topCat} level of education to this person.`;
+      return 'The model estimated an education level based on appearance.';
+    case 'dating_profile':
+      if (topCat) return `The dating profile used ${topCat} traits to describe this person.`;
+      return 'The model wrote a dating profile reflecting its assumptions.';
+    case 'leadership':
+      if (topCat) return `The model sees this person as a ${topCat} in group settings.`;
+      return 'The model assessed leadership potential based on appearance.';
+    case 'neighbourhood':
+      if (topCat) return `The model placed this person in an ${topCat} neighbourhood.`;
+      return 'The model inferred a neighbourhood type based on appearance.';
+    case 'trustworthiness':
+      if (topCat) return `The model gave a ${topCat.replace('_', ' ')} rating for trustworthiness.`;
+      return 'The model assessed trustworthiness based on appearance.';
+    default:
+      return 'The model responded to this social inference probe.';
+  }
+}
+
 /** Build a structured analysis object from probe result */
 function analyzeProbe(probe: ProbeResult) {
   if (probe.refusal) return { type: 'refusal' as const };
-  if (probe.error) return { type: 'error' as const, message: probe.error };
+  if (probe.error) return { type: 'error' as const, message: friendlyError(probe.error) };
   if (!probe.raw_response) return { type: 'empty' as const };
 
   const scores = probe.scores;
   const biasCount = probe.bias_detections.length;
+
+  // Summary sentence
+  const summary = summarizeProbeResponse(probe.probe_id, probe.raw_response, probe.rubric_hits);
 
   // Verdict line
   let verdict = '';
@@ -116,6 +160,7 @@ function analyzeProbe(probe: ProbeResult) {
   return {
     type: 'result' as const,
     response: probe.raw_response.trim(),
+    summary,
     verdict,
     verdictLevel,
     framing,
@@ -420,68 +465,75 @@ export default function ScanPage() {
                             return (
                               <div key={r.model} className="pl-4 border-l-2" style={{ borderColor: modelColor }}>
                                 <div className="text-xs font-mono mb-1" style={{ color: modelColor }}>{r.model_label}</div>
-                                {probe.refusal ? (
-                                  <div className="text-xs text-observatory-success font-mono">⛔ REFUSED — model declined to make assumptions</div>
-                                ) : probe.error ? (
-                                  <div className="text-xs text-observatory-danger font-mono">Error: {probe.error}</div>
-                                ) : (
-                                  <>
-                                    {(() => {
-                                      const a = analyzeProbe(probe);
-                                      if (a.type !== 'result') return null;
-                                      return (
-                                        <div className="space-y-2">
-                                          {/* VLM Response */}
-                                          <p className="text-xs leading-relaxed text-observatory-text-muted italic bg-observatory-bg/50 p-2 rounded-lg">
-                                            "{a.response.length > 400 ? a.response.slice(0, 400) + '…' : a.response}"
-                                          </p>
-                                          {/* Verdict */}
-                                          <p className={`text-xs font-semibold ${
-                                            a.verdictLevel === 'danger' ? 'text-observatory-danger' :
-                                            a.verdictLevel === 'warn' ? 'text-yellow-400' :
-                                            a.verdictLevel === 'ok' ? 'text-emerald-400' :
-                                            'text-observatory-success'
-                                          }`}>
-                                            {a.verdictLevel === 'danger' ? '🔴' : a.verdictLevel === 'warn' ? '🟡' : a.verdictLevel === 'ok' ? '🟢' : '✅'} {a.verdict}
-                                          </p>
-                                          {/* Framing + Confidence */}
-                                          <div className="flex flex-wrap gap-2 text-[10px] font-mono">
-                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.framing}</span>
-                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.confidence}</span>
-                                          </div>
-                                          {/* Rubric matches */}
-                                          {a.rubricMatches.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                              {a.rubricMatches.map((rm, i) => (
-                                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-accent/10 text-observatory-accent font-mono">
-                                                  {rm.category}: {rm.count}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
-                                          {/* Scores */}
-                                          {a.scores && (
-                                            <div className="flex gap-3 text-[10px] font-mono text-observatory-text-dim opacity-70">
-                                              <span>Stereo: {(a.scores.stereotype_alignment * 100).toFixed(0)}%</span>
-                                              <span>Val: {a.scores.valence.toFixed(2)}</span>
-                                              <span>Conf: {(a.scores.confidence * 100).toFixed(0)}%</span>
-                                            </div>
-                                          )}
-                                          {/* Bias signals */}
-                                          {a.biasSignals.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                              {a.biasSignals.map((s, i) => (
-                                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
-                                                  {s}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
+                                {(() => {
+                                  const a = analyzeProbe(probe);
+                                  if (a.type === 'refusal') return (
+                                    <div className="text-xs text-observatory-success font-mono">⛔ REFUSED — model declined to make assumptions</div>
+                                  );
+                                  if (a.type === 'error') return (
+                                    <div className="text-xs text-observatory-danger font-mono">{a.message}</div>
+                                  );
+                                  if (a.type !== 'result') return null;
+                                  return (
+                                    <div className="space-y-2">
+                                      {/* Key Finding */}
+                                      <p className="text-sm font-medium text-observatory-text">
+                                        📋 {a.summary}
+                                      </p>
+                                      {/* Verdict */}
+                                      <p className={`text-xs font-semibold ${
+                                        a.verdictLevel === 'danger' ? 'text-observatory-danger' :
+                                        a.verdictLevel === 'warn' ? 'text-yellow-400' :
+                                        a.verdictLevel === 'ok' ? 'text-emerald-400' :
+                                        'text-observatory-success'
+                                      }`}>
+                                        {a.verdictLevel === 'danger' ? '🔴' : a.verdictLevel === 'warn' ? '🟡' : a.verdictLevel === 'ok' ? '🟢' : '✅'} {a.verdict}
+                                      </p>
+                                      {/* Framing + Confidence */}
+                                      <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                                        <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.framing}</span>
+                                        <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.confidence}</span>
+                                      </div>
+                                      {/* Rubric matches */}
+                                      {a.rubricMatches.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {a.rubricMatches.map((rm, i) => (
+                                            <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-accent/10 text-observatory-accent font-mono">
+                                              {rm.category}: {rm.count}
+                                            </span>
+                                          ))}
                                         </div>
-                                      );
-                                    })()}
-                                  </>
-                                )}
+                                      )}
+                                      {/* Scores */}
+                                      {a.scores && (
+                                        <div className="flex gap-3 text-[10px] font-mono text-observatory-text-dim opacity-70">
+                                          <span>Stereo: {(a.scores.stereotype_alignment * 100).toFixed(0)}%</span>
+                                          <span>Val: {a.scores.valence.toFixed(2)}</span>
+                                          <span>Conf: {(a.scores.confidence * 100).toFixed(0)}%</span>
+                                        </div>
+                                      )}
+                                      {/* Bias signals */}
+                                      {a.biasSignals.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {a.biasSignals.map((s, i) => (
+                                            <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
+                                              {s}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {/* Raw response (collapsed) */}
+                                      <details className="group">
+                                        <summary className="text-[10px] font-mono text-observatory-text-dim cursor-pointer hover:text-observatory-text-muted">
+                                          Show raw VLM response ▸
+                                        </summary>
+                                        <p className="text-xs leading-relaxed text-observatory-text-muted italic bg-observatory-bg/50 p-2 rounded-lg mt-1">
+                                          "{a.response.length > 500 ? a.response.slice(0, 500) + '…' : a.response}"
+                                        </p>
+                                      </details>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             );
                           })}
