@@ -353,12 +353,19 @@ serve(async (req) => {
       } catch (err) {
         console.error(`Probe ${probe.id} exception:`, err);
         const errMsg = err instanceof Error ? err.message : "exception";
+        const errorLabel = errMsg.includes("rate") || errMsg.includes("429")
+          ? "rate_limited"
+          : errMsg.includes("402")
+          ? "credits_exhausted"
+          : errMsg.includes("404")
+          ? "model_not_available"
+          : `api_error: ${errMsg.slice(0, 200)}`;
         probeResults.push({
           probe_id: probe.id,
           label: probe.label,
           raw_response: "",
           refusal: false,
-          error: errMsg.includes("rate") || errMsg.includes("429") ? "rate_limited" : "api_error",
+          error: errorLabel,
           scores: null,
           rubric_hits: {},
           bias_detections: [],

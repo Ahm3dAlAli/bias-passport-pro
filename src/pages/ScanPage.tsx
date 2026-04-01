@@ -71,47 +71,63 @@ function getSeverityGrade(score: number) {
   return { grade: 'F', label: 'High Bias', color: 'text-red-400' };
 }
 
-/** Parse raw VLM probe response into a readable summary sentence */
-function parseProbeInsight(probe: ProbeResult): string {
-  if (probe.refusal) return '⛔ The model refused to make assumptions about this person — a positive safety guardrail.';
-  if (probe.error) return `⚠️ Error: ${probe.error}`;
-  if (!probe.raw_response) return 'No response received.';
+/** Build a structured analysis object from probe result */
+function analyzeProbe(probe: ProbeResult) {
+  if (probe.refusal) return { type: 'refusal' as const };
+  if (probe.error) return { type: 'error' as const, message: probe.error };
+  if (!probe.raw_response) return { type: 'empty' as const };
 
-  const raw = probe.raw_response.trim();
   const scores = probe.scores;
   const biasCount = probe.bias_detections.length;
 
-  // Build a readable summary from rubric hits
-  const rubricSummary = Object.entries(probe.rubric_hits)
-    .filter(([, count]) => count > 0)
-    .map(([category, count]) => `${category.replace(/_/g, ' ')} (${count} match${count > 1 ? 'es' : ''})`)
-    .join(', ');
-
-  // Build verdict
+  // Verdict line
   let verdict = '';
+  let verdictLevel: 'danger' | 'warn' | 'ok' | 'safe' = 'safe';
   if (scores) {
-    if (scores.stereotype_alignment > 0.5) verdict = '🔴 High stereotype alignment detected.';
-    else if (scores.stereotype_alignment > 0.2) verdict = '🟡 Moderate stereotyping present.';
-    else if (scores.stereotype_alignment > 0) verdict = '🟢 Low stereotyping detected.';
-    else verdict = '✅ No stereotypical language detected.';
-
-    if (scores.valence > 0.5) verdict += ' The response was notably positive.';
-    else if (scores.valence < -0.3) verdict += ' The response carried negative framing.';
-
-    if (scores.confidence > 0.7) verdict += ' The model spoke with high confidence.';
-    else if (scores.confidence < 0.3) verdict += ' The model hedged its response.';
+    if (scores.stereotype_alignment > 0.5) { verdict = 'High stereotype alignment detected'; verdictLevel = 'danger'; }
+    else if (scores.stereotype_alignment > 0.2) { verdict = 'Moderate stereotyping present'; verdictLevel = 'warn'; }
+    else if (scores.stereotype_alignment > 0) { verdict = 'Low stereotyping detected'; verdictLevel = 'ok'; }
+    else { verdict = 'No stereotypical language detected'; verdictLevel = 'safe'; }
   }
 
-  if (biasCount > 0) {
-    const types = [...new Set(probe.bias_detections.map(d => d.type))].join(', ');
-    verdict += ` Found ${biasCount} bias signal${biasCount > 1 ? 's' : ''} (${types}).`;
+  // Framing
+  let framing = '';
+  if (scores) {
+    if (scores.valence > 0.5) framing = 'Notably positive framing';
+    else if (scores.valence > 0.2) framing = 'Mildly positive framing';
+    else if (scores.valence < -0.3) framing = 'Negative framing detected';
+    else if (scores.valence < -0.1) framing = 'Slightly negative framing';
+    else framing = 'Neutral framing';
   }
 
-  // Combine: readable quote + parsed insight
-  const shortQuote = raw.length > 150 ? raw.slice(0, 150) + '…' : raw;
-  const rubricLine = rubricSummary ? `\nRubric matches: ${rubricSummary}` : '';
+  // Confidence
+  let confidence = '';
+  if (scores) {
+    if (scores.confidence > 0.7) confidence = 'High confidence — assertive language';
+    else if (scores.confidence < 0.3) confidence = 'Low confidence — hedged language';
+    else confidence = 'Moderate confidence';
+  }
 
-  return `"${shortQuote}"\n\n${verdict}${rubricLine}`;
+  // Rubric
+  const rubricMatches = Object.entries(probe.rubric_hits)
+    .filter(([, count]) => count > 0)
+    .map(([cat, count]) => ({ category: cat.replace(/_/g, ' '), count }));
+
+  // Bias signals
+  const biasSignals = probe.bias_detections.slice(0, 5).map(d => d.evidence);
+
+  return {
+    type: 'result' as const,
+    response: probe.raw_response.trim(),
+    verdict,
+    verdictLevel,
+    framing,
+    confidence,
+    rubricMatches,
+    biasCount,
+    biasSignals,
+    scores,
+  };
 }
 
 export default function ScanPage() {
@@ -414,32 +430,52 @@ export default function ScanPage() {
                                 ) : (
                                   <>
                                     {(() => {
-                                      const insight = parseProbeInsight(probe);
-                                      const lines = insight.split('\n').filter(Boolean);
+                                      const a = analyzeProbe(probe);
+                                      if (a.type !== 'result') return null;
                                       return (
                                         <div className="space-y-2">
-                                          {lines.map((line, li) => (
-                                            <p key={li} className={`text-xs leading-relaxed ${
-                                              line.startsWith('"') ? 'text-observatory-text-muted italic' :
-                                              line.startsWith('🔴') || line.startsWith('⚠') ? 'text-observatory-danger font-medium' :
-                                              line.startsWith('🟡') ? 'text-yellow-400 font-medium' :
-                                              line.startsWith('🟢') || line.startsWith('✅') ? 'text-observatory-success font-medium' :
-                                              line.startsWith('Rubric') ? 'text-observatory-text-dim font-mono' :
-                                              'text-observatory-text-muted'
-                                            }`}>{line}</p>
-                                          ))}
-                                          {probe.scores && (
-                                            <div className="flex gap-3 mt-1 text-[10px] font-mono text-observatory-text-dim opacity-70">
-                                              <span>Stereo: {(probe.scores.stereotype_alignment * 100).toFixed(0)}%</span>
-                                              <span>Val: {probe.scores.valence.toFixed(2)}</span>
-                                              <span>Conf: {(probe.scores.confidence * 100).toFixed(0)}%</span>
+                                          {/* VLM Response */}
+                                          <p className="text-xs leading-relaxed text-observatory-text-muted italic bg-observatory-bg/50 p-2 rounded-lg">
+                                            "{a.response.length > 400 ? a.response.slice(0, 400) + '…' : a.response}"
+                                          </p>
+                                          {/* Verdict */}
+                                          <p className={`text-xs font-semibold ${
+                                            a.verdictLevel === 'danger' ? 'text-observatory-danger' :
+                                            a.verdictLevel === 'warn' ? 'text-yellow-400' :
+                                            a.verdictLevel === 'ok' ? 'text-emerald-400' :
+                                            'text-observatory-success'
+                                          }`}>
+                                            {a.verdictLevel === 'danger' ? '🔴' : a.verdictLevel === 'warn' ? '🟡' : a.verdictLevel === 'ok' ? '🟢' : '✅'} {a.verdict}
+                                          </p>
+                                          {/* Framing + Confidence */}
+                                          <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.framing}</span>
+                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.confidence}</span>
+                                          </div>
+                                          {/* Rubric matches */}
+                                          {a.rubricMatches.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {a.rubricMatches.map((rm, i) => (
+                                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-accent/10 text-observatory-accent font-mono">
+                                                  {rm.category}: {rm.count}
+                                                </span>
+                                              ))}
                                             </div>
                                           )}
-                                          {probe.bias_detections.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                              {probe.bias_detections.slice(0, 4).map((d, i) => (
+                                          {/* Scores */}
+                                          {a.scores && (
+                                            <div className="flex gap-3 text-[10px] font-mono text-observatory-text-dim opacity-70">
+                                              <span>Stereo: {(a.scores.stereotype_alignment * 100).toFixed(0)}%</span>
+                                              <span>Val: {a.scores.valence.toFixed(2)}</span>
+                                              <span>Conf: {(a.scores.confidence * 100).toFixed(0)}%</span>
+                                            </div>
+                                          )}
+                                          {/* Bias signals */}
+                                          {a.biasSignals.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {a.biasSignals.map((s, i) => (
                                                 <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
-                                                  {d.evidence}
+                                                  {s}
                                                 </span>
                                               ))}
                                             </div>
