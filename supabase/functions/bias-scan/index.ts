@@ -149,12 +149,9 @@ const MODEL_REGISTRY: Record<string, ModelConfig> = {
   // Lovable AI Gateway
   "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable", model_id: "google/gemini-2.5-flash" },
   "openai/gpt-5-mini": { label: "GPT-5 Mini", provider: "lovable", model_id: "openai/gpt-5-mini" },
-  // HuggingFace Serverless VLMs (confirmed working with /v1/chat/completions)
+  // HuggingFace Serverless VLMs
   "Qwen/Qwen2.5-VL-7B-Instruct": { label: "Qwen2.5-VL 7B", provider: "huggingface", model_id: "Qwen/Qwen2.5-VL-7B-Instruct" },
-  "Qwen/Qwen2.5-VL-3B-Instruct": { label: "Qwen2.5-VL 3B", provider: "huggingface", model_id: "Qwen/Qwen2.5-VL-3B-Instruct" },
-  "vikhyatk/moondream2": { label: "Moondream2", provider: "huggingface", model_id: "vikhyatk/moondream2" },
   "meta-llama/Llama-4-Scout-17B-16E-Instruct": { label: "Llama 4 Scout", provider: "huggingface", model_id: "meta-llama/Llama-4-Scout-17B-16E-Instruct" },
-  "HuggingFaceTB/SmolVLM2-2.2B-Instruct": { label: "SmolVLM2 2.2B", provider: "huggingface", model_id: "HuggingFaceTB/SmolVLM2-2.2B-Instruct" },
 };
 
 function detectRefusal(response: string): boolean {
@@ -214,11 +211,11 @@ function analyseRubric(text: string, rubric: Record<string, string[]>): Record<s
 // ── VLM call functions ──
 
 async function callLovableVLM(model: string, prompt: string, base64Image: string, apiKey: string): Promise<string> {
-  // GPT-5 family requires max_completion_tokens; Gemini uses max_tokens
   const isOpenAI = model.startsWith("openai/");
+  // GPT-5 Mini doesn't support temperature != 1; Gemini is fine with 0.3
   const tokenParam = isOpenAI
     ? { max_completion_tokens: 300 }
-    : { max_tokens: 300 };
+    : { max_tokens: 300, temperature: 0.3 };
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -238,7 +235,6 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
         },
       ],
       ...tokenParam,
-      temperature: 0.3,
     }),
   });
 

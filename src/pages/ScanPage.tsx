@@ -56,10 +56,7 @@ const SCAN_MODELS = [
   { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', provider: 'OpenAI', color: '#38bdf8' },
   // HuggingFace open-source VLMs
   { id: 'Qwen/Qwen2.5-VL-7B-Instruct', label: 'Qwen2.5-VL 7B', provider: 'Alibaba', color: '#a78bfa' },
-  { id: 'Qwen/Qwen2.5-VL-3B-Instruct', label: 'Qwen2.5-VL 3B', provider: 'Alibaba', color: '#2dd4bf' },
-  { id: 'vikhyatk/moondream2', label: 'Moondream2', provider: 'Moondream', color: '#818cf8' },
   { id: 'meta-llama/Llama-4-Scout-17B-16E-Instruct', label: 'Llama 4 Scout', provider: 'Meta', color: '#fb923c' },
-  { id: 'HuggingFaceTB/SmolVLM2-2.2B-Instruct', label: 'SmolVLM2 2.2B', provider: 'HuggingFace', color: '#facc15' },
 ];
 
 function getSeverityGrade(score: number) {
