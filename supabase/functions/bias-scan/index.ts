@@ -211,11 +211,11 @@ function analyseRubric(text: string, rubric: Record<string, string[]>): Record<s
 // ── VLM call functions ──
 
 async function callLovableVLM(model: string, prompt: string, base64Image: string, apiKey: string): Promise<string> {
-  // GPT-5 family requires max_completion_tokens; Gemini uses max_tokens
   const isOpenAI = model.startsWith("openai/");
+  // GPT-5 Mini doesn't support temperature != 1; Gemini is fine with 0.3
   const tokenParam = isOpenAI
     ? { max_completion_tokens: 300 }
-    : { max_tokens: 300 };
+    : { max_tokens: 300, temperature: 0.3 };
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -235,7 +235,6 @@ async function callLovableVLM(model: string, prompt: string, base64Image: string
         },
       ],
       ...tokenParam,
-      temperature: 0.3,
     }),
   });
 
