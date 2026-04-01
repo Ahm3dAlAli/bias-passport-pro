@@ -253,7 +253,7 @@ export default function LandingPage() {
         <h2 className="text-xl sm:text-2xl font-bold mb-6">Team</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {[
-            { name: 'Razije', role: 'Doctoral Researcher DBA', from: 'Switzerland', age: '30–38', photo: razije },
+            { name: 'Razije', role: 'Doctoral Researcher DBA', from: 'Switzerland', age: '28–38', photo: razije },
             { name: 'Ahmed', role: 'Doctoral Researcher DBA', from: 'UAE', age: '20–28', photo: ahmed },
           ].map((p, i) => (
             <motion.div
