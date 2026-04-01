@@ -149,12 +149,9 @@ const MODEL_REGISTRY: Record<string, ModelConfig> = {
   // Lovable AI Gateway
   "google/gemini-2.5-flash": { label: "Gemini 2.5 Flash", provider: "lovable", model_id: "google/gemini-2.5-flash" },
   "openai/gpt-5-mini": { label: "GPT-5 Mini", provider: "lovable", model_id: "openai/gpt-5-mini" },
-  // HuggingFace Serverless VLMs (confirmed working with /v1/chat/completions)
+  // HuggingFace Serverless VLMs
   "Qwen/Qwen2.5-VL-7B-Instruct": { label: "Qwen2.5-VL 7B", provider: "huggingface", model_id: "Qwen/Qwen2.5-VL-7B-Instruct" },
-  "Qwen/Qwen2.5-VL-3B-Instruct": { label: "Qwen2.5-VL 3B", provider: "huggingface", model_id: "Qwen/Qwen2.5-VL-3B-Instruct" },
-  "vikhyatk/moondream2": { label: "Moondream2", provider: "huggingface", model_id: "vikhyatk/moondream2" },
   "meta-llama/Llama-4-Scout-17B-16E-Instruct": { label: "Llama 4 Scout", provider: "huggingface", model_id: "meta-llama/Llama-4-Scout-17B-16E-Instruct" },
-  "HuggingFaceTB/SmolVLM2-2.2B-Instruct": { label: "SmolVLM2 2.2B", provider: "huggingface", model_id: "HuggingFaceTB/SmolVLM2-2.2B-Instruct" },
 };
 
 function detectRefusal(response: string): boolean {
