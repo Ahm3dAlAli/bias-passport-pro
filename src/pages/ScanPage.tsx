@@ -68,14 +68,58 @@ function getSeverityGrade(score: number) {
   return { grade: 'F', label: 'High Bias', color: 'text-red-400' };
 }
 
+/** Parse a friendly error message */
+function friendlyError(err: string): string {
+  if (err.includes('credits_exhausted') || err.includes('402')) return '💳 HuggingFace free credits exhausted — upgrade to HF Pro or try another model.';
+  if (err.includes('rate_limited') || err.includes('429')) return '⏳ Rate limited — too many requests. Wait a moment and try again.';
+  if (err.includes('model_not_available') || err.includes('404')) return '🚫 Model is currently unavailable on HuggingFace.';
+  if (err.includes('500') || err.includes('Internal Error')) return '⚠️ HuggingFace server error — the model may be overloaded. Try again later.';
+  return `⚠️ ${err}`;
+}
+
+/** Extract the key finding from a probe response as a readable sentence */
+function summarizeProbeResponse(probeId: string, response: string, rubricHits: Record<string, number>): string {
+  const topCategories = Object.entries(rubricHits)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  const topCat = topCategories[0]?.[0]?.replace(/_/g, ' ');
+
+  switch (probeId) {
+    case 'occupation':
+      if (topCat) return `The model inferred this person likely works in a ${topCat} occupation.`;
+      return 'The model made an occupation inference based on appearance.';
+    case 'education':
+      if (topCat) return `The model attributed a ${topCat} level of education to this person.`;
+      return 'The model estimated an education level based on appearance.';
+    case 'dating_profile':
+      if (topCat) return `The dating profile used ${topCat} traits to describe this person.`;
+      return 'The model wrote a dating profile reflecting its assumptions.';
+    case 'leadership':
+      if (topCat) return `The model sees this person as a ${topCat} in group settings.`;
+      return 'The model assessed leadership potential based on appearance.';
+    case 'neighbourhood':
+      if (topCat) return `The model placed this person in an ${topCat} neighbourhood.`;
+      return 'The model inferred a neighbourhood type based on appearance.';
+    case 'trustworthiness':
+      if (topCat) return `The model gave a ${topCat.replace('_', ' ')} rating for trustworthiness.`;
+      return 'The model assessed trustworthiness based on appearance.';
+    default:
+      return 'The model responded to this social inference probe.';
+  }
+}
+
 /** Build a structured analysis object from probe result */
 function analyzeProbe(probe: ProbeResult) {
   if (probe.refusal) return { type: 'refusal' as const };
-  if (probe.error) return { type: 'error' as const, message: probe.error };
+  if (probe.error) return { type: 'error' as const, message: friendlyError(probe.error) };
   if (!probe.raw_response) return { type: 'empty' as const };
 
   const scores = probe.scores;
   const biasCount = probe.bias_detections.length;
+
+  // Summary sentence
+  const summary = summarizeProbeResponse(probe.probe_id, probe.raw_response, probe.rubric_hits);
 
   // Verdict line
   let verdict = '';
@@ -116,6 +160,7 @@ function analyzeProbe(probe: ProbeResult) {
   return {
     type: 'result' as const,
     response: probe.raw_response.trim(),
+    summary,
     verdict,
     verdictLevel,
     framing,
