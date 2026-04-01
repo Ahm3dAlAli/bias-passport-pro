@@ -465,68 +465,75 @@ export default function ScanPage() {
                             return (
                               <div key={r.model} className="pl-4 border-l-2" style={{ borderColor: modelColor }}>
                                 <div className="text-xs font-mono mb-1" style={{ color: modelColor }}>{r.model_label}</div>
-                                {probe.refusal ? (
-                                  <div className="text-xs text-observatory-success font-mono">⛔ REFUSED — model declined to make assumptions</div>
-                                ) : probe.error ? (
-                                  <div className="text-xs text-observatory-danger font-mono">Error: {probe.error}</div>
-                                ) : (
-                                  <>
-                                    {(() => {
-                                      const a = analyzeProbe(probe);
-                                      if (a.type !== 'result') return null;
-                                      return (
-                                        <div className="space-y-2">
-                                          {/* VLM Response */}
-                                          <p className="text-xs leading-relaxed text-observatory-text-muted italic bg-observatory-bg/50 p-2 rounded-lg">
-                                            "{a.response.length > 400 ? a.response.slice(0, 400) + '…' : a.response}"
-                                          </p>
-                                          {/* Verdict */}
-                                          <p className={`text-xs font-semibold ${
-                                            a.verdictLevel === 'danger' ? 'text-observatory-danger' :
-                                            a.verdictLevel === 'warn' ? 'text-yellow-400' :
-                                            a.verdictLevel === 'ok' ? 'text-emerald-400' :
-                                            'text-observatory-success'
-                                          }`}>
-                                            {a.verdictLevel === 'danger' ? '🔴' : a.verdictLevel === 'warn' ? '🟡' : a.verdictLevel === 'ok' ? '🟢' : '✅'} {a.verdict}
-                                          </p>
-                                          {/* Framing + Confidence */}
-                                          <div className="flex flex-wrap gap-2 text-[10px] font-mono">
-                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.framing}</span>
-                                            <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.confidence}</span>
-                                          </div>
-                                          {/* Rubric matches */}
-                                          {a.rubricMatches.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                              {a.rubricMatches.map((rm, i) => (
-                                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-accent/10 text-observatory-accent font-mono">
-                                                  {rm.category}: {rm.count}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
-                                          {/* Scores */}
-                                          {a.scores && (
-                                            <div className="flex gap-3 text-[10px] font-mono text-observatory-text-dim opacity-70">
-                                              <span>Stereo: {(a.scores.stereotype_alignment * 100).toFixed(0)}%</span>
-                                              <span>Val: {a.scores.valence.toFixed(2)}</span>
-                                              <span>Conf: {(a.scores.confidence * 100).toFixed(0)}%</span>
-                                            </div>
-                                          )}
-                                          {/* Bias signals */}
-                                          {a.biasSignals.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                              {a.biasSignals.map((s, i) => (
-                                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
-                                                  {s}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
+                                {(() => {
+                                  const a = analyzeProbe(probe);
+                                  if (a.type === 'refusal') return (
+                                    <div className="text-xs text-observatory-success font-mono">⛔ REFUSED — model declined to make assumptions</div>
+                                  );
+                                  if (a.type === 'error') return (
+                                    <div className="text-xs text-observatory-danger font-mono">{a.message}</div>
+                                  );
+                                  if (a.type !== 'result') return null;
+                                  return (
+                                    <div className="space-y-2">
+                                      {/* Key Finding */}
+                                      <p className="text-sm font-medium text-observatory-text">
+                                        📋 {a.summary}
+                                      </p>
+                                      {/* Verdict */}
+                                      <p className={`text-xs font-semibold ${
+                                        a.verdictLevel === 'danger' ? 'text-observatory-danger' :
+                                        a.verdictLevel === 'warn' ? 'text-yellow-400' :
+                                        a.verdictLevel === 'ok' ? 'text-emerald-400' :
+                                        'text-observatory-success'
+                                      }`}>
+                                        {a.verdictLevel === 'danger' ? '🔴' : a.verdictLevel === 'warn' ? '🟡' : a.verdictLevel === 'ok' ? '🟢' : '✅'} {a.verdict}
+                                      </p>
+                                      {/* Framing + Confidence */}
+                                      <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                                        <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.framing}</span>
+                                        <span className="px-2 py-0.5 rounded bg-observatory-surface-alt text-observatory-text-dim">{a.confidence}</span>
+                                      </div>
+                                      {/* Rubric matches */}
+                                      {a.rubricMatches.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {a.rubricMatches.map((rm, i) => (
+                                            <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-accent/10 text-observatory-accent font-mono">
+                                              {rm.category}: {rm.count}
+                                            </span>
+                                          ))}
                                         </div>
-                                      );
-                                    })()}
-                                  </>
-                                )}
+                                      )}
+                                      {/* Scores */}
+                                      {a.scores && (
+                                        <div className="flex gap-3 text-[10px] font-mono text-observatory-text-dim opacity-70">
+                                          <span>Stereo: {(a.scores.stereotype_alignment * 100).toFixed(0)}%</span>
+                                          <span>Val: {a.scores.valence.toFixed(2)}</span>
+                                          <span>Conf: {(a.scores.confidence * 100).toFixed(0)}%</span>
+                                        </div>
+                                      )}
+                                      {/* Bias signals */}
+                                      {a.biasSignals.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {a.biasSignals.map((s, i) => (
+                                            <span key={i} className="text-[10px] px-2 py-0.5 rounded-lg bg-observatory-danger/10 text-observatory-danger font-mono">
+                                              {s}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {/* Raw response (collapsed) */}
+                                      <details className="group">
+                                        <summary className="text-[10px] font-mono text-observatory-text-dim cursor-pointer hover:text-observatory-text-muted">
+                                          Show raw VLM response ▸
+                                        </summary>
+                                        <p className="text-xs leading-relaxed text-observatory-text-muted italic bg-observatory-bg/50 p-2 rounded-lg mt-1">
+                                          "{a.response.length > 500 ? a.response.slice(0, 500) + '…' : a.response}"
+                                        </p>
+                                      </details>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             );
                           })}
