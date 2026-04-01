@@ -60,6 +60,13 @@ const SCAN_MODELS = [
   { id: 'google/gemma-3n-E4B-it', label: 'Gemma 3n E4B', provider: 'Google', color: '#34d399' },
   { id: 'meta-llama/Llama-4-Scout-17B-16E-Instruct', label: 'Llama 4 Scout', provider: 'Meta', color: '#fb923c' },
   { id: 'zai-org/GLM-4.6V', label: 'GLM 4.6V', provider: 'Zhipu AI', color: '#e879f9' },
+  // User-requested models
+  { id: 'google/paligemma-3b-mix-448', label: 'PaliGemma 3B Mix', provider: 'Google', color: '#f472b6' },
+  { id: 'google/paligemma-3b-pt-224', label: 'PaliGemma 3B PT', provider: 'Google', color: '#c084fc' },
+  { id: 'HuggingFaceTB/SmolVLM2-2.2B-Instruct', label: 'SmolVLM2 2.2B', provider: 'HuggingFace', color: '#facc15' },
+  { id: 'Qwen/Qwen2.5-VL-3B-Instruct', label: 'Qwen2.5-VL 3B', provider: 'Alibaba', color: '#2dd4bf' },
+  { id: 'OpenGVLab/InternVL2_5-2B', label: 'InternVL2.5 2B', provider: 'OpenGVLab', color: '#fb7185' },
+  { id: 'vikhyatk/moondream2', label: 'Moondream2', provider: 'Moondream', color: '#818cf8' },
 ];
 
 function getSeverityGrade(score: number) {
