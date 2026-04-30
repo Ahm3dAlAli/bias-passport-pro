@@ -1,111 +1,83 @@
 #!/bin/bash
-# Fingerprint² Setup Script for rolf (UZH AIML Server)
-# Run this after SSHing into rolf
+# =============================================================================
+# setup_rolf.sh - Run this on ROLF to set up the environment and run benchmark
+# =============================================================================
 
 set -e
 
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     Fingerprint² Setup for rolf (UZH AIML Server)            ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+PROJ_DIR="/local/scratch/alali/FingerPrint"
+DATASET_PATH="/local/scratch/alali/fhibe_data"
+cd "$PROJ_DIR"
 
-# Configuration
-USERNAME=$(whoami)
-PROJECT_DIR="/local/scratch/${USERNAME}/fingerprint_squared"
-CONDA_ENV="fingerprint2"
+echo "=============================================="
+echo "Setting up Fingerprint² on ROLF"
+echo "=============================================="
 
-echo ""
-echo "Username: ${USERNAME}"
-echo "Project directory: ${PROJECT_DIR}"
-echo ""
-
-# Step 1: Create project directory on local scratch
-echo "[1/6] Creating project directory on /local/scratch..."
-mkdir -p "${PROJECT_DIR}"
-cd "${PROJECT_DIR}"
-
-# Set group permissions for AIML team
-chgrp -R aiml "${PROJECT_DIR}" 2>/dev/null || true
-chmod -R 775 "${PROJECT_DIR}" 2>/dev/null || true
-
-# Step 2: Check if Conda is installed
-echo "[2/6] Checking Conda installation..."
-if ! command -v conda &> /dev/null; then
-    echo "Conda not found. Installing Miniconda..."
-
-    # Download Miniconda
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-    bash miniconda.sh -b -p "${PROJECT_DIR}/miniconda"
-    rm miniconda.sh
-
-    # Initialize conda
-    source "${PROJECT_DIR}/miniconda/etc/profile.d/conda.sh"
-    conda init bash
-
-    echo "Please restart your shell or run: source ~/.bashrc"
-    echo "Then run this script again."
-    exit 0
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "[1/4] Creating virtual environment..."
+    python3 -m venv venv
 else
-    echo "Conda found: $(conda --version)"
+    echo "[1/4] Virtual environment already exists"
 fi
 
-# Step 3: Create conda environment
-echo "[3/6] Creating conda environment '${CONDA_ENV}'..."
-if conda env list | grep -q "^${CONDA_ENV} "; then
-    echo "Environment '${CONDA_ENV}' already exists. Activating..."
+# Activate and install packages
+echo "[2/4] Installing packages..."
+source venv/bin/activate
+
+pip install --upgrade pip
+
+# First uninstall conflicting packages
+pip uninstall -y torchaudio 2>/dev/null || true
+
+# Install PyTorch with CUDA 11.8 (required for latest transformers)
+# torch 2.6.0 pairs with torchvision 0.21.0
+pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu118
+
+# Install transformers with Pixtral support (requires >= 4.45)
+pip install "transformers>=4.45.0" accelerate bitsandbytes
+
+# Core dependencies
+pip install pillow tqdm vaderSentiment scikit-learn pandas numpy rich
+pip install einops timm sentencepiece protobuf qwen-vl-utils num2words
+
+# OpenCLIP for CLIP/FLAVA-style models
+pip install open-clip-torch
+
+# NOTE: OpenFlamingo requires torch 2.0.1 which conflicts with newer transformers
+# Skip it for now - use IDEFICS2 as the Flamingo-style alternative instead
+
+# Pixtral requires specific mistral packages
+pip install mistral-common
+
+# Flash attention for faster inference (optional, may fail on older GPUs)
+pip install flash-attn --no-build-isolation 2>/dev/null || echo "Flash attention not available"
+
+echo "[3/4] Verifying installation..."
+python3 -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
+python3 -c "import transformers; print(f'Transformers: {transformers.__version__}')"
+
+echo "[4/4] Checking dataset..."
+if [ -d "$DATASET_PATH" ]; then
+    echo "Dataset found: $(ls -1 $DATASET_PATH | wc -l) items in $DATASET_PATH"
 else
-    conda create -n "${CONDA_ENV}" python=3.10 -y
+    echo "WARNING: Dataset not found at $DATASET_PATH"
 fi
-
-# Activate environment
-source $(conda info --base)/etc/profile.d/conda.sh
-conda activate "${CONDA_ENV}"
-
-# Step 4: Install PyTorch with CUDA support (for rolf's CUDA 11.3+)
-echo "[4/6] Installing PyTorch with CUDA support..."
-conda install pytorch torchvision pytorch-cuda=11.8 -c pytorch -c nvidia -y
-
-# Step 5: Clone/setup Fingerprint² project
-echo "[5/6] Setting up Fingerprint² project..."
-if [ ! -d "${PROJECT_DIR}/FingerPrint" ]; then
-    echo "Please copy your FingerPrint project to ${PROJECT_DIR}/"
-    echo "You can use scp from your local machine:"
-    echo "  scp -r /path/to/FingerPrint ${USERNAME}@rolf.ifi.uzh.ch:${PROJECT_DIR}/"
-    echo ""
-    echo "Or clone from git if you have a repository."
-else
-    cd "${PROJECT_DIR}/FingerPrint"
-    pip install -e ".[dev]"
-fi
-
-# Step 6: Install additional dependencies
-echo "[6/6] Installing additional dependencies..."
-pip install roboflow rich aiohttp pillow
 
 echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    Setup Complete!                            ║"
-echo "╠══════════════════════════════════════════════════════════════╣"
-echo "║                                                              ║"
-echo "║  Next steps:                                                 ║"
-echo "║                                                              ║"
-echo "║  1. Copy your project to rolf:                               ║"
-echo "║     scp -r ~/Desktop/FingerPrint \\                          ║"
-echo "║         ${USERNAME}@rolf.ifi.uzh.ch:${PROJECT_DIR}/          ║"
-echo "║                                                              ║"
-echo "║  2. Set API keys:                                            ║"
-echo "║     export OPENROUTER_API_KEY='your-key'                     ║"
-echo "║     export ROBOFLOW_API_KEY='your-key'                       ║"
-echo "║                                                              ║"
-echo "║  3. Activate environment:                                    ║"
-echo "║     conda activate ${CONDA_ENV}                              ║"
-echo "║                                                              ║"
-echo "║  4. Run benchmark (in a screen session!):                    ║"
-echo "║     screen -S fingerprint                                    ║"
-echo "║     cd ${PROJECT_DIR}/FingerPrint                            ║"
-echo "║     nice -n 20 python scripts/run_roboflow_benchmark.py \\   ║"
-echo "║         --models gpt-4o,claude-3.5-sonnet --n-images 100     ║"
-echo "║                                                              ║"
-echo "║  5. Check GPU usage before running:                          ║"
-echo "║     nvidia-smi                                               ║"
-echo "║                                                              ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
+echo "=============================================="
+echo "Setup complete!"
+echo "=============================================="
+echo ""
+echo "To run the benchmark manually:"
+echo "  source venv/bin/activate"
+echo "  CUDA_VISIBLE_DEVICES=0 python scripts/run_full_evaluation.py \\"
+echo "      --dataset $DATASET_PATH --lightweight"
+echo ""
+echo "Or run with screen for persistence:"
+echo "  screen -S fingerprint_benchmark"
+echo "  source venv/bin/activate"
+echo "  CUDA_VISIBLE_DEVICES=0 python scripts/run_full_evaluation.py \\"
+echo "      --dataset $DATASET_PATH --lightweight"
+echo "  # Detach: Ctrl+A, D"
+echo ""

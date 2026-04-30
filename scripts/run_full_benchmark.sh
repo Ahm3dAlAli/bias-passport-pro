@@ -17,7 +17,7 @@
 set -e
 
 # Configuration
-DATASET_PATH="${1:-/shares/fhibe/fhibe_face_crop_align}"
+DATASET_PATH="${1:-/local/scratch/alali/fhibe_data}"
 OUTPUT_DIR="results/full_benchmark_$(date +%Y%m%d_%H%M%S)"
 GPU="${2:-0}"
 
@@ -31,7 +31,7 @@ MODELS=(
     "Qwen/Qwen2.5-VL-3B-Instruct"
     "HuggingFaceTB/SmolVLM2-2.2B-Instruct"
     "google/paligemma-3b-mix-448"
-    "vikhyat/moondream2"
+    "    # "vikhyat/moondream2"  # Requires HF auth"
     "OpenGVLab/InternVL2-2B"
 
     # Latest Qwen Vision (2024-2025)

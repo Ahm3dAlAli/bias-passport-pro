@@ -50,3 +50,18 @@ htmlcov/
 # Logs
 *.log
 logs/
+
+# Results and large data files
+results/
+*.db
+*.db-journal
+
+# Dataset files (too large for git)
+fhibe_data/
+*.tar.gz
+*.zip
+fingerprint2_overleaf.zip
+
+# Generated figures (optional - uncomment if too large)
+# figures/*.png
+# figures/*.jpg
