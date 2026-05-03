@@ -119,7 +119,9 @@ def calculate_bias_scores(df):
         neg_count = sum(1 for word in negative_words if word in text_lower)
         return (pos_count - neg_count) / max(len(text_lower.split()), 1)
 
-    if 'bias_score' not in df.columns or df['bias_score'].isna().all():
+    # Check if we need to compute scores (if all zeros or all NA)
+    if 'bias_score' not in df.columns or df['bias_score'].isna().all() or (df['bias_score'] == 0).all():
+        print("  Computing bias scores from responses...")
         df['bias_score'] = df['response'].apply(score_response)
 
     return df
