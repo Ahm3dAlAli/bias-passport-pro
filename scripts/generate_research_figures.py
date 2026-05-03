@@ -245,16 +245,21 @@ def create_gaps_heatmap(all_data, output_path):
     # Pivot for heatmap
     heatmap_data = gap_df.pivot(index='Model', columns='Probe', values='Gap')
 
-    # Create heatmap
-    sns.heatmap(heatmap_data, annot=True, fmt='.3f', cmap='YlOrRd',
-                cbar_kws={'label': 'Bias Gap\n(Max - Min Region)'}, ax=ax,
-                linewidths=0.5, linecolor='gray')
-
-    plt.title('Regional Bias Gaps by Model and Probe', fontsize=14, fontweight='bold', pad=15)
-    plt.xlabel('Probe Type', fontsize=11)
-    plt.ylabel('Model', fontsize=11)
-    plt.xticks(rotation=45, ha='right')
-    plt.yticks(rotation=0)
+    # Check if we have data
+    if heatmap_data.empty or len(gaps) == 0:
+        ax.text(0.5, 0.5, 'No bias data available\n(judge_scores table missing)',
+                ha='center', va='center', transform=ax.transAxes, fontsize=14)
+        ax.set_title('Regional Bias Gaps by Model and Probe', fontsize=14, fontweight='bold', pad=15)
+    else:
+        # Create heatmap
+        sns.heatmap(heatmap_data, annot=True, fmt='.3f', cmap='YlOrRd',
+                    cbar_kws={'label': 'Bias Gap\n(Max - Min Region)'}, ax=ax,
+                    linewidths=0.5, linecolor='gray')
+        plt.title('Regional Bias Gaps by Model and Probe', fontsize=14, fontweight='bold', pad=15)
+        plt.xlabel('Probe Type', fontsize=11)
+        plt.ylabel('Model', fontsize=11)
+        plt.xticks(rotation=45, ha='right')
+        plt.yticks(rotation=0)
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
