@@ -1,0 +1,93 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║              ✅ FIXED - CORRECT ROLF CONFIGURATION                ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+CORRECT ROLF DETAILS:
+────────────────────────────────────────────────────────────────────
+Hostname: rolf.ifi.uzh.ch (University of Zurich)
+Username: alali
+Directory: /local/scratch/alali/FingerPrint
+SSH Alias: rolf (from your ~/.ssh/config)
+
+════════════════════════════════════════════════════════════════════
+
+CORRECT COMMANDS TO RUN:
+════════════════════════════════════════════════════════════════════
+
+Option 1: ONE-LINER (Recommended)
+────────────────────────────────────────────────────────────────────
+
+cd /Users/ahmeda./Desktop/FingerPrint && ./sync_to_rolf.sh && ./run_on_rolf.sh && ./sync_from_rolf.sh
+
+
+Option 2: STEP-BY-STEP
+────────────────────────────────────────────────────────────────────
+
+# Step 1: Sync to Rolf
+cd /Users/ahmeda./Desktop/FingerPrint
+./sync_to_rolf.sh
+
+# Step 2: Run on Rolf (automatic via SSH)
+./run_on_rolf.sh
+
+# Step 3: Sync results back
+./sync_from_rolf.sh
+
+
+Option 3: MANUAL (if automatic doesn't work)
+────────────────────────────────────────────────────────────────────
+
+# Step 1: Sync to Rolf
+cd /Users/ahmeda./Desktop/FingerPrint
+./sync_to_rolf.sh
+
+# Step 2: SSH to Rolf
+ssh rolf
+
+# Step 3: Navigate and run
+cd /local/scratch/alali/FingerPrint
+./RUN_AAAI_ANALYSIS.sh
+
+# Step 4: Exit Rolf
+exit
+
+# Step 5: Sync results back
+./sync_from_rolf.sh
+
+════════════════════════════════════════════════════════════════════
+
+WHAT WAS FIXED:
+────────────────────────────────────────────────────────────────────
+
+OLD (WRONG):
+  Username: ahmeda
+  Hostname: rolf.cs.washington.edu
+  Directory: /projects/ai2/ahmeda/FingerPrint
+
+NEW (CORRECT):
+  Username: alali
+  Hostname: rolf.ifi.uzh.ch
+  Directory: /local/scratch/alali/FingerPrint
+
+════════════════════════════════════════════════════════════════════
+
+FILES UPDATED:
+────────────────────────────────────────────────────────────────────
+
+✅ sync_to_rolf.sh - Fixed hostname, username, directory
+✅ sync_from_rolf.sh - Fixed hostname, username, directory
+✅ run_on_rolf.sh - Fixed hostname, username, directory
+✅ ROLF_INSTRUCTIONS.md - Updated documentation
+
+════════════════════════════════════════════════════════════════════
+
+NOW TRY AGAIN:
+════════════════════════════════════════════════════════════════════
+
+cd /Users/ahmeda./Desktop/FingerPrint && ./sync_to_rolf.sh
+
+This should work now! ✅
+
+════════════════════════════════════════════════════════════════════

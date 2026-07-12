@@ -1,0 +1,116 @@
+═══════════════════════════════════════════════════════════════════
+  ALL FILES CREATED FOR YOUR AAAI SUBMISSION
+═══════════════════════════════════════════════════════════════════
+
+MAIN EXECUTION:
+  ✓ RUN_AAAI_ANALYSIS.sh              - Master script (RUN THIS!)
+  ✓ START_HERE.md                     - Quick start guide
+  ✓ README_SIMPLE.md                  - Ultra-simple instructions
+  ✓ EXECUTE_NOW.txt                   - Visual prompt to run
+  ✓ COMPLETE_IMPLEMENTATION_SUMMARY.md - Full technical details
+
+ANALYSIS SCRIPTS (called by master script):
+  ✓ scripts/run_all_aaai_analyses.py
+  ✓ scripts/add_statistical_rigor.py
+  ✓ scripts/prompt_sensitivity_analysis.py
+  ✓ scripts/sample_for_validation.py
+  ✓ scripts/generate_all_publication_figures.py
+  ✓ scripts/extract_qualitative_examples.py
+
+RESEARCH DOCUMENTATION:
+  ✓ AAAI_RESEARCH_METHODOLOGY.md      - Full research framework
+  ✓ METHODOLOGY_RIGOR_ANALYSIS.md     - Prompt design & defense
+  ✓ READY_FOR_AAAI_CHECKLIST.md       - 4-week timeline
+  ✓ QUICKSTART_AAAI.md                - Detailed action plan
+  ✓ AAAI_PUBLICATION_CHECKLIST.md     - Figure quality guide
+  ✓ AAAI_FIGURE_IMPROVEMENTS.md       - Figure design notes
+
+EXISTING (YOUR WORK):
+  ✓ scripts/generate_worst_best_sentiment_figure.py
+  ✓ results/single_runs_35k/*.db (your data)
+  ✓ figures/paper_style/*.pdf (your figures)
+
+═══════════════════════════════════════════════════════════════════
+
+TO RUN EVERYTHING:
+
+    ./RUN_AAAI_ANALYSIS.sh
+
+═══════════════════════════════════════════════════════════════════
+
+OUTPUT (after running):
+
+results/aaai_submission/
+├── statistical_analysis.json
+├── statistical_analysis_summary.txt  ← Use in paper
+├── sensitivity/
+│   ├── prompt_sensitivity_analysis.json
+│   └── NEXT_STEPS.txt
+├── validation_sample.csv             ← Upload to MTurk
+├── MTurk_INSTRUCTIONS.txt
+├── figures/                          ← Use in paper
+│   ├── fig1_worst_best_regional_sentiment.pdf
+│   ├── fig2_regional_heatmap.pdf
+│   ├── fig3_probe_comparison.pdf
+│   └── fig4_model_leaderboard.pdf
+├── qualitative_examples.json         ← Use in paper
+├── qualitative_examples_table.tex
+└── analysis_summary.json
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT EACH SCRIPT DOES:
+
+add_statistical_rigor.py
+  → ANOVA, p-values, Cohen's d, CIs, power analysis
+  → Output: Publication-ready statistics
+
+prompt_sensitivity_analysis.py
+  → Tests robustness across 3 prompt variants
+  → Output: Correlation analysis
+
+sample_for_validation.py
+  → Creates stratified 200-sample for MTurk
+  → Output: CSV ready for upload (~$90 cost)
+
+generate_all_publication_figures.py
+  → Creates 4 AAAI-formatted figures
+  → Output: PDF + PNG, colorblind-safe
+
+extract_qualitative_examples.py
+  → Finds high/low bias examples
+  → Output: JSON + LaTeX table template
+
+═══════════════════════════════════════════════════════════════════
+
+DOCUMENTATION MAP:
+
+Need...                         Read...
+────────────────────────────────────────────────────────────────
+Quick start                     START_HERE.md
+Ultra-simple instructions       README_SIMPLE.md
+Full technical details          COMPLETE_IMPLEMENTATION_SUMMARY.md
+Research framework              AAAI_RESEARCH_METHODOLOGY.md
+Methodology defense             METHODOLOGY_RIGOR_ANALYSIS.md
+4-week timeline                 READY_FOR_AAAI_CHECKLIST.md
+Figure quality guide            AAAI_PUBLICATION_CHECKLIST.md
+
+═══════════════════════════════════════════════════════════════════
+
+TIMELINE:
+
+Now:        Run ./RUN_AAAI_ANALYSIS.sh (30 min)
+Week 1:     Upload validation_sample.csv to MTurk ($90)
+Week 2:     Write Methods + Results (32 hours)
+Week 3:     Write Intro + Discussion (24 hours)
+Week 4:     Polish + Submit (16 hours)
+
+Target:     AAAI 2027 AISI Track
+
+═══════════════════════════════════════════════════════════════════
+
+EVERYTHING IS READY. JUST EXECUTE:
+
+    ./RUN_AAAI_ANALYSIS.sh
+
+═══════════════════════════════════════════════════════════════════

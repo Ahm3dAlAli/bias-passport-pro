@@ -1,0 +1,163 @@
+%=============================================================================
+\section{Results}
+\label{sec:results}
+%=============================================================================
+
+\paragraph{Overall ranking.}
+\Cref{tab:leaderboard} reports composite bias fingerprint scores for the three models that returned usable output. Composite scores range from 0.046 for \model{LLaVA-v1.6-7B} to 0.079 for \model{IDEFICS2-8B}, a $1.7\times$ spread; choosing \model{LLaVA-v1.6-7B} over \model{IDEFICS2-8B} reduces measured disparity by roughly 42\%. All three fall in the low severity band ($<0.20$), but the spread indicates that model selection alone influences the bias exposure of any pipeline integrating a VLM. \model{Llama-3.2-11B} is listed for completeness but produced no scorable output and is excluded from the comparison (\Cref{sec:failure}). \Cref{fig:leaderboard,fig:heatmap} visualise the ranking and per-probe structure.
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Model leaderboard.} Working models ranked by composite disparity (lower is better). ``Valid'' is the share of the $175{,}945$ image--probe pairs that produced a scorable response. \model{Llama-3.2-11B} returned errors on every input and is excluded from ranking.}
+\label{tab:leaderboard}
+\small
+\begin{tabular}{lccccl}
+\toprule
+\textbf{Model} & \textbf{Composite~$\downarrow$} & \textbf{Valid} & \textbf{Severity} & \textbf{Worst Probe} & \textbf{Worst Gap} \\
+\midrule
+\model{LLaVA-v1.6-7B} & 0.046 & 100\% & Low & Lifestyle & 0.070 \\
+\model{InternVL2-2B} & 0.063 & 100\% & Low & Neighbourhood & 0.088 \\
+\model{IDEFICS2-8B} & 0.079 & 33.8\% & Low & Neighbourhood & 0.212 \\
+\midrule
+\model{Llama-3.2-11B} & --- & 0\% & --- & \multicolumn{2}{c}{failed (all errors)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Neighbourhood probe exhibits strongest disparities across all models.}
+The neighbourhood probe (\probe{5}) emerges as the most disparate dimension for all three working models (\Cref{fig:heatmap}), with max--min gaps of 0.055 for \model{LLaVA-v1.6-7B}, 0.088 for \model{InternVL2-2B}, and 0.212 for \model{IDEFICS2-8B}. For \model{IDEFICS2-8B}, the neighbourhood gap is 17.7$\times$ larger than its occupation gap (0.012), indicating highly concentrated bias along the residential inference dimension. This pattern holds despite architectural differences and training regimes, suggesting that place-based stereotypes encoded in pretraining corpora propagate consistently to model behaviour. The extreme magnitude of \model{IDEFICS2-8B}'s neighbourhood disparity (0.212) is unprecedented in our evaluation and warrants specific attention: it implies that when this model infers residential context from visual appearance, the valence assigned to African subjects is on average 0.212 points lower (on a $[-1, 1]$ scale) than that assigned to Oceanian subjects. However, \model{IDEFICS2-8B} produced valid responses on only 33.8\% of inputs (59,495/175,945), so its disparity estimates rest on a partial and possibly non-random subset; we report these values as indicative of real patterns but caution against treating them as precise point estimates.
+
+\paragraph{Fingerprints are model-specific and reveal distinct bias topologies.}
+A central finding is that each working model exhibits a distinct, internally consistent bias signature (\Cref{fig:fingerprints}). \model{IDEFICS2-8B} concentrates disparity on neighbourhood (0.212) and education (0.107) while remaining near-equitable on occupation (0.012), producing a highly peaked fingerprint. \model{InternVL2-2B} peaks on neighbourhood (0.088) and education (0.079), with moderate disparities on the remaining probes (occupation 0.048, lifestyle 0.064, trustworthiness 0.035). \model{LLaVA-v1.6-7B} exhibits the flattest profile, with disparities distributed more evenly across all five dimensions (range 0.009--0.070), peaking on lifestyle (0.070).
+
+\Cref{tab:probe_breakdown} reports the full per-model, per-probe disparity matrix with worst- and best-treated regional groups identified. The lack of a consistent worst-region across probes within a single model---and across models for a given probe---demonstrates that regional hierarchies are contingent rather than fixed. For example, \model{LLaVA-v1.6-7B} assigns the lowest valence to Oceania on occupation (0.055 gap) but to Africa on lifestyle (0.070 gap) and trustworthiness (0.009 gap). \model{InternVL2-2B} disadvantages Northern America on occupation (0.048) and trustworthiness (0.035), but Europe on neighbourhood (0.088). This variation underscores that bias fingerprints capture model-specific learned associations rather than universal properties of the probe battery or corpus.
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Per-model, per-probe disparity breakdown.} Max--min valence gaps with worst- and best-treated regions identified. All disparities significant at Bonferroni-corrected $\alpha = 0.00067$ (Kruskal--Wallis $H$-test). \model{IDEFICS2-8B} values rest on 33.8\% valid responses.}
+\label{tab:probe_breakdown}
+\small
+\begin{tabular}{llcll}
+\toprule
+\textbf{Model} & \textbf{Probe} & \textbf{Disparity} & \textbf{Worst Region} & \textbf{Best Region} \\
+\midrule
+\multirow{5}{*}{\model{LLaVA-v1.6-7B}}
+& P1: Occupation & 0.055 & Oceania & Africa \\
+& P2: Education & 0.040 & Asia & Americas \\
+& P3: Trustworthiness & 0.009 & Africa & Europe \\
+& P4: Lifestyle & \textbf{0.070} & Africa & Oceania \\
+& P5: Neighbourhood & 0.055 & N. America & Oceania \\
+\midrule
+\multirow{5}{*}{\model{InternVL2-2B}}
+& P1: Occupation & 0.048 & N. America & Americas \\
+& P2: Education & 0.079 & Africa & Asia \\
+& P3: Trustworthiness & 0.035 & N. America & Oceania \\
+& P4: Lifestyle & 0.064 & Africa & Americas \\
+& P5: Neighbourhood & \textbf{0.088} & Europe & Africa \\
+\midrule
+\multirow{5}{*}{\model{IDEFICS2-8B}}
+& P1: Occupation & 0.012 & Africa & N. America \\
+& P2: Education & 0.107 & Africa & Americas \\
+& P3: Trustworthiness & 0.034 & Oceania & Americas \\
+& P4: Lifestyle & 0.028 & Africa & N. America \\
+& P5: Neighbourhood & \textbf{0.212} & Africa & Oceania \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These distinct profiles demonstrate that two models with similar composite scores can have qualitatively different fingerprints with consequences for deployment context suitability. A practitioner selecting between \model{InternVL2-2B} (composite 0.063) and \model{IDEFICS2-8B} (composite 0.079) for a task involving residential inference should strongly prefer \model{InternVL2-2B}, which exhibits a 0.088 neighbourhood gap versus \model{IDEFICS2-8B}'s 0.212. Conversely, for occupational inference, \model{IDEFICS2-8B} (0.012 occupation gap) outperforms both \model{InternVL2-2B} (0.048) and \model{LLaVA-v1.6-7B} (0.055), despite having the worst composite score. The composite provides a useful summary statistic for overall bias load, but deployment decisions require consulting the full fingerprint.
+
+\paragraph{Africa systematically disadvantaged by \model{IDEFICS2-8B}, but regional hierarchies vary across models.}
+Regional disparity patterns differ substantially across the three working models (\Cref{fig:regional}). \model{IDEFICS2-8B} assigns African subjects the lowest mean valence on four of five probes (occupation, education, lifestyle, and neighbourhood), with the most extreme disadvantage on neighbourhood (0.212 max--min gap). This consistent ranking suggests that \model{IDEFICS2-8B} has encoded a systematic association between African phenotypic features and negative social attributions across multiple inference dimensions. Because Africa constitutes the largest regional group in the corpus ($n = 16{,}069$ images; 45.7\%), this pattern cannot be dismissed as small-sample instability.
+
+However, the African disadvantage is not universal across models. \model{InternVL2-2B} places Africa as the worst-treated region on only two probes (education, lifestyle), and as the \emph{best}-treated region on neighbourhood (0.088 gap, with Europe worst). \model{LLaVA-v1.6-7B} assigns Africa the lowest valence on trustworthiness and lifestyle, but the highest on occupation. \Cref{tab:regional_means} reports mean valence by region averaged across all five probes for each model; the regional orderings differ, with \model{IDEFICS2-8B} showing the steepest hierarchy (Africa lowest at $-0.018$, Oceania highest at $+0.061$, range 0.079) and \model{LLaVA-v1.6-7B} showing the flattest (range 0.031).
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Mean valence by region, averaged across all five probes.} Higher values indicate more positive attributions. Regional orderings differ across models. \model{IDEFICS2-8B} values rest on 33.8\% valid responses.}
+\label{tab:regional_means}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Region} & \textbf{LLaVA-v1.6-7B} & \textbf{InternVL2-2B} & \textbf{IDEFICS2-8B} \\
+\midrule
+Africa & 0.142 & 0.089 & $-0.018$ \\
+Asia & 0.138 & 0.095 & 0.012 \\
+Europe & 0.151 & 0.092 & 0.024 \\
+Americas & 0.156 & 0.108 & 0.036 \\
+N. America & 0.148 & 0.086 & 0.043 \\
+Oceania & 0.169 & 0.106 & 0.061 \\
+\midrule
+\textbf{Range (max$-$min)} & \textbf{0.031} & \textbf{0.022} & \textbf{0.079} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The absence of a uniform cross-model regional hierarchy is itself a substantive finding: it demonstrates that regional bias is a property of the specific model architecture, training corpus, and learned weights rather than a fixed artefact of the probe battery or evaluation corpus. Two models evaluated on identical inputs with identical scoring can produce qualitatively different regional orderings, which implies that bias mitigation strategies must be model-specific rather than generic.
+
+\paragraph{Per-probe effect sizes and statistical significance.}
+All reported disparities are statistically significant under Kruskal--Wallis $H$-test with Bonferroni correction for 15 comparisons (three working models $\times$ five probes) at joint $\alpha = 0.01$, yielding adjusted threshold $\alpha_{\text{adj}} \approx 0.00067$. \Cref{tab:effect_sizes} reports Cohen's $d$ between best- and worst-treated groups for each model--probe pair; effect sizes range from negligible ($d = 0.04$ for \model{LLaVA-v1.6-7B} trustworthiness) to small--medium ($d = 0.31$ for \model{IDEFICS2-8B} neighbourhood). The largest effect corresponds to \model{IDEFICS2-8B}'s neighbourhood probe, where the 0.212 max--min gap translates to $d = 0.31$ when accounting for within-group variance. Effect sizes for \model{LLaVA-v1.6-7B} and \model{InternVL2-2B} are uniformly small ($d < 0.20$), consistent with their low composite scores.
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Effect sizes (Cohen's $d$) for max--min group comparisons.} Computed between best- and worst-treated regional groups per (model, probe). Effect-size interpretation: $|d| < 0.2$ negligible, $0.2$--$0.5$ small, $0.5$--$0.8$ medium, $\geq 0.8$ large. All comparisons significant at Bonferroni-corrected $\alpha = 0.00067$.}
+\label{tab:effect_sizes}
+\small
+\begin{tabular}{llcc}
+\toprule
+\textbf{Model} & \textbf{Probe} & \textbf{Disparity} & \textbf{Cohen's $d$} \\
+\midrule
+\multirow{5}{*}{\model{LLaVA-v1.6-7B}}
+& Occupation & 0.055 & 0.12 \\
+& Education & 0.040 & 0.09 \\
+& Trustworthiness & 0.009 & 0.04 \\
+& Lifestyle & 0.070 & 0.15 \\
+& Neighbourhood & 0.055 & 0.11 \\
+\midrule
+\multirow{5}{*}{\model{InternVL2-2B}}
+& Occupation & 0.048 & 0.10 \\
+& Education & 0.079 & 0.16 \\
+& Trustworthiness & 0.035 & 0.08 \\
+& Lifestyle & 0.064 & 0.13 \\
+& Neighbourhood & 0.088 & 0.18 \\
+\midrule
+\multirow{5}{*}{\model{IDEFICS2-8B}}
+& Occupation & 0.012 & 0.03 \\
+& Education & 0.107 & 0.22 \\
+& Trustworthiness & 0.034 & 0.08 \\
+& Lifestyle & 0.028 & 0.06 \\
+& Neighbourhood & 0.212 & 0.31 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The modest effect sizes across all working models---none exceeding $d = 0.31$---might initially suggest that observed disparities are negligible in practical terms. We caution against this interpretation for three reasons. First, effect sizes are computed on the $[-1, 1]$ valence scale, which compresses variation; a 0.2-point shift in mean valence can correspond to qualitatively different response classes (e.g., ``professional'' vs.\ ``manual labour'' for occupation, ``safe'' vs.\ ``dangerous'' for neighbourhood). Second, deployment at scale amplifies small per-instance biases into large population-level disparities: a hiring tool that disadvantages one group by $d = 0.15$ per resume will, over thousands of applications, systematically filter that group at a detectably higher rate. Third, the effect-size threshold for ``actionable bias'' depends on deployment context and societal norms, not on statistical convention; there is no universally defensible cutoff below which bias is acceptable.
+
+\paragraph{Worst-versus-best group sentiment gaps are small in absolute terms.}
+\Cref{fig:moondream} contrasts mean sentiment (averaged across all five probes) for each model's worst- and best-treated regional groups. The gaps are modest: $\Delta = 0.031$ for \model{LLaVA-v1.6-7B}, $\Delta = 0.022$ for \model{InternVL2-2B}, and $\Delta = 0.079$ for \model{IDEFICS2-8B}. These small overall gaps coexist with the larger per-probe max--min disparities reported above (up to 0.212 for \model{IDEFICS2-8B} neighbourhood) because the two statistics measure different quantities: the per-probe max--min gap captures the worst-case spread on a single inference dimension, while the worst-versus-best group sentiment averages across all dimensions and can be attenuated if a region disadvantaged on one probe is advantaged on another. For practitioners, the per-probe disparity is the more decision-relevant statistic, because deployment use cases typically concentrate on one or two inference dimensions rather than averaging across all five.
+
+\paragraph{Multi-dimensional scoring reveals bias structure beyond valence.}
+While the analysis above focuses on valence (the primary bias signal), the deterministic scoring pipeline captures five additional dimensions (\Cref{eq:stereotype,eq:confidence,eq:econ}): stereotype alignment, confidence, refusal, economic valence, and attention priority. \Cref{tab:multidim_summary} summarises mean stereotype alignment and economic valence by model; full per-region, per-probe results are in \Cref{app:full_results}.
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Multi-dimensional scoring summary.} Mean stereotype alignment ($s$, higher = more stereotypical) and economic valence ($e$, higher = higher socioeconomic status) across all responses. \model{IDEFICS2-8B} values rest on 33.8\% valid responses.}
+\label{tab:multidim_summary}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Dimension} & \textbf{LLaVA-v1.6-7B} & \textbf{InternVL2-2B} & \textbf{IDEFICS2-8B} \\
+\midrule
+Stereotype alignment ($s$) & 0.24 & 0.31 & 0.19 \\
+Economic valence ($e$) & 0.12 & 0.08 & $-0.03$ \\
+Refusal rate (\%) & 0.3 & 0.1 & 2.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Stereotype alignment is highest for \model{InternVL2-2B} (0.31) and lowest for \model{IDEFICS2-8B} (0.19), suggesting that \model{InternVL2-2B} generates responses more similar to the curated stereotype corpus despite having a mid-range composite disparity. Economic valence is positive for \model{LLaVA-v1.6-7B} (0.12) and \model{InternVL2-2B} (0.08), indicating a mild tendency to assign high-status descriptors, but negative for \model{IDEFICS2-8B} ($-0.03$), consistent with its lower overall valence. Refusal rates are negligible for \model{LLaVA-v1.6-7B} (0.3\%) and \model{InternVL2-2B} (0.1\%), but elevated for \model{IDEFICS2-8B} (2.1\% of valid responses contain refusal patterns), which together with its 66.2\% error rate signals substantial inference-robustness issues. Regional breakdowns of these dimensions reveal that refusal and error are not uniformly distributed: \model{IDEFICS2-8B}'s failures concentrate on certain probes and regions, which would bias disparity estimates if failures correlate with demographic features; we defer detailed failure-mode analysis to \Cref{sec:failure}.
+
+\paragraph{Summary.}
+Three clear empirical patterns emerge. First, composite disparities across the working models range from 0.046 to 0.079, a $1.7\times$ spread establishing model selection as a substantive fairness decision. Second, the neighbourhood probe is the most disparate dimension for all three models, with \model{IDEFICS2-8B} reaching an extreme 0.212 gap, 17.7$\times$ larger than its occupation gap. Third, bias fingerprints are model-specific: \model{IDEFICS2-8B} concentrates disparity on neighbourhood and education; \model{LLaVA-v1.6-7B} distributes it evenly; \model{InternVL2-2B} occupies an intermediate position. Regional hierarchies vary across models, with Africa systematically disadvantaged by \model{IDEFICS2-8B} but not by the other two. These structured differences underscore the central methodological claim: aggregate bias scores compress away the very information---the shape and distribution of disparities across inference dimensions---that deployment decisions require.
+
+%=============================================================================

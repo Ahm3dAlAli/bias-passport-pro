@@ -1,0 +1,116 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║            RUN ALL AAAI ANALYSES ON ROLF - THREE STEPS           ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+STEP 1: SYNC TO ROLF (5-15 min)
+────────────────────────────────────────────────────────────────────
+./sync_to_rolf.sh
+
+  → Uploads all scripts, data, and documentation to Rolf
+  → Automatically compresses and transfers database files
+  → Shows progress bar
+
+
+STEP 2: RUN ON ROLF (15-30 min)
+────────────────────────────────────────────────────────────────────
+./run_on_rolf.sh
+
+  → Runs all 5 analysis scripts on Rolf
+  → Generates statistics, figures, samples
+  → 3× faster than running locally
+
+
+STEP 3: SYNC RESULTS BACK (2-5 min)
+────────────────────────────────────────────────────────────────────
+./sync_from_rolf.sh
+
+  → Downloads all results to local machine
+  → Places in results/aaai_submission/
+  → Ready to use in paper
+
+
+═══════════════════════════════════════════════════════════════════
+
+ONE-LINER (Complete Workflow):
+────────────────────────────────────────────────────────────────────
+./sync_to_rolf.sh && ./run_on_rolf.sh && ./sync_from_rolf.sh
+
+
+Total time: 20-40 minutes (hands-off, automated)
+
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT YOU GET:
+────────────────────────────────────────────────────────────────────
+results/aaai_submission/
+  ✓ statistical_analysis_summary.txt (copy-paste for paper)
+  ✓ figures/*.pdf (4 publication figures)
+  ✓ validation_sample.csv (upload to MTurk, $90)
+  ✓ qualitative_examples.json (example responses)
+  ✓ [complete analysis package]
+
+
+═══════════════════════════════════════════════════════════════════
+
+QUICK CHECK:
+────────────────────────────────────────────────────────────────────
+After running, verify:
+
+  cat results/aaai_submission/statistical_analysis_summary.txt
+  ls results/aaai_submission/figures/
+  wc -l results/aaai_submission/validation_sample.csv
+
+
+═══════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+────────────────────────────────────────────────────────────────────
+"Cannot connect to Rolf"
+  → Check VPN connection
+  → Test: ssh ahmeda@rolf.cs.washington.edu
+
+"Permission denied"
+  → chmod +x *.sh
+
+"Module not found"
+  → Scripts auto-install packages
+
+
+═══════════════════════════════════════════════════════════════════
+
+CONFIGURATION (if needed):
+────────────────────────────────────────────────────────────────────
+Edit these files to change paths:
+  - sync_to_rolf.sh (lines 10-13)
+  - sync_from_rolf.sh (lines 10-13)
+  - run_on_rolf.sh (lines 10-13)
+
+Default:
+  User: ahmeda
+  Host: rolf.cs.washington.edu
+  Directory: /projects/ai2/ahmeda/FingerPrint
+
+
+═══════════════════════════════════════════════════════════════════
+
+NEXT STEPS AFTER RUNNING:
+────────────────────────────────────────────────────────────────────
+1. Review statistical_analysis_summary.txt
+2. Check all 4 figures look good
+3. Upload validation_sample.csv to MTurk
+4. Start writing paper (see READY_FOR_AAAI_CHECKLIST.md)
+
+
+Timeline to submission: 3-4 weeks
+
+
+═══════════════════════════════════════════════════════════════════
+
+             READY TO RUN? EXECUTE THE ONE-LINER! 🚀
+
+./sync_to_rolf.sh && ./run_on_rolf.sh && ./sync_from_rolf.sh
+
+═══════════════════════════════════════════════════════════════════

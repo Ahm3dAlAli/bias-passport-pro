@@ -1,0 +1,569 @@
+{
+ "meta": {
+  "alpha_joint": 0.01,
+  "n_comparisons": 15,
+  "alpha_adj": 0.0006666666666666666,
+  "bootstrap_B": 10000,
+  "valence_method": "word-count ratio pos/(pos+neg), 0.5 neutral, errors->NaN dropped",
+  "models": {
+   "llava": "LLaVA-v1.6-7B",
+   "internvl2": "InternVL2-2B",
+   "idefics2": "IDEFICS2-8B"
+  },
+  "note_idefics2_coverage": "Paper reports IDEFICS2 valid coverage 33.8% (59,495/175,945); composite 0.079 and all per-probe disparities reproduce from this DB which scores all rows. Coverage caveat carried per validated framing."
+ },
+ "composites": {
+  "llava": {
+   "composite": 0.045899554810167706,
+   "ci_lo": 0.02731327278063369,
+   "ci_hi": 0.0611980346267042
+  },
+  "internvl2": {
+   "composite": 0.06282608678727904,
+   "ci_lo": 0.04571918459365491,
+   "ci_hi": 0.07940111880364892
+  },
+  "idefics2": {
+   "composite": 0.07853462241968943,
+   "ci_lo": 0.02298621929218554,
+   "ci_hi": 0.15391756114092736
+  }
+ },
+ "region_means_by_probe": {
+  "llava": {
+   "P1_occupation": {
+    "Africa": 0.8315856618333437,
+    "Asia": 0.8119573487289653,
+    "Europe": 0.8068965517241379,
+    "Americas": 0.8224969474969475,
+    "Northern America": 0.8255208333333334,
+    "Oceania": 0.7761299435028248
+   },
+   "P2_education": {
+    "Africa": 0.6393169041840397,
+    "Asia": 0.6271817937701396,
+    "Europe": 0.6534841954022989,
+    "Americas": 0.6670482295482296,
+    "Northern America": 0.6578414351851851,
+    "Oceania": 0.6423022598870057
+   },
+   "P3_trustworthiness": {
+    "Africa": 0.500964590204742,
+    "Asia": 0.5029873791621912,
+    "Europe": 0.5099137931034483,
+    "Americas": 0.5068681318681318,
+    "Northern America": 0.5043402777777778,
+    "Oceania": 0.5063559322033898
+   },
+   "P4_lifestyle": {
+    "Africa": 0.4915883585371419,
+    "Asia": 0.5005034908700322,
+    "Europe": 0.5158045977011495,
+    "Americas": 0.5474664224664225,
+    "Northern America": 0.5234375,
+    "Oceania": 0.5614406779661016
+   },
+   "P5_neighbourhood": {
+    "Africa": 0.47538946626008666,
+    "Asia": 0.4839722073039742,
+    "Europe": 0.46170977011494246,
+    "Americas": 0.4937423687423687,
+    "Northern America": 0.45804398148148145,
+    "Oceania": 0.5134180790960452
+   }
+  },
+  "internvl2": {
+   "P1_occupation": {
+    "Africa": 0.5946646752546312,
+    "Asia": 0.6168602309344791,
+    "Europe": 0.5977729885057471,
+    "Americas": 0.6303418803418803,
+    "Northern America": 0.58203125,
+    "Oceania": 0.6002824858757062
+   },
+   "P2_education": {
+    "Africa": 0.6933007654490013,
+    "Asia": 0.7719577962764053,
+    "Europe": 0.7252729885057471,
+    "Americas": 0.7357142857142858,
+    "Northern America": 0.7122395833333334,
+    "Oceania": 0.7168079096045198
+   },
+   "P3_trustworthiness": {
+    "Africa": 0.9180112402170401,
+    "Asia": 0.9237099445041175,
+    "Europe": 0.9147772988505745,
+    "Americas": 0.9214743589743589,
+    "Northern America": 0.8910590277777778,
+    "Oceania": 0.9264124293785311
+   },
+   "P4_lifestyle": {
+    "Africa": 0.48002883398676544,
+    "Asia": 0.49742100787683496,
+    "Europe": 0.5023706896551724,
+    "Americas": 0.5439560439560439,
+    "Northern America": 0.5085358796296297,
+    "Oceania": 0.5127118644067796
+   },
+   "P5_neighbourhood": {
+    "Africa": 0.5783994025763892,
+    "Asia": 0.5366272824919441,
+    "Europe": 0.49051724137931035,
+    "Americas": 0.5042735042735043,
+    "Northern America": 0.509837962962963,
+    "Oceania": 0.5021186440677966
+   }
+  },
+  "idefics2": {
+   "P1_occupation": {
+    "Africa": 0.4852822204244197,
+    "Asia": 0.49473012889366275,
+    "Europe": 0.49676724137931033,
+    "Americas": 0.49633699633699635,
+    "Northern America": 0.4973958333333333,
+    "Oceania": 0.4957627118644068
+   },
+   "P2_education": {
+    "Africa": 0.6145061920467981,
+    "Asia": 0.6694750268528464,
+    "Europe": 0.6853448275862069,
+    "Americas": 0.7211538461538461,
+    "Northern America": 0.7065972222222222,
+    "Oceania": 0.6864406779661016
+   },
+   "P3_trustworthiness": {
+    "Africa": 0.5399527039641546,
+    "Asia": 0.5319325098460437,
+    "Europe": 0.5390086206896552,
+    "Americas": 0.5531135531135531,
+    "Northern America": 0.5373263888888888,
+    "Oceania": 0.5190677966101694
+   },
+   "P4_lifestyle": {
+    "Africa": 0.49337233181903045,
+    "Asia": 0.5013090762620838,
+    "Europe": 0.5150862068965517,
+    "Americas": 0.5132783882783882,
+    "Northern America": 0.5217013888888888,
+    "Oceania": 0.5021186440677966
+   },
+   "P5_neighbourhood": {
+    "Africa": 0.27363246001618025,
+    "Asia": 0.4183002148227712,
+    "Europe": 0.4495689655172414,
+    "Americas": 0.41620879120879123,
+    "Northern America": 0.4635416666666667,
+    "Oceania": 0.4851694915254237
+   }
+  }
+ },
+ "region_mean_avg": {
+  "llava": {
+   "Africa": 0.5877689962038708,
+   "Asia": 0.5853204439670605,
+   "Europe": 0.5895617816091954,
+   "Americas": 0.6075244200244201,
+   "Northern America": 0.5938368055555555,
+   "Oceania": 0.5999293785310733
+  },
+  "internvl2": {
+   "Africa": 0.6528809834967654,
+   "Asia": 0.6693152524167563,
+   "Europe": 0.6461422413793103,
+   "Americas": 0.6671520146520147,
+   "Northern America": 0.6407407407407408,
+   "Oceania": 0.6516666666666667
+  },
+  "idefics2": {
+   "Africa": 0.4813491816541166,
+   "Asia": 0.5231493913354816,
+   "Europe": 0.5371551724137931,
+   "Americas": 0.540018315018315,
+   "Northern America": 0.5453124999999999,
+   "Oceania": 0.5377118644067796
+  }
+ },
+ "disparity_matrix": {
+  "llava": {
+   "P1_occupation": {
+    "disp": 0.05545571833051888,
+    "worst": "Oceania",
+    "best": "Africa"
+   },
+   "P2_education": {
+    "disp": 0.039866435778090015,
+    "worst": "Asia",
+    "best": "Americas"
+   },
+   "P3_trustworthiness": {
+    "disp": 0.008949202898706266,
+    "worst": "Africa",
+    "best": "Europe"
+   },
+   "P4_lifestyle": {
+    "disp": 0.06985231942895975,
+    "worst": "Africa",
+    "best": "Oceania"
+   },
+   "P5_neighbourhood": {
+    "disp": 0.055374097614563744,
+    "worst": "Northern America",
+    "best": "Oceania"
+   }
+  },
+  "internvl2": {
+   "P1_occupation": {
+    "disp": 0.04831063034188032,
+    "worst": "Northern America",
+    "best": "Americas"
+   },
+   "P2_education": {
+    "disp": 0.07865703082740394,
+    "worst": "Africa",
+    "best": "Asia"
+   },
+   "P3_trustworthiness": {
+    "disp": 0.03535340160075329,
+    "worst": "Northern America",
+    "best": "Oceania"
+   },
+   "P4_lifestyle": {
+    "disp": 0.06392720996927848,
+    "worst": "Africa",
+    "best": "Americas"
+   },
+   "P5_neighbourhood": {
+    "disp": 0.08788216119707887,
+    "worst": "Europe",
+    "best": "Africa"
+   }
+  },
+  "idefics2": {
+   "P1_occupation": {
+    "disp": 0.012113612908913607,
+    "worst": "Africa",
+    "best": "Northern America"
+   },
+   "P2_education": {
+    "disp": 0.10664765410704802,
+    "worst": "Africa",
+    "best": "Americas"
+   },
+   "P3_trustworthiness": {
+    "disp": 0.034045756503383706,
+    "worst": "Oceania",
+    "best": "Americas"
+   },
+   "P4_lifestyle": {
+    "disp": 0.028329057069858388,
+    "worst": "Africa",
+    "best": "Northern America"
+   },
+   "P5_neighbourhood": {
+    "disp": 0.21153703150924347,
+    "worst": "Africa",
+    "best": "Oceania"
+   }
+  }
+ },
+ "kruskal_wallis": {
+  "llava": {
+   "P1_occupation": {
+    "H": 53.232716489436854,
+    "p": 3.0129155301774593e-10,
+    "eta2": 0.0013709097146189027,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P2_education": {
+    "H": 48.953646977640716,
+    "p": 2.2681934988396506e-09,
+    "eta2": 0.0012492865013682948,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P3_trustworthiness": {
+    "H": 63.282963592826725,
+    "p": 2.5436010590580514e-12,
+    "eta2": 0.001656566057267053,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P4_lifestyle": {
+    "H": 119.89608590569631,
+    "p": 3.301739453998915e-24,
+    "eta2": 0.0032656705200152436,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P5_neighbourhood": {
+    "H": 20.678359652093167,
+    "p": 0.0009315792089753314,
+    "eta2": 0.00044562316039260916,
+    "n": 35189,
+    "k": 6,
+    "sig": false
+   }
+  },
+  "internvl2": {
+   "P1_occupation": {
+    "H": 76.56630390890594,
+    "p": 4.381434379167906e-15,
+    "eta2": 0.0020341160193532654,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P2_education": {
+    "H": 558.8216718369553,
+    "p": 1.590280866503816e-118,
+    "eta2": 0.01574117249344727,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P3_trustworthiness": {
+    "H": 17.306520921007632,
+    "p": 0.003953704202963478,
+    "eta2": 0.0003497860023593108,
+    "n": 35189,
+    "k": 6,
+    "sig": false
+   },
+   "P4_lifestyle": {
+    "H": 84.11517938507441,
+    "p": 1.153842225869409e-16,
+    "eta2": 0.002248676331895359,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P5_neighbourhood": {
+    "H": 465.51857681822474,
+    "p": 2.2051875072861335e-98,
+    "eta2": 0.013089235619993313,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   }
+  },
+  "idefics2": {
+   "P1_occupation": {
+    "H": 186.3096653978755,
+    "p": 2.401686003658043e-38,
+    "eta2": 0.005153331591901643,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P2_education": {
+    "H": 697.4618384762125,
+    "p": 1.738010038126762e-148,
+    "eta2": 0.01968171669488709,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P3_trustworthiness": {
+    "H": 35.341373563980895,
+    "p": 1.2861207862861234e-06,
+    "eta2": 0.0008623873337686069,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P4_lifestyle": {
+    "H": 123.97946188748877,
+    "p": 4.503095730361618e-25,
+    "eta2": 0.00338173157171045,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   },
+   "P5_neighbourhood": {
+    "H": 3886.911416485719,
+    "p": 0.0,
+    "eta2": 0.1103348610546491,
+    "n": 35189,
+    "k": 6,
+    "sig": true
+   }
+  }
+ },
+ "dunn_posthoc": {
+  "llava": {
+   "P1_occupation": {
+    "worst": "Oceania",
+    "best": "Africa",
+    "delta": 0.05545571833051888,
+    "z": 2.9848224171762077,
+    "p_holm": 0.036886589731788044,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P2_education": {
+    "worst": "Asia",
+    "best": "Americas",
+    "delta": 0.039866435778090015,
+    "z": -4.889527854534702,
+    "p_holm": 1.5161718004419455e-05,
+    "sig": true,
+    "africa_endpoint": false
+   },
+   "P3_trustworthiness": {
+    "worst": "Africa",
+    "best": "Europe",
+    "delta": 0.008949202898706266,
+    "z": -7.277268854194836,
+    "p_holm": 5.10924635932497e-12,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P4_lifestyle": {
+    "worst": "Africa",
+    "best": "Oceania",
+    "delta": 0.06985231942895975,
+    "z": -4.999100092037492,
+    "p_holm": 6.911819927069018e-06,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P5_neighbourhood": null
+  },
+  "internvl2": {
+   "P1_occupation": {
+    "worst": "Northern America",
+    "best": "Americas",
+    "delta": 0.04831063034188032,
+    "z": 3.5507002064558497,
+    "p_holm": 0.004610493497048118,
+    "sig": true,
+    "africa_endpoint": false
+   },
+   "P2_education": {
+    "worst": "Africa",
+    "best": "Asia",
+    "delta": 0.07865703082740394,
+    "z": -23.423669650115887,
+    "p_holm": 0.0,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P3_trustworthiness": null,
+   "P4_lifestyle": {
+    "worst": "Africa",
+    "best": "Americas",
+    "delta": 0.06392720996927848,
+    "z": -7.551394864790352,
+    "p_holm": 6.461498003318411e-13,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P5_neighbourhood": {
+    "worst": "Europe",
+    "best": "Africa",
+    "delta": 0.08788216119707887,
+    "z": 16.0245827936101,
+    "p_holm": 0.0,
+    "sig": true,
+    "africa_endpoint": true
+   }
+  },
+  "idefics2": {
+   "P1_occupation": {
+    "worst": "Africa",
+    "best": "Northern America",
+    "delta": 0.012113612908913607,
+    "z": -4.192055145042761,
+    "p_holm": 0.0003317265319848772,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P2_education": {
+    "worst": "Africa",
+    "best": "Americas",
+    "delta": 0.10664765410704802,
+    "z": -14.944351599336581,
+    "p_holm": 0.0,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P3_trustworthiness": {
+    "worst": "Oceania",
+    "best": "Americas",
+    "delta": 0.034045756503383706,
+    "z": 2.9926213585260353,
+    "p_holm": 0.035957047607324766,
+    "sig": true,
+    "africa_endpoint": false
+   },
+   "P4_lifestyle": {
+    "worst": "Africa",
+    "best": "Northern America",
+    "delta": 0.028329057069858388,
+    "z": -5.6917280740909115,
+    "p_holm": 1.6348803488774877e-07,
+    "sig": true,
+    "africa_endpoint": true
+   },
+   "P5_neighbourhood": {
+    "worst": "Africa",
+    "best": "Oceania",
+    "delta": 0.21153703150924347,
+    "z": -14.139855609282211,
+    "p_holm": 0.0,
+    "sig": true,
+    "africa_endpoint": true
+   }
+  }
+ },
+ "bootstrap_neighbourhood": {
+  "llava": {
+   "point": 0.055374097614563744,
+   "lo": 0.029812171964079755,
+   "hi": 0.09938528120738363
+  },
+  "internvl2": {
+   "point": 0.08788216119707887,
+   "lo": 0.07952754940887109,
+   "hi": 0.10249263372679897
+  },
+  "idefics2": {
+   "point": 0.21153703150924347,
+   "lo": 0.19820272970721606,
+   "hi": 0.22340600018353057
+  }
+ },
+ "africa_min_counts": {
+  "llava": 2,
+  "internvl2": 2,
+  "idefics2": 4
+ },
+ "n_sig_omnibus": 13,
+ "probe_order": [
+  "P1_occupation",
+  "P2_education",
+  "P3_trustworthiness",
+  "P4_lifestyle",
+  "P5_neighbourhood"
+ ],
+ "probe_label": {
+  "P1_occupation": "Occupation",
+  "P2_education": "Education",
+  "P3_trustworthiness": "Trustworthiness",
+  "P4_lifestyle": "Lifestyle",
+  "P5_neighbourhood": "Neighbourhood"
+ },
+ "region_order": [
+  "Africa",
+  "Asia",
+  "Europe",
+  "Americas",
+  "Northern America",
+  "Oceania"
+ ]
+}

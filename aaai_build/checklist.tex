@@ -1,0 +1,84 @@
+%% AAAI 2027 Reproducibility Checklist -- filled for:
+%% "Beyond a Single Verdict: Multi-Dimensional Bias Fingerprints for Responsible VLM Deployment"
+%% Compile standalone (pdflatex) or \input{checklist} at the end of main.tex.
+\documentclass[letterpaper]{article}
+\usepackage[submission]{aaai25}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage[hyphens]{url}
+\usepackage{graphicx}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\usepackage{natbib}
+\usepackage{caption}
+\usepackage{enumitem}
+\frenchspacing
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+\pdfinfo{/TemplateVersion (2025.1)}
+
+\title{Reproducibility Checklist\\ \large Beyond a Single Verdict: Multi-Dimensional Bias Fingerprints for Responsible VLM Deployment}
+\author{}
+\affiliations{}
+
+\begin{document}
+\maketitle
+
+\noindent This checklist follows the AAAI Reproducibility Checklist. Answers
+refer to the accompanying paper; section names below point to where each item is
+substantiated.
+
+\section*{1. General Paper Structure}
+\begin{enumerate}[leftmargin=*]
+\item Includes a conceptual outline and/or pseudocode description of AI methods introduced. \textbf{yes} --- the Deterministic Scoring Pipeline section gives the six scoring functions in closed form; the appendix provides the verbatim reference implementation of \texttt{score\_response} and all lexicons.
+\item Clearly delineates statements that are opinions, hypothesis, and speculation from objective facts and results. \textbf{yes} --- the Motivation section frames the five premises as arguments; empirical claims are confined to Results and the appendix tables.
+\item Provides well-marked pedagogical references for less-familiar readers to gain background necessary to replicate the paper. \textbf{yes} --- Related Work and the probe grounding cite the Stereotype Content Model and implicit-association literature.
+\end{enumerate}
+
+\section*{2. Theoretical Contributions}
+\noindent \textbf{Does this paper make theoretical contributions? no.} The paper's
+contribution is a benchmark and an empirical audit, together with a
+measurement-methodology argument; it proves no formal theorems. Items 2a--2h are
+therefore not applicable.
+
+\section*{3. Datasets}
+\noindent \textbf{Does this paper rely on one or more datasets? yes.}
+\begin{enumerate}[leftmargin=*]
+\item A motivation is given for why the experiments are conducted on the selected datasets. \textbf{yes} --- the Dataset subsection explains that FHIBE provides consented, self-reported demographic attributes, avoiding the circularity of imputed labels.
+\item All novel datasets introduced in this paper are included in a data appendix. \textbf{NA} --- no novel dataset is introduced; the paper evaluates on the existing FHIBE corpus.
+\item All novel datasets will be made publicly available upon publication with a license that allows free use for research. \textbf{NA} --- no novel dataset introduced.
+\item All datasets drawn from the existing literature are accompanied by appropriate citation and, when available, a link/DOI. \textbf{yes} --- FHIBE is cited; the corpus statistics appendix documents counts and provenance.
+\item All datasets that are not publicly available are described in detail, with an explanation of why publicly available alternatives are not used. \textbf{NA} --- FHIBE is the sole corpus and is a released, access-controlled human-centric benchmark; its access terms are described in the Ethics section.
+\end{enumerate}
+
+\section*{4. Computational Experiments}
+\noindent \textbf{Does this paper include computational experiments? yes.}
+\begin{enumerate}[leftmargin=*]
+\item This paper states the number and range of values tried per (hyper-)parameter during development, along with the criterion used for selecting the final value. \textbf{yes} --- decoding uses the documented defaults (temperature 0.7, top-$p$ 0.9, max 256 tokens); scoring has no learned hyperparameters (deterministic lexicon rules), stated in Experimental Setup and the appendix.
+\item Any code required for pre-processing data is included in the appendix. \textbf{yes} --- the appendix gives the verbatim scoring reference implementation and preprocessing description (seed 42).
+\item All source code required for conducting and analyzing the experiments is included in a code appendix. \textbf{partial} --- the scoring/analysis reference code and all lexicons are in the appendix; the full inference-harness repository is not bundled in the anonymous submission but the deterministic pipeline is fully specified.
+\item All source code required for conducting and analyzing the experiments will be made publicly available upon publication. \textbf{yes} --- the benchmark code and analysis scripts are intended for public release on acceptance.
+\item All source code implementing new methods have comments detailing the implementation, with references to the paper where each step comes from. \textbf{yes} --- the reference implementation in the appendix is annotated and cross-referenced to the scoring definitions.
+\item If an algorithm depends on randomness, then the method used for setting seeds is described in a way sufficient to allow replication of results. \textbf{yes} --- bootstrap resampling uses a fixed seed (42), stated in the Disparity Metrics section and the bootstrap-CI appendix; the scoring pipeline itself is deterministic (bit-exact across runs).
+\item This paper specifies the computing infrastructure used for running experiments (hardware and software), including GPU/CPU models; amount of memory; operating system; names and versions of relevant software libraries and frameworks. \textbf{partial} --- Experimental Setup states NVIDIA A100 GPUs and 4-bit quantised inference; exact driver/library versions are not enumerated in the anonymous submission.
+\item This paper formally describes evaluation metrics used and explains the motivation for choosing these metrics. \textbf{yes} --- per-probe max--min disparity, the composite, Cohen's $d$, and the Kruskal--Wallis $H$ statistic are defined formally with motivation in the Disparity Metrics section.
+\item This paper states the number of algorithm runs used to compute each reported result. \textbf{yes} --- the full corpus (35{,}189 images $\times$ 5 probes = 175{,}945 image--probe pairs per model, 527{,}835 scored responses across three models) is evaluated once per model; scoring is deterministic, so repeated runs are identical.
+\item Analysis of experiments goes beyond single-dimensional summaries of performance (e.g., average; median) to include measures of variation, confidence, or other distributional information. \textbf{yes} --- the appendix reports Kruskal--Wallis omnibus tests, Dunn's post-hoc contrasts with Holm correction, rank effect sizes ($\eta^2_H$), and bootstrap 95\% confidence intervals.
+\item The significance of any improvement or decrease in performance is judged using appropriate statistical tests (e.g., Wilcoxon signed-rank). \textbf{yes} --- Kruskal--Wallis with Bonferroni correction across 15 model--probe pairs ($\alpha_{\mathrm{adj}}\approx0.00067$), plus Dunn's post-hoc; the paper explicitly cautions that large-$n$ significance be read against effect sizes.
+\item This paper lists all final (hyper-)parameters used for each model/algorithm in the paper's experiments. \textbf{yes} --- decoding parameters and the complete scoring specification (lexicons, refusal patterns, thresholds) are listed in the appendix.
+\end{enumerate}
+
+\section*{Honest caveats (also stated in the paper)}
+\begin{itemize}[leftmargin=*]
+\item The bootstrap resampling unit is the \emph{image}, not the subject, because
+the result databases expose image identifiers but not subject identifiers; the
+intervals are therefore image-level and may modestly understate within-subject
+correlation (stated in the bootstrap-CI appendix).
+\item \texttt{IDEFICS2-8B}'s disparities are computed on the 33.8\% of inputs that
+returned scorable output (59{,}495 / 175{,}945) and are reported with an explicit
+coverage caveat throughout; coverage itself is analysed as a fairness quantity in
+the Coverage section.
+\end{itemize}
+
+\end{document}

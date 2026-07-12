@@ -1,0 +1,161 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║          COMPLETE FILE STRUCTURE - EVERYTHING READY              ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+FingerPrint/
+│
+├─── EXECUTION SCRIPTS ────────────────────────────────────────────
+│   ├── RUN_AAAI_ANALYSIS.sh         ⭐ Run locally
+│   ├── sync_to_rolf.sh              ⭐ Upload to Rolf
+│   ├── run_on_rolf.sh               ⭐ Run on Rolf
+│   └── sync_from_rolf.sh            ⭐ Download from Rolf
+│
+├─── QUICK START GUIDES ───────────────────────────────────────────
+│   ├── START_HERE.md                📖 Begin here
+│   ├── README_SIMPLE.md             📖 Ultra-simple guide
+│   ├── EXECUTE_NOW.txt              📖 Local execution
+│   ├── EXECUTE_ON_ROLF.txt          📖 Rolf execution
+│   ├── FINAL_SUMMARY.md             📖 Complete overview
+│   └── FILES_CREATED.txt            📖 File inventory
+│
+├─── ANALYSIS SCRIPTS ─────────────────────────────────────────────
+│   └── scripts/
+│       ├── run_all_aaai_analyses.py           (Master)
+│       ├── add_statistical_rigor.py           (Stats)
+│       ├── prompt_sensitivity_analysis.py     (Robustness)
+│       ├── sample_for_validation.py           (MTurk)
+│       ├── generate_all_publication_figures.py (Figures)
+│       ├── extract_qualitative_examples.py    (Examples)
+│       └── generate_worst_best_sentiment_figure.py (Your existing)
+│
+├─── RESEARCH DOCUMENTATION ───────────────────────────────────────
+│   ├── AAAI_RESEARCH_METHODOLOGY.md         (Full framework)
+│   ├── METHODOLOGY_RIGOR_ANALYSIS.md        (Prompt defense)
+│   ├── READY_FOR_AAAI_CHECKLIST.md          (4-week timeline)
+│   ├── QUICKSTART_AAAI.md                   (Action plan)
+│   ├── AAAI_PUBLICATION_CHECKLIST.md        (Figure quality)
+│   ├── AAAI_FIGURE_IMPROVEMENTS.md          (Design notes)
+│   ├── ROLF_INSTRUCTIONS.md                 (Rolf workflow)
+│   └── COMPLETE_IMPLEMENTATION_SUMMARY.md   (Full tech details)
+│
+├─── YOUR DATA ────────────────────────────────────────────────────
+│   └── results/single_runs_35k/
+│       ├── gpu0_HuggingFaceM4_idefics2_8b_*.db
+│       ├── gpu0_OpenGVLab_InternVL2_2B_*.db
+│       └── gpu0_llava_hf_llava_v1.6_vicuna_7b_hf_*.db
+│
+└─── OUTPUT (after running) ───────────────────────────────────────
+    └── results/aaai_submission/
+        ├── statistical_analysis.json
+        ├── statistical_analysis_summary.txt  ⭐ Use in paper
+        ├── sensitivity/
+        │   ├── prompt_sensitivity_analysis.json
+        │   ├── NEXT_STEPS.txt
+        │   └── prompt_sensitivity_figure.png
+        ├── validation_sample.csv             ⭐ MTurk upload
+        ├── MTurk_INSTRUCTIONS.txt
+        ├── figures/                          ⭐ Use in paper
+        │   ├── fig1_worst_best_regional_sentiment.pdf
+        │   ├── fig1_worst_best_regional_sentiment.png
+        │   ├── fig2_regional_heatmap.pdf
+        │   ├── fig2_regional_heatmap.png
+        │   ├── fig3_probe_comparison.pdf
+        │   ├── fig3_probe_comparison.png
+        │   ├── fig4_model_leaderboard.pdf
+        │   └── fig4_model_leaderboard.png
+        ├── qualitative_examples.json         ⭐ Use in paper
+        ├── qualitative_examples_table.tex
+        └── analysis_summary.json
+
+═══════════════════════════════════════════════════════════════════
+
+EXECUTION OPTIONS:
+────────────────────────────────────────────────────────────────────
+
+LOCAL (15-30 min):
+  ./RUN_AAAI_ANALYSIS.sh
+
+ROLF (20-40 min total, 3× faster processing):
+  ./sync_to_rolf.sh && ./run_on_rolf.sh && ./sync_from_rolf.sh
+
+═══════════════════════════════════════════════════════════════════
+
+OUTPUT FILES (⭐ = use directly in paper):
+────────────────────────────────────────────────────────────────────
+
+⭐ statistical_analysis_summary.txt
+   → Copy-paste statistics into paper
+   → F-values, p-values, effect sizes, CIs
+
+⭐ figures/*.pdf (4 publication-ready figures)
+   → AAAI dimensions, fonts, colors
+   → Insert with \includegraphics
+
+⭐ validation_sample.csv
+   → Upload to MTurk
+   → Cost: ~$90 (200 samples × 3 raters × $0.15)
+
+⭐ qualitative_examples.json
+   → High/low bias examples
+   → Create Table 1 showing actual outputs
+
+═══════════════════════════════════════════════════════════════════
+
+DOCUMENTATION MAP:
+────────────────────────────────────────────────────────────────────
+
+Need quick start?           → START_HERE.md
+Want ultra-simple?           → README_SIMPLE.md
+Running on Rolf?             → ROLF_INSTRUCTIONS.md
+Need full tech details?      → COMPLETE_IMPLEMENTATION_SUMMARY.md
+Planning research?           → AAAI_RESEARCH_METHODOLOGY.md
+Defending methodology?       → METHODOLOGY_RIGOR_ANALYSIS.md
+Following timeline?          → READY_FOR_AAAI_CHECKLIST.md
+Checking figure quality?     → AAAI_PUBLICATION_CHECKLIST.md
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT EACH SCRIPT DOES:
+────────────────────────────────────────────────────────────────────
+
+add_statistical_rigor.py
+  → ANOVA, p-values, Cohen's d, CIs, power analysis
+  → For each model and probe
+  → Output: Publication-ready statistics
+
+prompt_sensitivity_analysis.py
+  → Tests 3 prompt variants per probe
+  → Measures correlation (target: r > 0.85)
+  → Output: Robustness validation
+
+sample_for_validation.py
+  → Stratified sampling (200 responses)
+  → Balanced across regions/probes
+  → Output: MTurk-ready CSV
+
+generate_all_publication_figures.py
+  → Creates 4 AAAI-formatted figures
+  → Worst/best, heatmap, probes, leaderboard
+  → Output: PDF + PNG, colorblind-safe
+
+extract_qualitative_examples.py
+  → Finds high/low bias examples
+  → 10 per region per bias level
+  → Output: JSON + LaTeX table template
+
+═══════════════════════════════════════════════════════════════════
+
+TIMELINE AFTER RUNNING:
+────────────────────────────────────────────────────────────────────
+
+Now:      Run analysis (30-40 min)
+Week 1:   MTurk validation ($90, 3 days wait)
+Week 2:   Write Methods + Results (32h)
+Week 3:   Write Intro + Discussion (24h)
+Week 4:   Polish + Submit to AAAI (16h)
+
+═══════════════════════════════════════════════════════════════════
+
+             EVERYTHING IS READY - JUST EXECUTE! 🚀
+
+═══════════════════════════════════════════════════════════════════

@@ -68,95 +68,90 @@ class HuggingFaceVLM(BaseVLM):
         self._model = None
         self._processor = None
 
+    def _build_load_kwargs(self) -> Dict[str, Any]:
+        """
+        Build version-robust from_pretrained kwargs.
+
+        Handles two transformers-5.x API changes:
+        - `torch_dtype` was renamed to `dtype`
+        - `load_in_4bit` / `load_in_8bit` kwargs were removed in favour of
+          a `quantization_config=BitsAndBytesConfig(...)`
+        """
+        kwargs: Dict[str, Any] = {
+            "trust_remote_code": True,
+            "device_map": "auto" if self.device == "cuda" else None,
+        }
+
+        # dtype kwarg name changed in transformers 5.x
+        try:
+            from transformers import __version__ as _tfv
+            _major = int(_tfv.split(".")[0])
+        except Exception:
+            _major = 4
+        kwargs["dtype" if _major >= 5 else "torch_dtype"] = self.torch_dtype
+
+        # Quantization via BitsAndBytesConfig (works on both 4.x and 5.x)
+        if self.load_in_4bit or self.load_in_8bit:
+            try:
+                from transformers import BitsAndBytesConfig
+                kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=self.load_in_4bit,
+                    load_in_8bit=self.load_in_8bit and not self.load_in_4bit,
+                )
+            except ImportError:
+                # bitsandbytes/transformers too old — fall back to full precision
+                pass
+
+        return kwargs
+
     def _load_model(self):
         """Load model and processor."""
         if self._model is not None:
             return
 
+        from transformers import AutoProcessor
+
+        # Resolve the unified vision-language auto class across transformers
+        # versions. transformers >= 4.47 / 5.x renamed AutoModelForVision2Seq
+        # to AutoModelForImageTextToText.
+        AutoVLM = None
         try:
-            from transformers import AutoProcessor, AutoModelForVision2Seq
+            from transformers import AutoModelForImageTextToText as AutoVLM
         except ImportError:
-            raise ImportError(
-                "Please install transformers: pip install transformers accelerate"
-            )
+            try:
+                from transformers import AutoModelForVision2Seq as AutoVLM
+            except ImportError:
+                AutoVLM = None
 
         model_lower = self.model_name.lower()
+        # Qwen2/2.5/3-VL use a distinct chat/message format in generate().
+        self._is_qwen2_vl = (
+            "qwen2.5-vl" in model_lower
+            or "qwen2-vl" in model_lower
+            or "qwen3-vl" in model_lower
+        )
 
-        # Qwen2.5-VL and Qwen2-VL models
-        if "qwen2.5-vl" in model_lower or "qwen2-vl" in model_lower:
-            try:
-                from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
-            except ImportError:
-                raise ImportError(
-                    "Please install transformers>=4.45.0 for Qwen2-VL support: "
-                    "pip install transformers>=4.45.0 accelerate qwen-vl-utils"
-                )
+        load_kwargs = self._build_load_kwargs()
 
-            self._processor = AutoProcessor.from_pretrained(
-                self.model_name,
-                trust_remote_code=True,
-            )
-            self._model = Qwen2VLForConditionalGeneration.from_pretrained(
-                self.model_name,
-                torch_dtype=self.torch_dtype,
-                device_map="auto" if self.device == "cuda" else None,
-                trust_remote_code=True,
-            )
-            self._is_qwen2_vl = True
+        # Processor — trust_remote_code lets custom repos (e.g. InternVL) load.
+        self._processor = AutoProcessor.from_pretrained(
+            self.model_name, trust_remote_code=True
+        )
 
-        # LLaVA models (including v1.6)
-        elif "llava" in model_lower:
-            from transformers import LlavaForConditionalGeneration, AutoProcessor
-
-            self._processor = AutoProcessor.from_pretrained(self.model_name)
-            self._model = LlavaForConditionalGeneration.from_pretrained(
-                self.model_name,
-                torch_dtype=self.torch_dtype,
-                device_map="auto" if self.device == "cuda" else None,
-                load_in_8bit=self.load_in_8bit,
-                load_in_4bit=self.load_in_4bit,
-            )
-            self._is_qwen2_vl = False
-
-        # SmolVLM models
-        elif "smolvlm" in model_lower:
-            self._processor = AutoProcessor.from_pretrained(
-                self.model_name,
-                trust_remote_code=True,
-            )
-            self._model = AutoModelForVision2Seq.from_pretrained(
-                self.model_name,
-                torch_dtype=self.torch_dtype,
-                device_map="auto" if self.device == "cuda" else None,
-                trust_remote_code=True,
-            )
-            self._is_qwen2_vl = False
-
-        # BLIP models
-        elif "blip" in model_lower:
-            from transformers import Blip2Processor, Blip2ForConditionalGeneration
-
-            self._processor = Blip2Processor.from_pretrained(self.model_name)
+        # BLIP has a dedicated class; route everything else through the unified
+        # auto class, which dispatches to LLaVA-Next / Idefics2 / InternVL / Qwen
+        # based on the checkpoint config.
+        if "blip" in model_lower:
+            from transformers import Blip2ForConditionalGeneration
             self._model = Blip2ForConditionalGeneration.from_pretrained(
-                self.model_name,
-                torch_dtype=self.torch_dtype,
-                device_map="auto" if self.device == "cuda" else None,
+                self.model_name, **load_kwargs
             )
-            self._is_qwen2_vl = False
-
+        elif AutoVLM is not None:
+            self._model = AutoVLM.from_pretrained(self.model_name, **load_kwargs)
         else:
-            # Generic loading
-            self._processor = AutoProcessor.from_pretrained(
-                self.model_name,
-                trust_remote_code=True,
-            )
-            self._model = AutoModelForVision2Seq.from_pretrained(
-                self.model_name,
-                torch_dtype=self.torch_dtype,
-                device_map="auto" if self.device == "cuda" else None,
-                trust_remote_code=True,
-            )
-            self._is_qwen2_vl = False
+            # Last resort for custom architectures without an Auto mapping.
+            from transformers import AutoModel
+            self._model = AutoModel.from_pretrained(self.model_name, **load_kwargs)
 
         if self.device == "cuda" and not (self.load_in_8bit or self.load_in_4bit):
             # Skip .to() for models with device_map="auto"
