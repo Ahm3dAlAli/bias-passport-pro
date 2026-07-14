@@ -1,0 +1,160 @@
+%=============================================================================
+\section{Demographic Positional Encoding}
+\label{sec:dpe}
+%=============================================================================
+
+Having established that each model carries a distinct, internally consistent
+bias fingerprint (\Cref{sec:results}), we ask whether these disparities can be
+\emph{reduced at inference time} without retraining, fine-tuning, or access to
+model weights beyond a forward pass. We introduce \textbf{Demographic Positional
+Encoding} (DPE), a training-free intervention that estimates a model's
+per-group bias offset from its own baseline behaviour and counteracts it by
+injecting a demographic-conditioned corrective signal into the model's visual
+token embeddings.
+
+The method rests on a simple hypothesis: if a model systematically shifts its
+outputs for a demographic group $g$ relative to the population mean, that shift
+corresponds to a displacement in the model's internal representation space, and
+an equal and opposite displacement---applied to the visual tokens before the
+language decoder attends to them---will move the group's outputs back toward
+parity. DPE operationalises this in three stages: (i) bias-vector estimation,
+(ii) projection into embedding space, and (iii) inference-time injection.
+
+%-----------------------------------------------------------------------------
+\subsection{Notation and problem setup}
+%-----------------------------------------------------------------------------
+
+Let $\mathcal{D} = \{(x_i, g_i)\}_{i=1}^{N}$ be the evaluation set, where $x_i$
+is an image and $g_i \in \mathcal{G}$ its demographic group. We define
+$\mathcal{G}$ as the Cartesian product of gender presentation and jurisdictional
+region, $\mathcal{G} = \mathrm{Gender} \times \mathrm{Region}$, yielding the
+groups over which disparity is measured in \Cref{sec:results}. For each
+image--probe response we obtain a vector of $K=3$ scored bias dimensions,
+\begin{equation}
+    s_i = \big(\,\mathrm{valence}_i,\;\mathrm{stereotype}_i,\;\mathrm{confidence}_i\,\big) \in \mathbb{R}^{3},
+\end{equation}
+produced by the LLM judge (\Cref{sec:scoring}). A VLM exposes a vision encoder
+$f_\text{vis}$ that maps an image to a sequence of $T$ visual token embeddings
+$H = f_\text{vis}(x) \in \mathbb{R}^{T \times d}$, where $d$ is the hidden width
+of the representation consumed by the language decoder.
+
+%-----------------------------------------------------------------------------
+\subsection{Stage 1: Demographic bias-vector estimation}
+%-----------------------------------------------------------------------------
+
+From the model's baseline responses we compute the grand mean score vector and
+the per-group mean,
+\begin{equation}
+    \mu = \frac{1}{N}\sum_{i=1}^{N} s_i,
+    \qquad
+    \mu_g = \frac{1}{|\mathcal{I}_g|}\sum_{i \in \mathcal{I}_g} s_i,
+\end{equation}
+where $\mathcal{I}_g = \{i : g_i = g\}$ indexes the responses for group $g$. The
+\emph{bias offset} of group $g$ is the signed deviation of its mean from the
+population mean, and the corresponding \emph{correction vector} is its negation,
+\begin{equation}
+    \delta_g \;=\; \mu - \mu_g \;\in\; \mathbb{R}^{3}.
+    \label{eq:correction}
+\end{equation}
+A group treated more negatively than the population on some dimension (e.g.\ a
+lower mean valence) receives a positive correction on that dimension, and vice
+versa; a perfectly equitable group has $\delta_g = \mathbf{0}$. Groups with
+fewer than $n_\text{min}=30$ scored responses are excluded from estimation to
+avoid unstable offsets, and fall back to $\delta_g = \mathbf{0}$ (no
+intervention). Crucially, $\delta_g$ is estimated from the target model's
+\emph{own} baseline outputs, making DPE self-calibrating and model-specific: the
+same procedure yields a different correction field for each VLM.
+
+%-----------------------------------------------------------------------------
+\subsection{Stage 2: Projection into embedding space}
+%-----------------------------------------------------------------------------
+
+The correction $\delta_g$ lives in the $3$-dimensional score space, whereas the
+intervention must act in the $d$-dimensional visual embedding space
+($d \gg 3$). We map between them with a fixed linear operator
+$W \in \mathbb{R}^{d \times 3}$ and define the group's positional encoding
+\begin{equation}
+    \varepsilon_g \;=\; W\,\delta_g \;\in\; \mathbb{R}^{d}.
+    \label{eq:encoding}
+\end{equation}
+We construct $W$ to have orthonormal columns by QR-decomposing a Gaussian random
+matrix, $W = \mathrm{qr}(G)$ with $G_{jk} \sim \mathcal{N}(0,1)$, under a fixed
+random seed. Orthonormality ensures the projection is an isometry onto its
+range, $\lVert \varepsilon_g \rVert_2 = \lVert \delta_g \rVert_2$, so the
+\emph{magnitude} of a group's bias offset is preserved as the magnitude of its
+representational shift, and distinct score-space directions map to distinct,
+non-interfering embedding-space directions. Fixing the seed makes $W$
+deterministic and reproducible across runs and models, so the encoding for a
+given $\delta_g$ is identical every time. We deliberately avoid learning $W$:
+a learned projection would require gradient access and a training objective,
+reintroducing exactly the retraining cost DPE is designed to avoid. Learning $W$
+under a fairness objective is a natural extension (\Cref{sec:limitations}).
+
+%-----------------------------------------------------------------------------
+\subsection{Stage 3: Inference-time injection}
+%-----------------------------------------------------------------------------
+
+At inference, given an image $x$ of a subject in group $g$, we apply the
+encoding additively to every visual token produced by the vision encoder,
+\begin{equation}
+    \tilde{H} \;=\; H + \alpha\,\mathbf{1}_T\,\varepsilon_g^{\top},
+    \qquad
+    \tilde{H}_t = H_t + \alpha\,\varepsilon_g \;\; \forall t,
+    \label{eq:inject}
+\end{equation}
+where $\mathbf{1}_T \in \mathbb{R}^{T}$ broadcasts the encoding across all $T$
+tokens and $\alpha \ge 0$ is a scalar \emph{correction strength}. The shifted
+tokens $\tilde{H}$ replace $H$ in the language decoder's cross-attention, so the
+model conditions its generation on a representation that has been nudged toward
+the population mean for group $g$. Implementation-wise this requires no weight
+modification: we register a forward hook on the vision encoder module that
+intercepts $H$ and returns $\tilde{H}$, leaving the rest of the forward pass
+untouched. Setting $\alpha = 0$ recovers the unmodified baseline; larger $\alpha$
+applies a stronger corrective push. Because $\varepsilon_g$ depends only on the
+group label---available from dataset metadata---DPE adds no per-image inference
+cost beyond a single vector addition.
+
+\begin{algorithm}[t]
+\caption{Demographic Positional Encoding (DPE)}
+\label{alg:dpe}
+\begin{algorithmic}[1]
+\Require baseline scores $\{(s_i, g_i)\}$; VLM with vision encoder $f_\text{vis}$;
+         strength $\alpha$; seed $\rho$
+\Statex \textbf{// Stage 1: estimate correction field (once)}
+\State $\mu \gets \mathrm{mean}_i\, s_i$
+\For{each group $g \in \mathcal{G}$ with $|\mathcal{I}_g| \ge n_\text{min}$}
+    \State $\delta_g \gets \mu - \mathrm{mean}_{i \in \mathcal{I}_g}\, s_i$
+\EndFor
+\Statex \textbf{// Stage 2: fixed orthonormal projection}
+\State $W \gets \mathrm{qr}(G),\; G \sim \mathcal{N}(0,1)^{d\times 3}$ seeded by $\rho$
+\Statex \textbf{// Stage 3: inference with injection}
+\For{each image $x$ of group $g$}
+    \State $H \gets f_\text{vis}(x)$
+    \State $\varepsilon_g \gets W\,\delta_g$
+    \State $\tilde{H} \gets H + \alpha\,\varepsilon_g$ \Comment{broadcast over tokens}
+    \State generate response from $\tilde{H}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+%-----------------------------------------------------------------------------
+\subsection{Evaluation protocol}
+%-----------------------------------------------------------------------------
+
+We evaluate DPE by re-running the full probe battery with injection enabled and
+comparing against the untouched baseline on the identical set of images and
+probes, so that any change is attributable solely to the intervention. We report
+three complementary quantities. First, the \emph{demographic disparity}
+$\sigma_A$ for a demographic axis $A$ (gender or region), defined as the
+standard deviation of per-group mean valence across the groups of $A$; lower
+$\sigma_A$ indicates more equitable treatment, and we summarise the effect as
+the relative reduction $(\sigma_A^\text{base} - \sigma_A^\text{DPE}) /
+\sigma_A^\text{base}$. Second, per-dimension effect sizes (Cohen's $d$) and
+Welch's $t$-test $p$-values between baseline and DPE score distributions, to
+establish that observed shifts are statistically reliable and to quantify their
+magnitude. Third, a per-region $\times$ per-probe map of the mean valence change
+$\Delta = \bar{s}^\text{DPE} - \bar{s}^\text{base}$, to verify that the
+intervention moves the most disadvantaged groups upward rather than merely
+compressing variance by penalising advantaged groups. A successful intervention
+reduces $\sigma_A$ while raising the valence of the lowest-scoring groups toward
+the mean.

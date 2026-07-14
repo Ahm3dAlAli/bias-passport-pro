@@ -112,6 +112,9 @@ fi
 # is the one that produced the baseline, so use it exclusively.
 export PYTHONNOUSERSITE=1
 
+# Reduce CUDA fragmentation OOM on tight-memory GPUs (e.g. RTX 2080 Ti, 11 GB).
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
 echo "Python: $(which python3)  ($(python3 --version 2>&1))"
 
 # Show the ACTUAL torch/transformers that will be used (post PYTHONNOUSERSITE)
@@ -135,6 +138,34 @@ except Exception as e:
                      "or upgrade torch to >= 2.4 to match the newer transformers.")
 PYVER
 echo "✓ torch + CUDA verified"
+
+# Model-loading deps: sentencepiece (InternVL tokenizer), bitsandbytes (4-bit),
+# accelerate + einops (device_map / InternVL). Install only what's missing, INTO
+# the active conda env via `python3 -m pip` (not bare `pip`, which resolved to a
+# read-only system location). Non-fatal: only InternVL truly needs sentencepiece.
+MISSING_DEPS=$(python3 - <<'PYDEPS'
+import importlib.util
+# model-loading deps + the baseline heuristic judge's deps (vader, sbert) so DPE
+# responses are scored on the SAME scale as the baseline judge_scores.
+mods = {
+    "sentencepiece": "sentencepiece",
+    "bitsandbytes": "bitsandbytes",
+    "accelerate": "accelerate",
+    "einops": "einops",
+    "vaderSentiment": "vaderSentiment",
+    "sentence_transformers": "sentence-transformers",
+}
+print(" ".join(pip for imp, pip in mods.items() if importlib.util.find_spec(imp) is None))
+PYDEPS
+)
+if [ -n "$MISSING_DEPS" ]; then
+    echo "Installing missing deps into fingerprint env: $MISSING_DEPS"
+    python3 -m pip install --quiet $MISSING_DEPS \
+        || echo "⚠ Auto-install failed. If InternVL errors, run manually:" \
+                "conda activate fingerprint && python3 -m pip install $MISSING_DEPS"
+else
+    echo "✓ model-loading deps present"
+fi
 echo ""
 
 # Dataset check

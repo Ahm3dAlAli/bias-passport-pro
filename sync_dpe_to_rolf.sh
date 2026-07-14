@@ -34,10 +34,13 @@ rsync -avz \
     "$LOCAL_DIR/fingerprint_squared/models/huggingface_vlm.py" \
     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/fingerprint_squared/models/huggingface_vlm.py"
 
-# 2. The DPE scripts + the run orchestrator
+# 2. The DPE scripts + the run orchestrator.
+#    run_fhibe_benchmark.py is included because DPE reuses its client classes and
+#    we patched the Idefics2 processor call for transformers 5.x.
 rsync -avz \
     "$LOCAL_DIR/scripts/run_dpe_benchmark.py" \
     "$LOCAL_DIR/scripts/compare_dpe_baseline.py" \
+    "$LOCAL_DIR/scripts/run_fhibe_benchmark.py" \
     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/scripts/"
 
 rsync -avz \

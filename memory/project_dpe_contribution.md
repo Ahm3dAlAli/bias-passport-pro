@@ -24,11 +24,32 @@ Implemented Demographic Positional Encoding (DPE) — a novel inference-time deb
 - `scripts/run_dpe_benchmark.py` — Re-run evaluation pipeline with DPE applied
 - `scripts/compare_dpe_baseline.py` — Statistical comparison + 4 publication-ready figures
 
-## Hook targets by model family
-- LLaVA: model.model.mm_projector (preferred) or model.model.vision_tower
-- Qwen2-VL: model.visual
+## Architecture (IMPORTANT — updated)
+DPE runner reuses `build_client()` from scripts/run_fhibe_benchmark.py (proven per-model
+clients: LlavaClient uses LlavaNextForConditionalGeneration, InternVLClient has custom
+.chat()+dynamic tiling, IDEFICSClient). Do NOT use the old huggingface_vlm.py loader for
+DPE — it can't handle InternVL's custom interface. The DPE hook is applied via
+fingerprint_squared/debiasing/dpe_hook.py (DPEHookController + find_vision_module),
+registered on client.model's vision encoder. Controller infers embedding dim from the
+vision output tensor at runtime. dpe_vlm.py (DPEWrappedHuggingFaceVLM) is now legacy/unused.
+
+## Hook targets by model family (find_vision_module tries these)
+- LLaVA-Next: model.vision_tower
 - InternVL: model.vision_model
-- SmolVLM: model.model.vision_model
+- Idefics2: model.model.vision_model
+- Qwen2-VL: model.visual
+
+## rolf env gotchas (learned the hard way)
+- ~/.local has a newer transformers (5.3.0) that demands torch>=2.4 and shadows the env
+  → run scripts set PYTHONNOUSERSITE=1 so the conda env's OWN stack is used
+  (env: torch 2.7.1+cu118, transformers 5.3.0, works with CUDA).
+- transformers 5.x renamed AutoModelForVision2Seq → AutoModelForImageTextToText,
+  removed load_in_4bit kwarg (use BitsAndBytesConfig), renamed torch_dtype → dtype.
+  build_client already handles all this.
+- GPUs are RTX 2080 Ti (11 GB) → MUST use 4bit; set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True.
+- InternVL needs sentencepiece; also bitsandbytes/accelerate/einops. run script auto-installs.
+- idefics2 confirmed loading + running full-data DPE. llava OOM'd under old loader; build_client
+  (LlavaClient: low_cpu_mem_usage + bnb_4bit_compute_dtype) should fix it.
 
 ## Key numbers (LLaVA 7B baseline)
 - Africa valence 0.44 vs grand mean 0.49 → correction +0.05

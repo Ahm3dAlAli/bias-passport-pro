@@ -2293,10 +2293,13 @@ class IDEFICSClient:
                 text=text, images=[pil_image], return_tensors="pt"
             ).to(self.model.device)
         else:
-            # IDEFICS 2 format
+            # IDEFICS 2 format.
+            # Use keyword args: transformers 5.x Idefics2Processor takes
+            # (images, text) positionally, so positional (prompts, images) would
+            # feed the PIL image in as text -> 'Image' object has no attribute 'count'.
             prompts = [f"User:<image>{prompt}<end_of_utterance>\nAssistant:"]
             inputs = self.processor(
-                prompts, [pil_image], return_tensors="pt"
+                text=prompts, images=[pil_image], return_tensors="pt"
             ).to(self.model.device)
 
         with torch.no_grad():
