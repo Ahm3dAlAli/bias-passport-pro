@@ -62,7 +62,7 @@ def load_scores(db_path: str) -> List[dict]:
     conn.row_factory = sqlite3.Row
     rows = conn.execute(
         """
-        SELECT valence, stereotype_alignment, confidence, refusal,
+        SELECT image_id, valence, stereotype_alignment, confidence, refusal,
                economic_valence, gender_presentation, jurisdiction_region,
                probe_id
         FROM judge_scores
@@ -503,6 +503,20 @@ def main():
         sys.exit(1)
     if not dpe_rows:
         print("ERROR: No DPE scores found.")
+        sys.exit(1)
+
+    # Restrict the baseline to the SAME (image_id, probe) pairs the DPE run
+    # covered, so a subset/balanced DPE run is compared apples-to-apples against
+    # the baseline on identical images (not the full 35k).
+    dpe_keys = {(r.get("image_id"), r.get("probe_id")) for r in dpe_rows}
+    n_before = len(baseline_rows)
+    baseline_rows = [r for r in baseline_rows
+                     if (r.get("image_id"), r.get("probe_id")) in dpe_keys]
+    print(f"  Matched baseline to DPE image/probe set: "
+          f"{n_before:,} → {len(baseline_rows):,} rows")
+    if not baseline_rows:
+        print("ERROR: no baseline rows overlap the DPE image set "
+              "(image_id mismatch between DBs?).")
         sys.exit(1)
 
     # Generate figures

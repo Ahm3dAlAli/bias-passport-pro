@@ -313,6 +313,49 @@ def load_image_records_from_baseline(
     return [dict(r) for r in rows]
 
 
+def load_balanced_image_records(
+    baseline_db: str, per_group: int
+) -> List[dict]:
+    """
+    Load a demographically BALANCED image sample: up to `per_group` distinct
+    images from each (gender_presentation, jurisdiction_region) group, so rare
+    groups (non-binary, Oceania, …) are represented and disparity estimates are
+    not dominated by the largest groups.
+
+    Deterministic (images sorted by id, first `per_group` taken) — reproducible.
+    """
+    from collections import defaultdict
+
+    conn = sqlite3.connect(baseline_db)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """
+        SELECT DISTINCT image_id, jurisdiction, jurisdiction_region,
+               age_group, gender_presentation, num_persons
+        FROM probe_results
+        ORDER BY image_id
+        """
+    ).fetchall()
+    conn.close()
+
+    groups: Dict[tuple, List[dict]] = defaultdict(list)
+    for r in rows:
+        rec = dict(r)
+        key = (rec.get("gender_presentation") or "unknown",
+               rec.get("jurisdiction_region") or "unknown")
+        groups[key].append(rec)
+
+    out: List[dict] = []
+    print(f"  Balanced sampling up to {per_group} images/group "
+          f"across {len(groups)} demographic groups:")
+    for key in sorted(groups):
+        take = groups[key][:per_group]
+        out.extend(take)
+        print(f"    {key[0]:<12} {key[1]:<18} -> {len(take):>4} "
+              f"(of {len(groups[key])} available)")
+    return out
+
+
 def build_image_index(dataset_path: Path) -> Dict[str, Path]:
     """
     Scan the fullres FHIBE dataset once and build an {image_id -> path} index.
@@ -469,6 +512,7 @@ def run_dpe_benchmark(
     device: str,
     batch_size: int,
     load_in_4bit: bool = False,
+    balanced_per_group: Optional[int] = None,
 ):
     print(f"\n=== DPE Benchmark: {model_name} ===")
     print(f"  α (correction strength) = {alpha}")
@@ -490,7 +534,10 @@ def run_dpe_benchmark(
 
     # 2. Load image records from the primary baseline DB
     print(f"\n[2/4] Loading image records from {primary_baseline_db}...")
-    image_records = load_image_records_from_baseline(primary_baseline_db, n_images)
+    if balanced_per_group:
+        image_records = load_balanced_image_records(primary_baseline_db, balanced_per_group)
+    else:
+        image_records = load_image_records_from_baseline(primary_baseline_db, n_images)
     print(f"  Found {len(image_records):,} distinct images")
 
     if not image_records:
@@ -708,6 +755,12 @@ def main():
         help="Load model in 4-bit quantization (match baseline for fair comparison).",
     )
     parser.add_argument(
+        "--balanced-per-group", type=int, default=None,
+        help="Demographically balanced sampling: up to N images from EACH "
+             "(gender x region) group. Overrides --n-images. Use for alpha sweeps "
+             "so rare groups are represented and disparity is not group-size-biased.",
+    )
+    parser.add_argument(
         "--batch-size", type=int, default=1,
         help="Batch size (currently unused; reserved for future batching).",
     )
@@ -730,6 +783,7 @@ def main():
         device=args.device,
         batch_size=args.batch_size,
         load_in_4bit=args.load_in_4bit,
+        balanced_per_group=args.balanced_per_group,
     )
 
 

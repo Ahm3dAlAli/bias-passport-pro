@@ -40,12 +40,14 @@ rsync -avz \
 rsync -avz \
     "$LOCAL_DIR/scripts/run_dpe_benchmark.py" \
     "$LOCAL_DIR/scripts/compare_dpe_baseline.py" \
+    "$LOCAL_DIR/scripts/generate_dpe_paper_tables.py" \
     "$LOCAL_DIR/scripts/run_fhibe_benchmark.py" \
     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/scripts/"
 
 rsync -avz \
     "$LOCAL_DIR/run_dpe_on_rolf.sh" \
     "$LOCAL_DIR/run_dpe_parallel_rolf.sh" \
+    "$LOCAL_DIR/run_dpe_alpha_sweep_rolf.sh" \
     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
 
 echo ""
