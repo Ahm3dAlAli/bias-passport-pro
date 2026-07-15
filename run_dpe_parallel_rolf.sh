@@ -26,6 +26,10 @@
 set -e
 
 ALPHA="${ALPHA:-1.5}"
+# Balanced sampling by default (full 35k is ~6 days/model on these GPUs).
+# BALANCED_PER_GROUP images per (gender x region) group ≈ 18 groups × 60 ≈ 1000
+# images × 5 probes ≈ 5000 generations ≈ 4-5h/model. Set to 0 + N_IMAGES for other modes.
+BALANCED_PER_GROUP="${BALANCED_PER_GROUP:-60}"
 N_IMAGES="${N_IMAGES:-0}"
 DATASET_PATH="${DATASET_PATH:-/local/scratch/alali/fhibe_data/fhibe.20250716.u.gT5_rFTA_fullres}"
 GPUS="${GPUS:-0 1 2}"
@@ -33,8 +37,10 @@ SHARED_OUT="results/dpe_parallel_$(date +%Y%m%d_%H%M%S)"
 
 # model-name-substring  <=>  short screen tag
 # One entry per model; assigned to GPUs in order.
-FILTERS=("llava" "InternVL2" "idefics2")
-TAGS=("dpe_llava" "dpe_internvl2" "dpe_idefics2")
+# InternVL2 excluded: its 2024 remote code is incompatible with transformers 5.x
+# at the generation stage (GenerationMixin). Ship LLaVA + idefics2.
+FILTERS=("llava" "idefics2")
+TAGS=("dpe_llava" "dpe_idefics2")
 
 read -ra GPU_ARR <<< "$GPUS"
 
@@ -43,7 +49,8 @@ echo "  Parallel DPE launch (one model per GPU)"
 echo "=============================================="
 echo "  Models:   ${FILTERS[*]}"
 echo "  GPUs:     ${GPU_ARR[*]}"
-echo "  Alpha:    $ALPHA   N_IMAGES: $N_IMAGES"
+echo "  Alpha:    $ALPHA"
+echo "  Sampling: balanced ${BALANCED_PER_GROUP}/group (0=use N_IMAGES=$N_IMAGES)"
 echo "  Out base: $SHARED_OUT"
 echo ""
 
@@ -63,6 +70,7 @@ for i in "${!FILTERS[@]}"; do
     screen -dmS "$tag" bash -c "
         cd $(pwd)
         export GPU=$gpu ONLY='$only' ALPHA=$ALPHA N_IMAGES=$N_IMAGES DATASET_PATH='$DATASET_PATH'
+        export BALANCED_PER_GROUP=$BALANCED_PER_GROUP
         export OUT_DIR_OVERRIDE='$logdir'
         ./run_dpe_on_rolf.sh 2>&1 | tee '$logdir/console.log'
         echo ''

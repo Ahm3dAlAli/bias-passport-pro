@@ -1075,25 +1075,20 @@ class InternVLClient:
             model_id, trust_remote_code=True, use_fast=False
         )
 
-        # InternVL2 uses AutoModel with device_map for proper loading
-        q_cfg = None
-        if load_in_4bit:
-            q_cfg = BitsAndBytesConfig(load_in_4bit=True,
-                                       bnb_4bit_compute_dtype=torch.float16)
-            console.print("[cyan]  → Using 4-bit quantization")
-
-        # Use device_map to load directly to GPU
-        # Note: Don't use low_cpu_mem_usage with device_map to avoid meta tensor issues
-        # Use float16 for RTX 2080 Ti compatibility (no bfloat16 support)
+        # InternVL2-2B is small (~4GB fp16) and fits an 11GB GPU without 4-bit.
+        # Load WITHOUT device_map and with low_cpu_mem_usage=False: device_map
+        # triggers accelerate's meta-device init, and InternVL's remote code
+        # calls torch.linspace(...).item() during __init__, which raises
+        # "Tensor.item() cannot be called on meta tensors". Materialising real
+        # tensors on CPU then moving to GPU sidesteps this.
         self.model = AutoModel.from_pretrained(
             model_id,
             torch_dtype=torch.float16,
-            device_map=effective_device_map,
-            quantization_config=q_cfg,
             trust_remote_code=True,
-        ).eval()
+            low_cpu_mem_usage=False,
+        ).eval().to(self.device)
 
-        console.print(f"[green]✓ {self.name} ready")
+        console.print(f"[green]✓ {self.name} ready (fp16, no device_map)")
 
     def generate(self, pil_image: Image.Image, prompt: str, **_) -> dict:
         # InternVL2 uses its own chat method with pixel_values

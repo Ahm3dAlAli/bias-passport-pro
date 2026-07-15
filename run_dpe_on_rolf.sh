@@ -147,11 +147,14 @@ MISSING_DEPS=$(python3 - <<'PYDEPS'
 import importlib.util
 # model-loading deps + the baseline heuristic judge's deps (vader, sbert) so DPE
 # responses are scored on the SAME scale as the baseline judge_scores.
+# sentencepiece PINNED to 0.1.99: newer 0.2.x rejects InternLM2's (InternVL2's)
+# tokenizer with "piece must not include null character".
 mods = {
-    "sentencepiece": "sentencepiece",
+    "sentencepiece": "sentencepiece==0.1.99",
     "bitsandbytes": "bitsandbytes",
     "accelerate": "accelerate",
     "einops": "einops",
+    "timm": "timm",                       # InternVL2 vision code: timm.models.layers
     "vaderSentiment": "vaderSentiment",
     "sentence_transformers": "sentence-transformers",
 }
@@ -179,9 +182,14 @@ echo ""
 
 mkdir -p "$OUT_DIR"
 
-# N_IMAGES flag (0 => omit --n-images, i.e. use all)
+# Sampling flag. BALANCED_PER_GROUP (if >0) takes precedence: a demographically
+# balanced sample of N images per (gender x region) group — far faster than full
+# 35k and gives clean per-group disparity with rare groups represented.
+# Otherwise fall back to N_IMAGES (0 = all).
 NIMG_FLAG=""
-if [ "$N_IMAGES" -gt 0 ]; then
+if [ "${BALANCED_PER_GROUP:-0}" -gt 0 ]; then
+    NIMG_FLAG="--balanced-per-group $BALANCED_PER_GROUP"
+elif [ "$N_IMAGES" -gt 0 ]; then
     NIMG_FLAG="--n-images $N_IMAGES"
 fi
 

@@ -122,6 +122,23 @@ def _make_judge(fhibe, baseline_db: str):
     return (lambda pr: fhibe.openai_judge(pr, oai_client, judge_model)), f"openai:{judge_model}"
 
 
+def _patch_transformers_for_remote_code():
+    """
+    Make transformers 5.x tolerate older remote-code models (e.g. InternVL2's
+    InternVLChatModel), which predate two 5.x internals:
+    - `all_tied_weights_keys` (new bookkeeping dict) — old code only has
+      `_tied_weights_keys`. Provide an empty-dict class default so
+      _finalize_model_loading's mark_tied_weights_as_initialized() no-ops.
+    """
+    try:
+        import transformers.modeling_utils as mu
+        PTM = mu.PreTrainedModel
+        if not hasattr(PTM, "all_tied_weights_keys"):
+            PTM.all_tied_weights_keys = {}
+    except Exception:
+        pass
+
+
 def _load_fhibe_module():
     """
     Import scripts/run_fhibe_benchmark.py as a module so we can reuse its proven
@@ -130,6 +147,7 @@ def _load_fhibe_module():
     import importlib.util
 
     _install_transformers_compat_shim()
+    _patch_transformers_for_remote_code()
 
     fhibe_path = ROOT / "scripts" / "run_fhibe_benchmark.py"
     spec = importlib.util.spec_from_file_location("fhibe_benchmark", fhibe_path)
@@ -513,9 +531,11 @@ def run_dpe_benchmark(
     batch_size: int,
     load_in_4bit: bool = False,
     balanced_per_group: Optional[int] = None,
+    correction_axis: str = "intersectional",
 ):
     print(f"\n=== DPE Benchmark: {model_name} ===")
     print(f"  α (correction strength) = {alpha}")
+    print(f"  correction axis         = {correction_axis}")
     print(f"  Baseline DBs: {baseline_dbs}")
     print(f"  Output DB: {out_db}")
 
@@ -524,6 +544,7 @@ def run_dpe_benchmark(
     encoder = DemographicPositionalEncoder.from_sqlite(
         db_paths=baseline_dbs,
         alpha=alpha,
+        correction_axis=correction_axis,
     )
     top_biased = encoder.top_biased_groups(n=5)
     print(f"  Grand mean scores: {encoder.grand_mean.tolist()}")
@@ -569,11 +590,26 @@ def run_dpe_benchmark(
     if device_map.startswith("cuda:") is False and device == "cuda":
         device_map = "cuda:0"
 
-    client = fhibe.build_client(
-        model_name,
-        device_map=device_map,
-        load_in_4bit=load_in_4bit,
-    )
+    # transformers 5.x initialises models on the 'meta' device before loading
+    # weights. Some remote-code models (InternVL2) call torch.linspace(...).item()
+    # during __init__, which fails on meta tensors. Force linspace onto CPU for
+    # the duration of construction so the tensor is real; restore it afterwards.
+    import torch as _torch
+    _orig_linspace = _torch.linspace
+
+    def _cpu_linspace(*a, **k):
+        k.setdefault("device", "cpu")
+        return _orig_linspace(*a, **k)
+
+    _torch.linspace = _cpu_linspace
+    try:
+        client = fhibe.build_client(
+            model_name,
+            device_map=device_map,
+            load_in_4bit=load_in_4bit,
+        )
+    finally:
+        _torch.linspace = _orig_linspace
     model = client.model
     print("  Model loaded successfully.")
 
@@ -643,7 +679,13 @@ def run_dpe_benchmark(
                 raw_text = (result.get("response") or "").strip()
 
             except Exception as exc:
-                print(f"    ERROR probing {image_id}/{probe_id}: {exc}")
+                # Print type + repr so empty-message exceptions are diagnosable;
+                # dump a full traceback for the very first failure.
+                print(f"    ERROR probing {image_id}/{probe_id}: "
+                      f"{type(exc).__name__}: {exc!r}")
+                if n_errors == 0:
+                    import traceback
+                    traceback.print_exc()
                 n_errors += 1
                 continue
 
@@ -761,6 +803,13 @@ def main():
              "so rare groups are represented and disparity is not group-size-biased.",
     )
     parser.add_argument(
+        "--correction-axis", choices=["intersectional", "region", "gender"],
+        default="intersectional",
+        help="Which demographic grouping defines the correction field δ. "
+             "'region' = region-only (robust, matches the Africa finding); "
+             "'intersectional' = gender x region (default).",
+    )
+    parser.add_argument(
         "--batch-size", type=int, default=1,
         help="Batch size (currently unused; reserved for future batching).",
     )
@@ -784,6 +833,7 @@ def main():
         batch_size=args.batch_size,
         load_in_4bit=args.load_in_4bit,
         balanced_per_group=args.balanced_per_group,
+        correction_axis=args.correction_axis,
     )
 
 

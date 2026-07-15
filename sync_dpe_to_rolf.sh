@@ -48,6 +48,8 @@ rsync -avz \
     "$LOCAL_DIR/run_dpe_on_rolf.sh" \
     "$LOCAL_DIR/run_dpe_parallel_rolf.sh" \
     "$LOCAL_DIR/run_dpe_alpha_sweep_rolf.sh" \
+    "$LOCAL_DIR/run_dpe_ablation_rolf.sh" \
+    "$LOCAL_DIR/run_dpe_ablation_one.sh" \
     "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
 
 echo ""

@@ -73,12 +73,27 @@ class DemographicPositionalEncoder:
         grand_mean: np.ndarray,
         projection_seed: int = 42,
         alpha: float = 1.0,
+        correction_axis: str = "intersectional",
     ):
         self.group_stats = group_stats
         self.grand_mean = grand_mean
         self.projection_seed = projection_seed
         self.alpha = alpha
+        # Which demographic grouping defines the correction field δ:
+        #   "intersectional" -> (gender x region) ; "region" ; "gender"
+        self.correction_axis = correction_axis
         self._projection_cache: Dict[int, torch.Tensor] = {}
+
+    @staticmethod
+    def _axis_key(gender: str, region: str, axis: str) -> str:
+        """Group key for a given correction axis."""
+        gender = gender or "unknown"
+        region = region or "unknown"
+        if axis == "region":
+            return region
+        if axis == "gender":
+            return gender
+        return f"{gender}|{region}"  # intersectional
 
     # ------------------------------------------------------------------
     # Construction
@@ -91,6 +106,7 @@ class DemographicPositionalEncoder:
         alpha: float = 1.0,
         projection_seed: int = 42,
         min_samples: int = 30,
+        correction_axis: str = "intersectional",
     ) -> "DemographicPositionalEncoder":
         """
         Build encoder from one or more benchmark result databases.
@@ -98,6 +114,9 @@ class DemographicPositionalEncoder:
         The databases must have a `judge_scores` table with columns:
         valence, stereotype_alignment, confidence, gender_presentation,
         jurisdiction_region.
+
+        correction_axis : "intersectional" (gender x region), "region", or "gender"
+            Which demographic grouping the correction field is estimated over.
         """
         rows: List[dict] = []
         for db_path in db_paths:
@@ -109,7 +128,8 @@ class DemographicPositionalEncoder:
             )
 
         return cls._from_rows(
-            rows, alpha=alpha, projection_seed=projection_seed, min_samples=min_samples
+            rows, alpha=alpha, projection_seed=projection_seed,
+            min_samples=min_samples, correction_axis=correction_axis,
         )
 
     @classmethod
@@ -119,8 +139,9 @@ class DemographicPositionalEncoder:
         alpha: float,
         projection_seed: int,
         min_samples: int,
+        correction_axis: str = "intersectional",
     ) -> "DemographicPositionalEncoder":
-        # Aggregate scores per demographic group
+        # Aggregate scores per demographic group (per the chosen axis)
         from collections import defaultdict
 
         buckets: Dict[str, List[np.ndarray]] = defaultdict(list)
@@ -136,8 +157,8 @@ class DemographicPositionalEncoder:
                 row.get("confidence") or 0.0,
             ], dtype=np.float32)
 
-            group = DemographicGroup(gender=gender, region=region)
-            buckets[group.key].append(scores)
+            key = cls._axis_key(gender, region, correction_axis)
+            buckets[key].append(scores)
             all_scores.append(scores)
 
         grand_mean = np.mean(all_scores, axis=0)
@@ -148,8 +169,15 @@ class DemographicPositionalEncoder:
                 continue
             group_mean = np.mean(score_list, axis=0)
             correction = grand_mean - group_mean  # δ_g
+            # Store the raw key on the group's region/gender slot for reference.
+            if correction_axis == "intersectional":
+                grp = DemographicGroup.from_key(key)
+            elif correction_axis == "region":
+                grp = DemographicGroup(gender="*", region=key)
+            else:
+                grp = DemographicGroup(gender=key, region="*")
             group_stats[key] = GroupBiasStats(
-                group=DemographicGroup.from_key(key),
+                group=grp,
                 mean_scores=group_mean,
                 correction_vector=correction,
                 n_samples=len(score_list),
@@ -160,6 +188,7 @@ class DemographicPositionalEncoder:
             grand_mean=grand_mean,
             projection_seed=projection_seed,
             alpha=alpha,
+            correction_axis=correction_axis,
         )
 
     # ------------------------------------------------------------------
@@ -169,16 +198,17 @@ class DemographicPositionalEncoder:
     def get_correction_vector(
         self, gender: str, region: str
     ) -> Optional[np.ndarray]:
-        """Return the 3-dim bias correction vector δ_g for a demographic group."""
-        key = DemographicGroup(gender=gender, region=region).key
+        """Return the 3-dim bias correction vector δ for the group, per axis."""
+        key = self._axis_key(gender, region, self.correction_axis)
         stats = self.group_stats.get(key)
-        if stats is None:
-            # Fall back to gender-only match
+        if stats is not None:
+            return stats.correction_vector
+        # Intersectional fallback: match on gender prefix if exact cell missing.
+        if self.correction_axis == "intersectional":
             for k, s in self.group_stats.items():
                 if k.startswith(f"{gender}|"):
                     return s.correction_vector
-            return None
-        return stats.correction_vector
+        return None
 
     def get_embedding(
         self,
