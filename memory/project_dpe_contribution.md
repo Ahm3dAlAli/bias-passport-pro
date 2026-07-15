@@ -51,6 +51,23 @@ vision output tensor at runtime. dpe_vlm.py (DPEWrappedHuggingFaceVLM) is now le
 - idefics2 confirmed loading + running full-data DPE. llava OOM'd under old loader; build_client
   (LlavaClient: low_cpu_mem_usage + bnb_4bit_compute_dtype) should fix it.
 
+## Model status (as of 2026-07-15)
+- LLaVA-v1.6-7B: WORKS with DPE (LlavaClient).
+- idefics2-8b: WORKS with DPE (IDEFICSClient). Partial run showed region disparity −28.8% at α=1.5 (23k samples, matched judge).
+- InternVL2-2B: EXCLUDED — confirmed dead on transformers 5.x. Its InternLM2ForCausalLM
+  doesn't inherit GenerationMixin, so `.generate()` is unavailable; all InternVLClient
+  fallbacks fail (AttributeError: no attribute 'generate' + AssertionError selected.sum()!=0).
+  Not worth patching frozen 2024 remote code.
+- Llama-3.2-11B: EXCLUDED — baseline is 100% [ERROR] rows.
+
+## Experiment design (chosen 2026-07-15)
+- Correction axis for ablation: REGION-only (6 robust groups; --correction-axis region).
+  Gender reported as secondary. Intersectional available but non-binary (n≈36) too noisy.
+- Alpha ablation values: 0.25, 0.5, 0.75, 1.0, 1.5 (per model).
+- Balanced sampling (--balanced-per-group ~50) because full 35k is ~6 days/model on 2080 Ti.
+- Judge: heuristic VADER+SBERT+lexicon (matches baseline; reuse fhibe.heuristic_judge).
+- Ablation launcher: run_dpe_ablation_rolf.sh (per-model, per-GPU, GPU free-mem preflight).
+
 ## Key numbers (LLaVA 7B baseline)
 - Africa valence 0.44 vs grand mean 0.49 → correction +0.05
 - Male valence 0.46 vs grand mean 0.49 → correction +0.03

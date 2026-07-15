@@ -25,7 +25,8 @@ set -e
 ALPHAS="${ALPHAS:-0.25 0.5 0.75 1.0 1.5}"
 CORRECTION_AXIS="${CORRECTION_AXIS:-region}"
 PER_GROUP="${PER_GROUP:-50}"
-GPUS="${GPUS:-3 4 5}"
+GPUS="${GPUS:-0 1}"          # free GPUs only — verify with nvidia-smi first!
+MIN_FREE_MIB="${MIN_FREE_MIB:-8000}"   # skip a GPU with less free memory than this
 BASELINE_DIR="results/single_runs_35k"
 OUT_BASE="results/dpe_ablation_$(date +%Y%m%d_%H%M%S)"
 export DATASET_PATH="${DATASET_PATH:-/local/scratch/alali/fhibe_data/fhibe.20250716.u.gT5_rFTA_fullres}"
@@ -33,13 +34,18 @@ export DATASET_PATH="${DATASET_PATH:-/local/scratch/alali/fhibe_data/fhibe.20250
 read -ra GPU_ARR <<< "$GPUS"
 
 # model  |  baseline-db glob  |  screen tag
-# InternVL2 included but may fail at generation (transformers 5.x / GenerationMixin);
-# if it does, its screen ends with the real error and the other two are unaffected.
+# InternVL2 EXCLUDED: its 2024 remote code (InternLM2ForCausalLM) does not inherit
+# GenerationMixin, so .generate() is unavailable under transformers 5.x — confirmed
+# failure at the generation stage. LLaVA + idefics2 are the working models.
 JOBS=(
     "llava-hf/llava-v1.6-vicuna-7b-hf|gpu*llava*v1.6*vicuna*7b*.db|abl_llava"
     "HuggingFaceM4/idefics2-8b|gpu*idefics2_8b*.db|abl_idefics2"
-    "OpenGVLab/InternVL2-2B|gpu*InternVL2_2B*.db|abl_internvl2"
 )
+
+# Free GPU memory (MiB) for a physical GPU index.
+gpu_free_mib() {
+    nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i "$1" 2>/dev/null | tr -d ' '
+}
 
 resolve_baseline_db() {
     local best="" bn=-1
@@ -73,6 +79,15 @@ for job in "${JOBS[@]}"; do
         echo "⚠ no baseline DB for $model (glob: $glob) — skipping"
         continue
     fi
+
+    # Pre-flight: refuse to launch onto a busy GPU (avoids the OOM collision).
+    free=$(gpu_free_mib "$gpu")
+    if [ "${free:-0}" -lt "$MIN_FREE_MIB" ]; then
+        echo "⚠ GPU $gpu has only ${free:-?} MiB free (< $MIN_FREE_MIB) — SKIPPING $model."
+        echo "   Free a GPU or pass GPUS=\"<free ids>\" (check: nvidia-smi)."
+        continue
+    fi
+    echo "  GPU $gpu free: ${free} MiB ✓"
 
     outdir="$OUT_BASE/$tag"
     mkdir -p "$outdir"

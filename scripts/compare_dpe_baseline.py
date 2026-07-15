@@ -481,10 +481,21 @@ def main():
         "--metric", default="valence", choices=METRICS,
         help="Primary metric for gender/region comparison figures.",
     )
+    parser.add_argument(
+        "--exclude-gender", default="unknown,non-binary",
+        help="Comma-separated gender_presentation values to drop before analysis "
+             "(default: unknown,non-binary — unlabeled + too-small-n for stable "
+             "disparity). Pass '' to keep all.",
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    exclude_genders = {g.strip().lower() for g in args.exclude_gender.split(",") if g.strip()}
+
+    def _keep(r):
+        return (r.get("gender_presentation") or "unknown").lower() not in exclude_genders
 
     print(f"Loading baseline from: {args.baseline_db}")
     baseline_rows = []
@@ -497,6 +508,13 @@ def main():
     for db in args.dpe_db:
         dpe_rows.extend(load_scores(db))
     print(f"  → {len(dpe_rows):,} rows")
+
+    if exclude_genders:
+        nb, nd = len(baseline_rows), len(dpe_rows)
+        baseline_rows = [r for r in baseline_rows if _keep(r)]
+        dpe_rows = [r for r in dpe_rows if _keep(r)]
+        print(f"  Excluded gender {sorted(exclude_genders)}: "
+              f"baseline {nb:,}→{len(baseline_rows):,}, dpe {nd:,}→{len(dpe_rows):,}")
 
     if not baseline_rows:
         print("ERROR: No baseline scores found.")

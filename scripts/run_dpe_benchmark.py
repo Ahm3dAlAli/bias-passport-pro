@@ -332,17 +332,24 @@ def load_image_records_from_baseline(
 
 
 def load_balanced_image_records(
-    baseline_db: str, per_group: int
+    baseline_db: str, per_group: int, exclude_genders: Optional[set] = None
 ) -> List[dict]:
     """
     Load a demographically BALANCED image sample: up to `per_group` distinct
     images from each (gender_presentation, jurisdiction_region) group, so rare
-    groups (non-binary, Oceania, …) are represented and disparity estimates are
-    not dominated by the largest groups.
+    groups (Oceania, …) are represented and disparity estimates are not
+    dominated by the largest groups.
+
+    exclude_genders: gender_presentation values to skip entirely (default
+    {"unknown", "non-binary"} — unlabeled + too-small-n for stable disparity).
 
     Deterministic (images sorted by id, first `per_group` taken) — reproducible.
     """
     from collections import defaultdict
+
+    if exclude_genders is None:
+        exclude_genders = {"unknown", "non-binary"}
+    exclude_genders = {g.lower() for g in exclude_genders}
 
     conn = sqlite3.connect(baseline_db)
     conn.row_factory = sqlite3.Row
@@ -359,8 +366,10 @@ def load_balanced_image_records(
     groups: Dict[tuple, List[dict]] = defaultdict(list)
     for r in rows:
         rec = dict(r)
-        key = (rec.get("gender_presentation") or "unknown",
-               rec.get("jurisdiction_region") or "unknown")
+        gender = rec.get("gender_presentation") or "unknown"
+        if gender.lower() in exclude_genders:
+            continue
+        key = (gender, rec.get("jurisdiction_region") or "unknown")
         groups[key].append(rec)
 
     out: List[dict] = []
@@ -532,6 +541,7 @@ def run_dpe_benchmark(
     load_in_4bit: bool = False,
     balanced_per_group: Optional[int] = None,
     correction_axis: str = "intersectional",
+    exclude_genders: Optional[set] = None,
 ):
     print(f"\n=== DPE Benchmark: {model_name} ===")
     print(f"  α (correction strength) = {alpha}")
@@ -556,7 +566,8 @@ def run_dpe_benchmark(
     # 2. Load image records from the primary baseline DB
     print(f"\n[2/4] Loading image records from {primary_baseline_db}...")
     if balanced_per_group:
-        image_records = load_balanced_image_records(primary_baseline_db, balanced_per_group)
+        image_records = load_balanced_image_records(
+            primary_baseline_db, balanced_per_group, exclude_genders=exclude_genders)
     else:
         image_records = load_image_records_from_baseline(primary_baseline_db, n_images)
     print(f"  Found {len(image_records):,} distinct images")
@@ -810,6 +821,11 @@ def main():
              "'intersectional' = gender x region (default).",
     )
     parser.add_argument(
+        "--exclude-gender", default="unknown,non-binary",
+        help="Comma-separated gender_presentation values to skip in balanced "
+             "sampling (default: unknown,non-binary). Pass '' to keep all.",
+    )
+    parser.add_argument(
         "--batch-size", type=int, default=1,
         help="Batch size (currently unused; reserved for future batching).",
     )
@@ -834,6 +850,7 @@ def main():
         load_in_4bit=args.load_in_4bit,
         balanced_per_group=args.balanced_per_group,
         correction_axis=args.correction_axis,
+        exclude_genders={g.strip() for g in args.exclude_gender.split(",") if g.strip()},
     )
 
 
