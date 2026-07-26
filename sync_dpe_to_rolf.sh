@@ -58,8 +58,10 @@ rsync -avz -e "$RSYNC_SSH" \
 #    and we patched the Idefics2 processor call + InternVL loader for tf 5.x).
 rsync -avz -e "$RSYNC_SSH" \
     "$LOCAL_DIR/scripts/run_dpe_benchmark.py" \
+    "$LOCAL_DIR/scripts/dump_visual_embeddings.py" \
     "$LOCAL_DIR/scripts/compare_dpe_baseline.py" \
     "$LOCAL_DIR/scripts/generate_dpe_paper_tables.py" \
+    "$LOCAL_DIR/scripts/plot_dpe_alpha_curve.py" \
     "$LOCAL_DIR/scripts/run_fhibe_benchmark.py" \
     "${REMOTE}:${REMOTE_DIR}/scripts/"
 
@@ -70,6 +72,7 @@ rsync -avz -e "$RSYNC_SSH" \
     "$LOCAL_DIR/run_dpe_alpha_sweep_rolf.sh" \
     "$LOCAL_DIR/run_dpe_ablation_rolf.sh" \
     "$LOCAL_DIR/run_dpe_ablation_one.sh" \
+    "$LOCAL_DIR/run_dpe_final_eval.sh" \
     "${REMOTE}:${REMOTE_DIR}/"
 
 echo ""

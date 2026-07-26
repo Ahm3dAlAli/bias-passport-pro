@@ -1,0 +1,83 @@
+% ==== group means (raw judge valence, [-1,1]) ====
+\multirow{5}{*}{\model{IDEFICS2-8B}}
+& \probe{1} & 0.004 & 0.008 & 0.007 & 0.008 & 0.009 & 0.002 \\
+& \probe{2} & -0.000 & 0.000 & -0.000 & 0.000 & 0.000 & -0.001 \\
+& \probe{3} & 0.166 & 0.225 & 0.166 & 0.191 & 0.190 & 0.124 \\
+& \probe{4} & 0.041 & 0.099 & 0.072 & 0.097 & 0.092 & 0.113 \\
+& \probe{5} & -0.209 & -0.064 & -0.067 & -0.033 & -0.030 & 0.034 \\
+\midrule
+\multirow{5}{*}{\model{InternVL2-2B}}
+& \probe{1} & 0.515 & 0.496 & 0.508 & 0.539 & 0.536 & 0.524 \\
+& \probe{2} & 0.227 & 0.284 & 0.325 & 0.261 & 0.235 & 0.313 \\
+& \probe{3} & 0.814 & 0.825 & 0.820 & 0.797 & 0.741 & 0.865 \\
+& \probe{4} & 0.934 & 0.936 & 0.928 & 0.945 & 0.936 & 0.960 \\
+& \probe{5} & 0.275 & 0.563 & 0.538 & 0.584 & 0.521 & 0.631 \\
+\midrule
+\multirow{5}{*}{\model{LLaVA-v1.6-7B}}
+& \probe{1} & 0.149 & 0.249 & 0.184 & 0.282 & 0.304 & 0.237 \\
+& \probe{2} & 0.146 & 0.392 & 0.326 & 0.397 & 0.397 & 0.363 \\
+& \probe{3} & 0.746 & 0.733 & 0.744 & 0.752 & 0.774 & 0.739 \\
+& \probe{4} & 0.901 & 0.923 & 0.896 & 0.913 & 0.914 & 0.943 \\
+& \probe{5} & 0.256 & 0.435 & 0.436 & 0.517 & 0.490 & 0.569 \\
+\bottomrule
+
+% ==== Kruskal-Wallis (complete runs) ====
+\multirow{5}{*}{\model{IDEFICS2-8B}}
+& \probe{1} Occupation & 57.31 & 5 & $4.4\times10^{-11}$ & 0.0015 & \texttt{***} \\
+& \probe{2} Education & 20.96 & 5 & $8.3\times10^{-4}$ & 0.0005 & \texttt{n.s.} \\
+& \probe{3} Trustworthiness & 53.73 & 5 & $2.4\times10^{-10}$ & 0.0014 & \texttt{***} \\
+& \probe{4} Lifestyle & 286.43 & 5 & $8.3\times10^{-60}$ & 0.0080 & \texttt{***} \\
+& \probe{5} Neighbourhood & 3399.91 & 5 & $<10^{-300}$ & 0.0965 & \texttt{***} \\
+\midrule
+\multirow{5}{*}{\model{InternVL2-2B}}
+& \probe{1} Occupation & 26.47 & 5 & $7.2\times10^{-5}$ & 0.0006 & \texttt{***} \\
+& \probe{2} Education & 291.56 & 5 & $6.5\times10^{-61}$ & 0.0081 & \texttt{***} \\
+& \probe{3} Trustworthiness & 128.27 & 5 & $5.5\times10^{-26}$ & 0.0035 & \texttt{***} \\
+& \probe{4} Lifestyle & 124.01 & 5 & $4.4\times10^{-25}$ & 0.0034 & \texttt{***} \\
+& \probe{5} Neighbourhood & 2949.42 & 5 & $<10^{-300}$ & 0.0837 & \texttt{***} \\
+\midrule
+\multirow{5}{*}{\model{LLaVA-v1.6-7B}}
+& \probe{1} Occupation & 301.10 & 5 & $5.8\times10^{-63}$ & 0.0084 & \texttt{***} \\
+& \probe{2} Education & 1634.04 & 5 & $<10^{-300}$ & 0.0463 & \texttt{***} \\
+& \probe{3} Trustworthiness & 22.90 & 5 & $3.5\times10^{-4}$ & 0.0005 & \texttt{***} \\
+& \probe{4} Lifestyle & 157.44 & 5 & $3.5\times10^{-32}$ & 0.0043 & \texttt{***} \\
+& \probe{5} Neighbourhood & 1635.42 & 5 & $<10^{-300}$ & 0.0463 & \texttt{***} \\
+\bottomrule
+
+% ==== Dunn headline contrast (complete runs) ====
+\multirow{5}{*}{\model{IDEFICS2-8B}}
+& \probe{1} Occupation & 0.007 & No \\
+& \probe{2} Education & --- & \emph{n.s.\ omnibus} \\
+& \probe{3} Trustworthiness & 0.101 & Yes \\
+& \probe{4} Lifestyle & 0.072 & Yes \\
+& \probe{5} Neighbourhood & 0.243 & Yes \\
+\midrule
+\multirow{5}{*}{\model{InternVL2-2B}}
+& \probe{1} Occupation & 0.043 & Yes \\
+& \probe{2} Education & 0.098 & Yes \\
+& \probe{3} Trustworthiness & 0.124 & Yes \\
+& \probe{4} Lifestyle & 0.032 & Yes \\
+& \probe{5} Neighbourhood & 0.355 & Yes \\
+\midrule
+\multirow{5}{*}{\model{LLaVA-v1.6-7B}}
+& \probe{1} Occupation & 0.155 & Yes \\
+& \probe{2} Education & 0.251 & Yes \\
+& \probe{3} Trustworthiness & 0.041 & Yes \\
+& \probe{4} Lifestyle & 0.047 & Yes \\
+& \probe{5} Neighbourhood & 0.313 & Yes \\
+\bottomrule
+
+% ==== Africa extreme (complete runs) ====
+\model{IDEFICS2-8B} & 2/5 & 2/5 \\
+\model{InternVL2-2B} & 2/5 & 2/5 \\
+\model{LLaVA-v1.6-7B} & 3/5 & 3/5 \\
+\textbf{Total} & \textbf{7/15} & \textbf{7/15} \\
+
+% ==== Neighbourhood bootstrap CI (B=10000) ====
+\model{IDEFICS2-8B} & \probe{5} Neighbourhood & 0.243 & $[0.220,\ 0.265]$ & Yes \\
+\model{InternVL2-2B} & \probe{5} Neighbourhood & 0.355 & $[0.308,\ 0.406]$ & Yes \\
+\model{LLaVA-v1.6-7B} & \probe{5} Neighbourhood & 0.313 & $[0.265,\ 0.364]$ & Yes \\
+
+% n_omnibus_sig = 14/15
+% non-sig cells: [('IDEFICS2-8B', 'Education')]
+% omnibus-sig but contrast NOT sig: [('IDEFICS2-8B', 'Occupation')]

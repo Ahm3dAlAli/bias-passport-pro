@@ -33,9 +33,17 @@ from fingerprint_squared.debiasing.demographic_positional_encoder import (
 )
 
 
-# Candidate attribute paths to the vision encoder, by model family.
+# Candidate attribute paths to the injection module, by model family.
+# IMPORTANT ordering: for LLaVA(-Next) we hook the multimodal PROJECTOR output
+# (image features already in language-model space, AFTER the vision tower's
+# post-LayerNorm) rather than the raw vision_tower — adding the correction to the
+# pre-norm vision_tower output gets normalized away and has zero effect on
+# generation. idefics2 (connector) and InternVL (mlp1) don't expose
+# multi_modal_projector, so they fall through to their vision encoders unchanged.
 VISION_MODULE_PATHS = [
-    "vision_tower",          # LLaVA / LLaVA-Next
+    "multi_modal_projector",        # LLaVA / LLaVA-Next: post-projection (LM space)
+    "model.multi_modal_projector",  # nested packaging
+    "vision_tower",          # (fallback) LLaVA raw vision tower
     "vision_model",          # InternVL, Idefics2 (top-level), SigLIP-based
     "model.vision_model",    # Idefics2 / Idefics3 (nested)
     "model.vision_tower",    # some LLaVA packagings

@@ -122,6 +122,21 @@ def _make_judge(fhibe, baseline_db: str):
     return (lambda pr: fhibe.openai_judge(pr, oai_client, judge_model)), f"openai:{judge_model}"
 
 
+def _disable_caching_allocator_warmup():
+    """
+    transformers 5.x's caching_allocator_warmup pre-allocates ~fp16-model-sized
+    memory during from_pretrained, which OOMs large models (llava-7b) on tight
+    GPUs *even when loading in 4-bit*. 4-bit loading works fine without it, so
+    turn it into a no-op.
+    """
+    try:
+        import transformers.modeling_utils as mu
+        if hasattr(mu, "caching_allocator_warmup"):
+            mu.caching_allocator_warmup = lambda *a, **k: None
+    except Exception:
+        pass
+
+
 def _patch_transformers_for_remote_code():
     """
     Make transformers 5.x tolerate older remote-code models (e.g. InternVL2's
@@ -139,6 +154,41 @@ def _patch_transformers_for_remote_code():
         pass
 
 
+def _ensure_generation_mixin(model) -> None:
+    """
+    transformers 5.x stopped auto-inheriting GenerationMixin on PreTrainedModel,
+    so pre-5.x remote-code causal LMs (e.g. InternVL2's InternLM2ForCausalLM) no
+    longer expose .generate(). Dynamically mix GenerationMixin into the model and
+    its .language_model so the remote .chat()/.generate() path works again.
+    """
+    try:
+        from transformers.generation import GenerationMixin
+    except Exception:
+        return
+
+    targets = [model]
+    lm = getattr(model, "language_model", None)
+    if lm is not None:
+        targets.append(lm)
+
+    for m in targets:
+        cls = m.__class__
+        if issubclass(cls, GenerationMixin):
+            continue
+        # Only patch things that actually look generative.
+        if not (hasattr(m, "prepare_inputs_for_generation") or hasattr(cls, "generate")):
+            continue
+        try:
+            m.__class__ = type(cls.__name__, (cls, GenerationMixin), {})
+            print(f"  [DPE] injected GenerationMixin into {cls.__name__}")
+        except TypeError:
+            try:
+                cls.__bases__ = cls.__bases__ + (GenerationMixin,)
+                print(f"  [DPE] added GenerationMixin base to {cls.__name__}")
+            except TypeError:
+                print(f"  [DPE] WARNING: could not add GenerationMixin to {cls.__name__}")
+
+
 def _load_fhibe_module():
     """
     Import scripts/run_fhibe_benchmark.py as a module so we can reuse its proven
@@ -148,6 +198,7 @@ def _load_fhibe_module():
 
     _install_transformers_compat_shim()
     _patch_transformers_for_remote_code()
+    _disable_caching_allocator_warmup()
 
     fhibe_path = ROOT / "scripts" / "run_fhibe_benchmark.py"
     spec = importlib.util.spec_from_file_location("fhibe_benchmark", fhibe_path)
@@ -332,16 +383,21 @@ def load_image_records_from_baseline(
 
 
 def load_balanced_image_records(
-    baseline_db: str, per_group: int, exclude_genders: Optional[set] = None
+    baseline_db: str, per_group: int, exclude_genders: Optional[set] = None,
+    balance_by: str = "gender_region",
 ) -> List[dict]:
     """
-    Load a demographically BALANCED image sample: up to `per_group` distinct
-    images from each (gender_presentation, jurisdiction_region) group, so rare
-    groups (Oceania, …) are represented and disparity estimates are not
-    dominated by the largest groups.
+    Load a BALANCED image sample: up to `per_group` distinct images per group.
 
-    exclude_genders: gender_presentation values to skip entirely (default
-    {"unknown", "non-binary"} — unlabeled + too-small-n for stable disparity).
+    balance_by:
+      "region"        -> group by jurisdiction_region only (cap per REGION;
+                         gender ignored, ALL genders included). Use for a
+                         region-disparity study where gender is not a factor.
+      "gender_region" -> group by (gender_presentation, jurisdiction_region);
+                         excludes `exclude_genders` (default unknown/non-binary).
+
+    exclude_genders: gender values to skip (only applies when balance_by
+    == "gender_region"). Default {"unknown", "non-binary"}.
 
     Deterministic (images sorted by id, first `per_group` taken) — reproducible.
     """
@@ -366,20 +422,26 @@ def load_balanced_image_records(
     groups: Dict[tuple, List[dict]] = defaultdict(list)
     for r in rows:
         rec = dict(r)
-        gender = rec.get("gender_presentation") or "unknown"
-        if gender.lower() in exclude_genders:
-            continue
-        key = (gender, rec.get("jurisdiction_region") or "unknown")
+        region = rec.get("jurisdiction_region") or "unknown"
+        if balance_by == "region":
+            # cap per region; keep ALL genders (gender not a factor here)
+            key = (region,)
+        else:
+            gender = rec.get("gender_presentation") or "unknown"
+            if gender.lower() in exclude_genders:
+                continue
+            key = (gender, region)
         groups[key].append(rec)
 
     out: List[dict] = []
-    print(f"  Balanced sampling up to {per_group} images/group "
-          f"across {len(groups)} demographic groups:")
+    unit = "region" if balance_by == "region" else "group"
+    print(f"  Balanced sampling up to {per_group} images/{unit} "
+          f"across {len(groups)} {unit}s (balance_by={balance_by}):")
     for key in sorted(groups):
         take = groups[key][:per_group]
         out.extend(take)
-        print(f"    {key[0]:<12} {key[1]:<18} -> {len(take):>4} "
-              f"(of {len(groups[key])} available)")
+        label = " ".join(str(k) for k in key)
+        print(f"    {label:<28} -> {len(take):>5} (of {len(groups[key])} available)")
     return out
 
 
@@ -542,6 +604,7 @@ def run_dpe_benchmark(
     balanced_per_group: Optional[int] = None,
     correction_axis: str = "intersectional",
     exclude_genders: Optional[set] = None,
+    balance_by: str = "gender_region",
 ):
     print(f"\n=== DPE Benchmark: {model_name} ===")
     print(f"  α (correction strength) = {alpha}")
@@ -567,7 +630,8 @@ def run_dpe_benchmark(
     print(f"\n[2/4] Loading image records from {primary_baseline_db}...")
     if balanced_per_group:
         image_records = load_balanced_image_records(
-            primary_baseline_db, balanced_per_group, exclude_genders=exclude_genders)
+            primary_baseline_db, balanced_per_group,
+            exclude_genders=exclude_genders, balance_by=balance_by)
     else:
         image_records = load_image_records_from_baseline(primary_baseline_db, n_images)
     print(f"  Found {len(image_records):,} distinct images")
@@ -596,10 +660,11 @@ def run_dpe_benchmark(
     print(f"  device={device}  4bit={load_in_4bit}")
 
     fhibe = _load_fhibe_module()
-    device_map = f"cuda:{device}" if str(device).isdigit() else "auto"
-    # NOTE: --gpu already set CUDA_VISIBLE_DEVICES, so the visible GPU is index 0.
-    if device_map.startswith("cuda:") is False and device == "cuda":
-        device_map = "cuda:0"
+    # Use "auto": --gpu already pinned CUDA_VISIBLE_DEVICES to one GPU, so accelerate
+    # dispatches the model onto it. This avoids device_map={"":0}, which triggers a
+    # ".to() not supported for 4-bit models" error in transformers 4.44 — the env
+    # where 4-bit llava actually quantizes (5.x materializes fp16 first and OOMs).
+    device_map = "auto"
 
     # transformers 5.x initialises models on the 'meta' device before loading
     # weights. Some remote-code models (InternVL2) call torch.linspace(...).item()
@@ -623,6 +688,12 @@ def run_dpe_benchmark(
         _torch.linspace = _orig_linspace
     model = client.model
     print("  Model loaded successfully.")
+
+    # transformers 5.x: PreTrainedModel no longer auto-inherits GenerationMixin,
+    # so older remote-code LMs (InternVL2's InternLM2ForCausalLM) lose .generate().
+    # Inject GenerationMixin into the model + its language_model so .chat()/.generate()
+    # work again.
+    _ensure_generation_mixin(model)
 
     # Locate the vision encoder and attach the DPE hook.
     vision_module, vpath = find_vision_module(model)
@@ -809,9 +880,14 @@ def main():
     )
     parser.add_argument(
         "--balanced-per-group", type=int, default=None,
-        help="Demographically balanced sampling: up to N images from EACH "
-             "(gender x region) group. Overrides --n-images. Use for alpha sweeps "
-             "so rare groups are represented and disparity is not group-size-biased.",
+        help="Balanced sampling: up to N images per group (see --balance-by). "
+             "Overrides --n-images.",
+    )
+    parser.add_argument(
+        "--balance-by", choices=["gender_region", "region"], default="gender_region",
+        help="Grouping for --balanced-per-group. 'region' = cap N per REGION "
+             "(gender ignored, all genders kept). 'gender_region' = cap N per "
+             "(gender x region), excluding --exclude-gender (default).",
     )
     parser.add_argument(
         "--correction-axis", choices=["intersectional", "region", "gender"],
@@ -851,6 +927,7 @@ def main():
         balanced_per_group=args.balanced_per_group,
         correction_axis=args.correction_axis,
         exclude_genders={g.strip() for g in args.exclude_gender.split(",") if g.strip()},
+        balance_by=args.balance_by,
     )
 
 

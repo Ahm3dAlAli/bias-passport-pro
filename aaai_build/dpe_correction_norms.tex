@@ -1,0 +1,19 @@
+\begin{table}[t]\centering\small
+\caption{\textbf{DPE correction-vector norms} $\lVert\alpha\,\varepsilon_g\rVert$ per region (the injected magnitude added to the visual tokens; equal to $\alpha\lVert\delta_g\rVert$ since the projection is orthonormal). Norms are non-trivial and of comparable magnitude across models---in particular \model{LLaVA-v1.6-7B}'s are the \emph{largest}---so its near-zero disparity change reflects genuine architectural resistance to the correction rather than a failure to inject it. $\alpha^{\star}$: IDEFICS2 $0.25$, InternVL2 $0.5$, LLaVA $0.5$.}
+\label{tab:dpe_norms}
+\begin{tabular}{lccc}
+\toprule
+Region & \model{IDEFICS2-8B} & \model{InternVL2-2B} & \model{LLaVA-v1.6-7B} \\
+\midrule
+Africa & 0.0057 & 0.0197 & 0.0242 \\
+Asia & 0.0039 & 0.0169 & 0.0151 \\
+Europe & 0.0081 & 0.0173 & 0.0423 \\
+Americas & 0.0105 & 0.0150 & 0.0295 \\
+N. America & 0.0079 & 0.0048 & 0.0441 \\
+Oceania & 0.0093 & 0.0355 & 0.0415 \\
+\midrule
+Mean & 0.0076 & 0.0182 & 0.0328 \\
+\bottomrule
+\end{tabular}
+\end{table}
+

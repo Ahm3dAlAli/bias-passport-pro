@@ -1,0 +1,21 @@
+\begin{table}[t]\centering\small
+\caption{\textbf{Content preservation under DPE.} Fraction of responses byte-identical to the greedy-decoded
+baseline, overall semantic similarity (SBERT cosine, counting identical pairs as $1$), and cosine on the
+subset that changed. DPE's footprint scales with its effect: \model{LLaVA-v1.6-7B} leaves most responses
+untouched (consistent with its negligible disparity change), \model{IDEFICS2-8B} edits a minority while
+preserving meaning (overall cosine $0.88$), and \model{InternVL2-2B} rewrites nearly all responses---its
+larger disparity reduction is a more invasive intervention, though semantically related ($0.74$). The high
+identical fractions for \model{IDEFICS2-8B}/\model{LLaVA-v1.6-7B} also show the DPE run reproduces the
+archived baseline verbatim where the correction does not act, so the with/without-DPE gap reflects the
+correction rather than precision or hardware drift.}
+\label{tab:dpe_content}
+\begin{tabular}{lcccc}
+\toprule
+Model & \% identical & Overall cos & Cos (changed) & \# changed \\
+\midrule
+\model{IDEFICS2-8B}   & 71.6\% & 0.883 & 0.587 & 11{,}227 \\
+\model{InternVL2-2B}  & 0.1\%  & 0.737 & 0.737 & 39{,}499 \\
+\model{LLaVA-v1.6-7B} & 82.5\% & 0.984 & 0.911 & 6{,}900 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -51,13 +51,28 @@ vision output tensor at runtime. dpe_vlm.py (DPEWrappedHuggingFaceVLM) is now le
 - idefics2 confirmed loading + running full-data DPE. llava OOM'd under old loader; build_client
   (LlavaClient: low_cpu_mem_usage + bnb_4bit_compute_dtype) should fix it.
 
+## LLaVA on tight GPU (11GB) — the working recipe (2026-07-17)
+LLaVA-1.6-7B 4-bit fails in the transformers-5.3 env (new loading path materializes
+fp16 weights first → OOM even at 4-bit; caching_allocator_warmup also over-allocates).
+WORKING setup: run in the `internvl` (transformers 4.44) env with:
+  - accelerate==0.34.2 (the cloned env had a too-new accelerate whose dispatch_model
+    calls model.to() on 4-bit models → ".to not supported for 4-bit" error; 0.34.2 matches tf 4.44)
+  - run_dpe_benchmark uses device_map="auto" (not cuda:0)
+  - _disable_caching_allocator_warmup() patch (harmless no-op)
+  - env vars: PYTHONNOUSERSITE=1, PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True, HF_HUB_OFFLINE=1, TRANSFORMERS_OFFLINE=1
+Confirmed: Completed 120/120, Errors 0, 4-bit, ~6GB. Run llava's full 5-α sweep in internvl env.
+GPU contention on shared cluster (kasim etc.) caused many false OOMs — always verify a GPU is 0 MiB used first.
+
 ## Model status (as of 2026-07-15)
 - LLaVA-v1.6-7B: WORKS with DPE (LlavaClient).
 - idefics2-8b: WORKS with DPE (IDEFICSClient). Partial run showed region disparity −28.8% at α=1.5 (23k samples, matched judge).
-- InternVL2-2B: EXCLUDED — confirmed dead on transformers 5.x. Its InternLM2ForCausalLM
-  doesn't inherit GenerationMixin, so `.generate()` is unavailable; all InternVLClient
-  fallbacks fail (AttributeError: no attribute 'generate' + AssertionError selected.sum()!=0).
-  Not worth patching frozen 2024 remote code.
+- InternVL2-2B: WORKS but ONLY in a transformers==4.44.2 env. On transformers 5.x it
+  dies (InternLM2 lacks GenerationMixin, meta-tensor init, img_context assertion).
+  Fix: `conda create -n internvl --clone fingerprint` then `pip install --no-user
+  transformers==4.44.2`. Run InternVL2 with env vars: PYTHONNOUSERSITE=1,
+  HF_HUB_OFFLINE=1, TRANSFORMERS_OFFLINE=1 (rolf can't reach HF; model is cached).
+  Confirmed: Completed 120/120, Errors 0, hook fires. Run its ablation loop directly
+  (not run_dpe_ablation_rolf.sh, which activates the fingerprint env).
 - Llama-3.2-11B: EXCLUDED — baseline is 100% [ERROR] rows.
 
 ## Experiment design (chosen 2026-07-15)
@@ -98,3 +113,13 @@ python scripts/run_dpe_benchmark.py --model llava-hf/llava-v1.6-vicuna-7b-hf \
 python scripts/compare_dpe_baseline.py --baseline-db results/single_runs_35k/gpu7_llava_*.db \
   --dpe-db results/dpe/llava_dpe.db --out-dir results/dpe_comparison/llava
 ```
+
+## Evaluation methodology (decided 2026-07-20)
+- Alpha selected on balanced ablation set (~600 imgs). User is fine reusing those
+  images in the final eval (600/35k overlap is negligible — do NOT add held-out
+  split / offset machinery; it was rejected as over-engineering).
+- Final eval: run each model at its OPTIMAL alpha, compare vs stored baseline
+  (before=baseline, after=DPE). Script: run_dpe_final_eval.sh (per-model env+GPU).
+- Optimal alphas: idefics2=0.25, InternVL2=0.5, LLaVA=0.5.
+- Per-model envs: idefics2=fingerprint(tf5.3)+4bit; InternVL2=internvl(tf4.44)+fp16;
+  LLaVA=internvl(tf4.44)+4bit.

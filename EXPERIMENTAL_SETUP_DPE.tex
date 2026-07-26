@@ -1,0 +1,112 @@
+%=============================================================================
+\section{Experimental Setup}
+\label{sec:setup}
+%=============================================================================
+
+\paragraph{Dataset.}
+We evaluate on FHIBE (Fair Human-centric Image Benchmark), comprising
+$35{,}189$ consented, human-centric images annotated with self-reported
+demographic attributes. We group images by \emph{jurisdictional region} into
+six regions---Africa, Americas, Asia, Europe, Northern America, and
+Oceania---which is the demographic axis our intervention targets. Region sizes
+are strongly imbalanced (Africa $\approx16.1$K and Asia $\approx14.9$K images
+versus Oceania $236$ and Northern America $576$), a point we return to when
+describing sampling.
+
+\paragraph{Models.}
+We study three open-weight vision--language models spanning distinct
+architectures and scales: \model{IDEFICS2-8B}, \model{InternVL2-2B}, and
+\model{LLaVA-1.6-7B}. A fourth model (\model{Llama-3.2-11B-Vision}) was excluded
+because its baseline run produced no scorable output (\Cref{sec:limitations}).
+All models are run in 4-bit quantization on a single NVIDIA RTX~2080~Ti
+(11~GB)\footnote{\model{InternVL2-2B} is run in half precision, as its
+remote-code architecture is loaded through a transformers~4.44 runtime; the
+other models use 4-bit quantization.}.
+
+\paragraph{Probes and scoring.}
+Each image is queried with a battery of five social-inference probes
+(occupation, education, trustworthiness, lifestyle, and neighbourhood). Every
+response is scored on a $[-1,1]$ \emph{valence} dimension by a deterministic
+judge (VADER sentiment $+$ frozen sentence-transformer stereotype embeddings $+$
+lexicons); critically, DPE responses are scored with the \emph{same} judge that
+produced the baseline scores, so the with-/without-DPE comparison is on a common
+scale.
+
+\paragraph{Bias metric.}
+Our headline metric is the \emph{regional valence disparity} $\sigma$, defined
+as the standard deviation of the six per-region mean valence scores. Lower
+$\sigma$ indicates more equitable treatment across regions. Because $\sigma$ is
+computed over per-region \emph{means}, each region contributes a single value
+regardless of its sample size; we therefore require only enough images per
+region for a stable mean, not equal counts.
+
+\paragraph{Two-stage protocol.}
+DPE has a single hyperparameter, the correction strength $\alpha$. We use a
+two-stage protocol. \emph{(i)~Strength selection:} we sweep
+$\alpha\in\{0.25,0.5,0.75,1.0,1.5\}$ on a balanced development sample and select,
+per model, the $\alpha^{\star}$ that minimises $\sigma$. \emph{(ii)~Evaluation:}
+we re-run each model at its $\alpha^{\star}$ and compare against the baseline
+(DPE off) on the same images. Correction is \emph{region-only}: the correction
+field $\delta$ is estimated per region, and applied to all images of that region
+regardless of gender.
+
+\paragraph{Sampling.}
+Because a full-dataset re-evaluation is computationally infeasible
+(\Cref{sec:limitations}), both stages use \emph{balanced sampling}. Strength
+selection uses $50$ images per (gender$\times$region) group ($\approx600$ images,
+$1.7\%$ of the dataset). The final evaluation uses \emph{region-balanced}
+sampling, capping each region at $2{,}000$ images (all images are used for
+regions below the cap), yielding $7{,}904$ images ($22.5\%$ of the dataset).
+Sampling is deterministic (images ordered by identifier), so runs are
+reproducible. The selected strengths were
+$\alpha^{\star}{=}0.25$ (\model{IDEFICS2-8B}) and $\alpha^{\star}{=}0.5$
+(\model{InternVL2-2B}, \model{LLaVA-1.6-7B}).
+
+\paragraph{Baseline reuse.}
+DPE is a post-hoc intervention: the ``without DPE'' condition is exactly the
+model's original (baseline) output. We therefore do not re-run baselines; the
+comparison pulls each sampled image's baseline score from the original run,
+matched by image identifier. Only the ``with DPE'' condition is computed.
+
+
+%=============================================================================
+\section{Limitations}
+\label{sec:limitations}
+%=============================================================================
+
+\paragraph{Compute cost precludes full-dataset evaluation.}
+DPE requires re-generating model outputs with the correction injected, which is
+as expensive as a full inference pass over the data. On a single RTX~2080~Ti,
+the balanced strength-selection sweep ($50$ images/group, $\approx600$ images,
+five $\alpha$ values) takes roughly one day \emph{per model}. Since this covers
+only $1.7\%$ of the $35{,}189$-image dataset, a single-strength re-evaluation of
+the \emph{entire} dataset would require on the order of $\sim\!60\times$ more
+generation and, extrapolating from observed throughput ($\sim\!10^3$
+generations/hour), on the order of a week per model---and substantially longer
+for a multi-$\alpha$ sweep across three models. We therefore report the region-balanced
+evaluation ($2{,}000$ images/region, $7{,}904$ images, $22.5\%$ of the corpus) as
+our primary result. We argue this is not merely a concession but methodologically
+preferable for a \emph{region} disparity study: the full dataset is
+$\sim\!88\%$ Africa/Asia, whereas balanced sampling weights each region comparably
+and yields stable per-region means. For completeness, a full-corpus
+($35{,}189$-image) DPE pass is \emph{currently running} at the time of submission;
+after roughly one day of continuous generation per model it has reached only
+$\sim\!9$--$24\%$ coverage, and at the observed throughput the three models will
+not complete until well after the submission deadline. We will include these
+full-corpus results---which we expect to reproduce the region-balanced
+findings---in a future revision.
+
+\paragraph{Additional limitations.}
+(i)~Bias is scored by a deterministic lexical/embedding judge rather than human
+annotators; while reproducible and consistent across conditions, it is an
+imperfect proxy for perceived bias. (ii)~We evaluate a single benchmark (FHIBE);
+generalisation to other populations and imaging conditions is untested.
+(iii)~The correction targets region only; its effect on the untargeted gender
+axis is model-dependent and can be adverse (\Cref{sec:results}). (iv)~The
+projection from score space to embedding space uses a fixed random orthonormal
+matrix rather than a learned map; a learned projection under a fairness objective
+is left to future work. (v)~Responsiveness to DPE varies by architecture
+(strong for \model{IDEFICS2-8B}/\model{InternVL2-2B}, weak for
+\model{LLaVA-1.6-7B}), indicating the intervention is not universally effective
+and its efficacy depends on where in the visual pathway the correction is
+injected.

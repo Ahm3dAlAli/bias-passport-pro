@@ -1,0 +1,227 @@
+\begin{table}[t]\centering\small
+\caption{\textbf{Model leaderboard} (complete runs, judge valence). Composite is the mean per-probe max--min regional gap (lower is better); all three models now score $100\%$ valid on the complete runs.}
+\label{tab:leaderboard}
+\begin{tabular}{lccccl}
+\toprule
+Model & Composite $\downarrow$ & Valid & Severity & Worst Probe & Worst Gap \\
+\midrule
+IDEFICS2-8B & 0.085 & 100\% & Moderate & Neighbourhood & 0.243 \\
+InternVL2-2B & 0.131 & 100\% & Moderate & Neighbourhood & 0.355 \\
+LLaVA-v1.6-7B & 0.161 & 100\% & High & Neighbourhood & 0.313 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Per-model, per-probe disparity breakdown (max--min valence gap) with worst- and best-treated regions, from the complete runs.}
+\label{tab:probe-breakdown}
+\begin{tabular}{llccc}
+\toprule
+Model & Probe & Disparity & Worst Region & Best Region \\
+\midrule
+\multicolumn{5}{l}{\textit{IDEFICS2-8B}} \\
+\quad P1 Occupation & & 0.007 & Oceania & N. America \\
+\quad P2 Education & & 0.001 & Oceania & Europe \\
+\quad P3 Trustworthiness & & 0.101 & Oceania & Americas \\
+\quad P4 Lifestyle & & 0.072 & Africa & Oceania \\
+\quad P5 Neighbourhood & & 0.243 & Africa & Oceania \\
+\midrule
+\multicolumn{5}{l}{\textit{InternVL2-2B}} \\
+\quad P1 Occupation & & 0.043 & Americas & Europe \\
+\quad P2 Education & & 0.098 & Africa & Asia \\
+\quad P3 Trustworthiness & & 0.124 & N. America & Oceania \\
+\quad P4 Lifestyle & & 0.032 & Asia & Oceania \\
+\quad P5 Neighbourhood & & 0.355 & Africa & Oceania \\
+\midrule
+\multicolumn{5}{l}{\textit{LLaVA-v1.6-7B}} \\
+\quad P1 Occupation & & 0.155 & Africa & N. America \\
+\quad P2 Education & & 0.251 & Africa & N. America \\
+\quad P3 Trustworthiness & & 0.041 & Americas & N. America \\
+\quad P4 Lifestyle & & 0.047 & Asia & Oceania \\
+\quad P5 Neighbourhood & & 0.313 & Africa & Oceania \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Multi-metric regional disparity with bootstrap $95\%$ CIs (image-level resampling). Worst$\rightarrow$best region shown per metric.}
+\label{tab:multimetric}
+\begin{tabular}{llcl}
+\toprule
+Model & Metric & Disparity & Worst $\rightarrow$ Best Region \\
+\midrule
+\multicolumn{4}{l}{\textit{IDEFICS2-8B}} \\
+\quad Sentiment valence & & 0.054 [0.052, 0.065] & Africa $\rightarrow$ Oceania \\
+\quad Economic valence & & 0.123 [0.111, 0.136] & Africa $\rightarrow$ Oceania \\
+\quad Stereotype score & & 0.024 [0.020, 0.027] & Oceania $\rightarrow$ Africa \\
+\quad Probe-specific & & 0.085 [0.075, 0.096] & Africa $\rightarrow$ Oceania \\
+\quad Refusal rate & & 0.000 [0.000, 0.001] & Asia $\rightarrow$ N. America \\
+\midrule
+\multicolumn{4}{l}{\textit{InternVL2-2B}} \\
+\quad Sentiment valence & & 0.106 [0.081, 0.131] & Africa $\rightarrow$ Oceania \\
+\quad Economic valence & & 0.075 [0.071, 0.092] & Africa $\rightarrow$ Asia \\
+\quad Stereotype score & & 0.009 [0.007, 0.011] & Oceania $\rightarrow$ Africa \\
+\quad Probe-specific & & 0.131 [0.120, 0.153] & Africa $\rightarrow$ Oceania \\
+\quad Refusal rate & & 0.060 [0.044, 0.077] & Oceania $\rightarrow$ Asia \\
+\midrule
+\multicolumn{4}{l}{\textit{LLaVA-v1.6-7B}} \\
+\quad Sentiment valence & & 0.136 [0.129, 0.156] & Africa $\rightarrow$ N. America \\
+\quad Economic valence & & 0.047 [0.039, 0.076] & Africa $\rightarrow$ Americas \\
+\quad Stereotype score & & 0.004 [0.003, 0.006] & Oceania $\rightarrow$ Africa \\
+\quad Probe-specific & & 0.161 [0.152, 0.178] & Africa $\rightarrow$ N. America \\
+\quad Refusal rate & & 0.069 [0.063, 0.086] & N. America $\rightarrow$ Africa \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Two-way structure of valence: one-way $F$ for region and probe factors, and the variance of the region$\times$probe interaction effect.}
+\label{tab:anova}
+\begin{tabular}{lccc}
+\toprule
+Model & $F_{\text{region}}$ & $F_{\text{probe}}$ & Interaction Var. \\
+\midrule
+IDEFICS2-8B & 309.1 & 10997.7 & 0.00163 \\
+InternVL2-2B & 211.4 & 17711.6 & 0.00359 \\
+LLaVA-v1.6-7B & 364.4 & 27014.7 & 0.00316 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Modal worst-treated region per model across the five probes, with the fraction of probes for which it is worst (consistency).}
+\label{tab:modal}
+\begin{tabular}{lccc}
+\toprule
+Model & Modal Worst Region & Worst Count & Consistency \\
+\midrule
+IDEFICS2-8B & Oceania & 3/5 & 0.60 \\
+InternVL2-2B & Africa & 2/5 & 0.40 \\
+LLaVA-v1.6-7B & Africa & 3/5 & 0.60 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[t]\centering\small
+\caption{Region$\times$probe mean judge valence for each model (complete runs).}
+\label{tab:rxp}
+\begin{tabular}{llcccccc}
+\toprule
+Model & Probe & Africa & Asia & Europe & Americas & N. America & Oceania \\
+\midrule
+\multicolumn{8}{l}{\textit{IDEFICS2-8B}} \\
+\quad P1 & Occupation & 0.004 & 0.007 & 0.008 & 0.008 & 0.009 & 0.002 \\
+\quad P2 & Education & -0.000 & -0.000 & 0.000 & 0.000 & 0.000 & -0.001 \\
+\quad P3 & Trustworthiness & 0.166 & 0.166 & 0.191 & 0.225 & 0.190 & 0.124 \\
+\quad P4 & Lifestyle & 0.041 & 0.072 & 0.097 & 0.099 & 0.092 & 0.113 \\
+\quad P5 & Neighbourhood & -0.209 & -0.067 & -0.033 & -0.064 & -0.030 & 0.034 \\
+\midrule
+\multicolumn{8}{l}{\textit{InternVL2-2B}} \\
+\quad P1 & Occupation & 0.515 & 0.508 & 0.539 & 0.496 & 0.536 & 0.524 \\
+\quad P2 & Education & 0.227 & 0.325 & 0.261 & 0.284 & 0.235 & 0.313 \\
+\quad P3 & Trustworthiness & 0.814 & 0.820 & 0.797 & 0.825 & 0.741 & 0.865 \\
+\quad P4 & Lifestyle & 0.934 & 0.928 & 0.945 & 0.936 & 0.936 & 0.960 \\
+\quad P5 & Neighbourhood & 0.275 & 0.538 & 0.584 & 0.563 & 0.521 & 0.631 \\
+\midrule
+\multicolumn{8}{l}{\textit{LLaVA-v1.6-7B}} \\
+\quad P1 & Occupation & 0.149 & 0.184 & 0.282 & 0.249 & 0.304 & 0.237 \\
+\quad P2 & Education & 0.146 & 0.326 & 0.397 & 0.392 & 0.397 & 0.363 \\
+\quad P3 & Trustworthiness & 0.746 & 0.744 & 0.752 & 0.733 & 0.774 & 0.739 \\
+\quad P4 & Lifestyle & 0.901 & 0.896 & 0.913 & 0.923 & 0.914 & 0.943 \\
+\quad P5 & Neighbourhood & 0.256 & 0.436 & 0.517 & 0.435 & 0.490 & 0.569 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]\centering\small
+\caption{Kruskal--Wallis omnibus test per model$\times$probe (6 regions, $df{=}5$). Significance at Bonferroni $\alpha_{\text{adj}}\approx0.00067$.}
+\label{tab:kw}
+\begin{tabular}{llcccc}
+\toprule
+Model & Probe & $H$ & $p$ & $\eta^2$ & Sig. \\
+\midrule
+\multicolumn{6}{l}{\textit{IDEFICS2-8B}} \\
+\quad P1 Occupation & & 57.31 & $4.4\times10^{-11}$ & 0.0015 & *** \\
+\quad P2 Education & & 20.96 & $8.3\times10^{-4}$ & 0.0005 & n.s. \\
+\quad P3 Trustworthiness & & 53.73 & $2.4\times10^{-10}$ & 0.0014 & *** \\
+\quad P4 Lifestyle & & 286.43 & $8.3\times10^{-60}$ & 0.0080 & *** \\
+\quad P5 Neighbourhood & & 3399.91 & $<10^{-300}$ & 0.0965 & *** \\
+\midrule
+\multicolumn{6}{l}{\textit{InternVL2-2B}} \\
+\quad P1 Occupation & & 26.47 & $7.2\times10^{-5}$ & 0.0006 & *** \\
+\quad P2 Education & & 291.56 & $6.5\times10^{-61}$ & 0.0081 & *** \\
+\quad P3 Trustworthiness & & 128.27 & $5.5\times10^{-26}$ & 0.0035 & *** \\
+\quad P4 Lifestyle & & 124.01 & $4.4\times10^{-25}$ & 0.0034 & *** \\
+\quad P5 Neighbourhood & & 2949.42 & $<10^{-300}$ & 0.0837 & *** \\
+\midrule
+\multicolumn{6}{l}{\textit{LLaVA-v1.6-7B}} \\
+\quad P1 Occupation & & 301.10 & $5.8\times10^{-63}$ & 0.0084 & *** \\
+\quad P2 Education & & 1634.04 & $<10^{-300}$ & 0.0463 & *** \\
+\quad P3 Trustworthiness & & 22.90 & $3.5\times10^{-4}$ & 0.0005 & *** \\
+\quad P4 Lifestyle & & 157.44 & $3.5\times10^{-32}$ & 0.0043 & *** \\
+\quad P5 Neighbourhood & & 1635.42 & $<10^{-300}$ & 0.0463 & *** \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Dunn post-hoc (Holm-corrected) headline-contrast significance for the worst$\rightarrow$best regional pair, restricted to cells with a significant omnibus test. $\Delta\bar v$ is the max--min valence gap.}
+\label{tab:dunn}
+\begin{tabular}{llcc}
+\toprule
+Model & Probe & $\Delta\bar v$ & Contrast sig. \\
+\midrule
+\multicolumn{4}{l}{\textit{IDEFICS2-8B}} \\
+\quad P1 Occupation & & 0.007 & No \\
+\quad P2 Education & & --- & n.s. omnibus \\
+\quad P3 Trustworthiness & & 0.101 & Yes \\
+\quad P4 Lifestyle & & 0.072 & Yes \\
+\quad P5 Neighbourhood & & 0.243 & Yes \\
+\midrule
+\multicolumn{4}{l}{\textit{InternVL2-2B}} \\
+\quad P1 Occupation & & 0.043 & Yes \\
+\quad P2 Education & & 0.098 & Yes \\
+\quad P3 Trustworthiness & & 0.124 & Yes \\
+\quad P4 Lifestyle & & 0.032 & Yes \\
+\quad P5 Neighbourhood & & 0.355 & Yes \\
+\midrule
+\multicolumn{4}{l}{\textit{LLaVA-v1.6-7B}} \\
+\quad P1 Occupation & & 0.155 & Yes \\
+\quad P2 Education & & 0.251 & Yes \\
+\quad P3 Trustworthiness & & 0.041 & Yes \\
+\quad P4 Lifestyle & & 0.047 & Yes \\
+\quad P5 Neighbourhood & & 0.313 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Africa as regional extreme. ``Africa lowest'' counts probes where the African mean is the minimum; ``Africa in max gap'' counts probes where Africa is an endpoint of the largest pairwise gap.}
+\label{tab:africa}
+\begin{tabular}{lcc}
+\toprule
+Model & Africa lowest & Africa in max gap \\
+\midrule
+IDEFICS2-8B & 2/5 & 2/5 \\
+InternVL2-2B & 2/5 & 2/5 \\
+LLaVA-v1.6-7B & 3/5 & 3/5 \\
+\midrule
+Total & 7/15 & 7/15 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\small
+\caption{Bootstrap $95\%$ CI on the neighbourhood-probe max--min disparity ($B{=}10{,}000$ image-level resamples, seed 42).}
+\label{tab:neigh-boot}
+\begin{tabular}{lccc}
+\toprule
+Model & Disparity & $95\%$ CI & Excl.\ 0 \\
+\midrule
+IDEFICS2-8B & 0.243 & [0.220, 0.265] & Yes \\
+InternVL2-2B & 0.355 & [0.308, 0.406] & Yes \\
+LLaVA-v1.6-7B & 0.313 & [0.265, 0.364] & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+

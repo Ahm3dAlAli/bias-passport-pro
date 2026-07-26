@@ -1,0 +1,57 @@
+% ---------------------------------------------------------------------------
+% DPE results: regional valence-disparity sigma across correction strength alpha.
+% Absolute sigma (std of per-region mean valence); lower = more equitable.
+% Requires \usepackage{booktabs}. Bold = optimum alpha (min sigma) per model.
+% ---------------------------------------------------------------------------
+\begin{table}[t]
+\centering
+\caption{Regional valence-disparity $\sigma$ (std of per-region means; lower is
+more equitable) under Demographic Positional Encoding at correction strength
+$\alpha$, region-only correction, balanced FHIBE sample. \textbf{Bold} marks the
+optimum $\alpha$ (minimum $\sigma$) per model.}
+\label{tab:dpe}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccccccc}
+\toprule
+& & \multicolumn{5}{c}{\textbf{DPE} ($\sigma$ at $\alpha$)} & \\
+\cmidrule(lr){3-7}
+\textbf{Model} & \textbf{Base} & $0.25$ & $0.5$ & $0.75$ & $1.0$ & $1.5$ & $\alpha^{\star}$ \\
+\midrule
+\model{IDEFICS2-8B}  & $0.0183$ & $\mathbf{0.0124}$ & $0.0145$ & $0.0124$ & $0.0127$ & $0.0127$ & $0.25$ \\
+\model{InternVL2-2B} & $0.0338$ & $0.0275$ & $\mathbf{0.0246}$ & $0.0279$ & $0.0256$ & $0.0258$ & $0.50$ \\
+\model{LLaVA-1.6-7B} & $0.0381$ & $0.0396$ & $\mathbf{0.0372}$ & $0.0405$ & $0.0395$ & $0.0382$ & $0.50$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ---------------------------------------------------------------------------
+% Per-region mean valence at baseline vs. optimum alpha (shows convergence).
+% ---------------------------------------------------------------------------
+\begin{table}[t]
+\centering
+\caption{Per-region mean valence at baseline and at the optimum $\alpha^{\star}$.
+DPE raises the lowest region (Africa) and lowers the highest, converging the
+per-region means. $\Delta_{\max}$ is the max$-$min gap across regions.}
+\label{tab:dpe_region}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{llccccccc c}
+\toprule
+\textbf{Model} & & Afr. & Amer. & Asia & Eur. & N.Am. & Oce. & $\Delta_{\max}$ \\
+\midrule
+\multirow{2}{*}{\model{IDEFICS2-8B}}
+ & base            & $0.027$ & $0.070$ & $0.048$ & $0.073$ & $0.082$ & $0.065$ & $0.055$ \\
+ & $\alpha^{\star}{=}0.25$ & $0.044$ & $0.062$ & $0.047$ & $0.061$ & $0.073$ & $0.078$ & $0.034$ \\
+\midrule
+\multirow{2}{*}{\model{InternVL2-2B}}
+ & base            & $0.558$ & $0.612$ & $0.597$ & $0.621$ & $0.590$ & $0.669$ & $0.111$ \\
+ & $\alpha^{\star}{=}0.50$ & $0.523$ & $0.521$ & $0.557$ & $0.523$ & $0.488$ & $0.561$ & $0.073$ \\
+\midrule
+\multirow{2}{*}{\model{LLaVA-1.6-7B}}
+ & base            & $0.469$ & $0.556$ & $0.520$ & $0.576$ & $0.569$ & $0.570$ & $0.107$ \\
+ & $\alpha^{\star}{=}0.50$ & $0.468$ & $0.551$ & $0.525$ & $0.577$ & $0.568$ & $0.568$ & $0.108$ \\
+\bottomrule
+\end{tabular}
+\end{table}
