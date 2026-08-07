@@ -1,5 +1,17 @@
 # Reproducing the DPE (Demographic Positional Encoding) results
 
+**One command, guided end-to-end:**
+```bash
+bash shell/reproduce_all.sh
+```
+It walks every stage (env → dataset → baseline runs → DPE runs → embeddings →
+analysis → paper compile), runs whatever is feasible on the current machine, and
+prints the exact next command for the manual/cluster parts. Note two hard limits
+it will guide you through rather than automate: **FHIBE is a gated, consent-based
+dataset** (request access from Sony AI — it cannot be `wget`'d), and the **model
+runs take ~2 weeks of cluster GPU**. Once the DBs exist locally, the analysis and
+figures regenerate in ~1–2 minutes.
+
 This documents how to reproduce every DPE table and figure from the result
 databases, and how those databases were generated on the GPU cluster.
 
