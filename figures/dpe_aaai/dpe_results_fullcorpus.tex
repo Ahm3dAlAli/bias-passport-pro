@@ -1,0 +1,14 @@
+\begin{table}[t]\centering\small
+\caption{\textbf{DPE regional valence-disparity reduction (corrected).} Headline result on the full $35{,}189$-image corpus, with the region-balanced $2000$/region evaluation reported as a mean$\pm$std over 5 random seeds (rather than a single deterministic subsample). \model{IDEFICS2-8B} shows a consistent reduction under both; \model{InternVL2-2B} and \model{LLaVA-v1.6-7B} show none.}
+\label{tab:dpe_results}
+\begin{tabular}{lccc}
+\toprule
+Model & $\sigma_{\text{base}}\!\to\!\sigma_{\text{DPE}}$ (full) & $\Delta\sigma$ full & $\Delta\sigma$ random-2000 (5 seeds) \\
+\midrule
+\model{IDEFICS2-8B} & $0.0195\!\to\!0.0171$ & +12.0\% & $+11.8\pm1.1\%$ \\
+\model{InternVL2-2B} & $0.0326\!\to\!0.0333$ & -2.1\% & $-2.8\pm5.9\%$ \\
+\model{LLaVA-v1.6-7B} & $0.0480\!\to\!0.0481$ & -0.2\% & $-0.2\pm1.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+

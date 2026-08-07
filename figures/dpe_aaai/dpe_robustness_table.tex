@@ -1,0 +1,14 @@
+\begin{table}[t]\centering\small
+\caption{\textbf{Sampling robustness of the DPE disparity reduction.} Regional valence-disparity $\sigma$ reduction for each model under three samplings of the \emph{same} full-corpus DPE run: the deterministic first-$2000$/region set used by the two-stage evaluation, a random $2000$/region set (mean$\pm$std over 5 seeds), and the full corpus. \model{IDEFICS2-8B}'s reduction holds under random and full evaluation (genuine); \model{InternVL2-2B}'s large first-$N$ reduction collapses to $\approx0$ under random/full sampling (an artifact of the deterministic image ordering); \model{LLaVA-v1.6-7B} is unaffected throughout. Positive $=$ disparity reduced.}
+\label{tab:dpe_robustness}
+\begin{tabular}{lccc}
+\toprule
+Model & first-2000/reg. & random-2000/reg. & full corpus \\
+\midrule
+\model{IDEFICS2-8B} & +19.1\% & $+11.8\pm1.1\%$ & +12.0\% \\
+\model{InternVL2-2B} & +37.6\% & $-2.8\pm5.9\%$ & -2.1\% \\
+\model{LLaVA-v1.6-7B} & -0.0\% & $-0.2\pm1.0\%$ & -0.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+

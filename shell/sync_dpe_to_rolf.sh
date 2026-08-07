@@ -18,7 +18,7 @@ set -e
 REMOTE_USER="alali"
 REMOTE_HOST="rolf.ifi.uzh.ch"
 REMOTE_DIR="/local/scratch/alali/FingerPrint"
-LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
+LOCAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"   # repo root (this script lives in shell/)
 REMOTE="${REMOTE_USER}@${REMOTE_HOST}"
 
 # --- SSH connection multiplexing: authenticate ONCE, reuse for all rsync ------
@@ -67,12 +67,12 @@ rsync -avz -e "$RSYNC_SSH" \
 
 # 3. The orchestration scripts
 rsync -avz -e "$RSYNC_SSH" \
-    "$LOCAL_DIR/run_dpe_on_rolf.sh" \
-    "$LOCAL_DIR/run_dpe_parallel_rolf.sh" \
-    "$LOCAL_DIR/run_dpe_alpha_sweep_rolf.sh" \
-    "$LOCAL_DIR/run_dpe_ablation_rolf.sh" \
-    "$LOCAL_DIR/run_dpe_ablation_one.sh" \
-    "$LOCAL_DIR/run_dpe_final_eval.sh" \
+    "$LOCAL_DIR/shell/run_dpe_on_rolf.sh" \
+    "$LOCAL_DIR/shell/run_dpe_parallel_rolf.sh" \
+    "$LOCAL_DIR/shell/run_dpe_alpha_sweep_rolf.sh" \
+    "$LOCAL_DIR/shell/run_dpe_ablation_rolf.sh" \
+    "$LOCAL_DIR/shell/run_dpe_ablation_one.sh" \
+    "$LOCAL_DIR/shell/run_dpe_final_eval.sh" \
     "${REMOTE}:${REMOTE_DIR}/"
 
 echo ""

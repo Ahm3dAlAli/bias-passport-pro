@@ -15,7 +15,7 @@ REMOTE_USER="alali"
 REMOTE_HOST="rolf.ifi.uzh.ch"
 REMOTE_DIR="/local/scratch/alali/FingerPrint"
 REMOTE="${REMOTE_USER}@${REMOTE_HOST}"
-LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
+LOCAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"   # repo root (script now in shell/)
 
 # --- SSH: authenticate ONCE, and avoid "Too many authentication failures" -----
 # IdentitiesOnly=yes stops ssh from offering every key in the agent (which

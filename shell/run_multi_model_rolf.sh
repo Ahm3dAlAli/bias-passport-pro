@@ -15,7 +15,7 @@ set -e
 REMOTE_USER="alali"
 REMOTE_HOST="rolf.ifi.uzh.ch"
 REMOTE_DIR="/local/scratch/alali/FingerPrint"
-LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
+LOCAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"   # repo root (script now in shell/)
 
 # Parse arguments
 RUN_EVALUATION=false
