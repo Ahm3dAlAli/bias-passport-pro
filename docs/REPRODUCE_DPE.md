@@ -42,7 +42,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dpe.txt
 ```
 
-**Generation (GPU cluster "rolf"):** two conda envs, because InternVL2 needs an
+**Generation (GPU cluster):** two conda envs, because InternVL2 needs an
 older transformers:
 - `fingerprint` — transformers 5.x, torch 2.7 (IDEFICS2, LLaVA figures)
 - `internvl`    — cloned from `fingerprint`, `transformers==4.44.2` + `accelerate==0.34.2` (InternVL2, LLaVA generation)
@@ -66,11 +66,12 @@ Each `judge_scores` row is one (image, probe) with `valence`,
 
 Optimal correction strengths: **IDEFICS2 α★=0.25, InternVL2 α★=0.5, LLaVA α★=0.5**.
 
-Pull the DBs from the cluster:
+Pull the DBs from the cluster (set your host/path in the sync scripts, or via
+`$REMOTE`/`$REMOTE_DIR`):
 ```bash
-bash shell/sync_dpe_from_rolf.sh          # results/dpe_* dirs
+bash shell/sync_dpe_from_rolf.sh          # results/dpe_* dirs (edit REMOTE_* at the top)
 # baselines + full35k are large; rsync individually as needed, e.g.:
-rsync -avz rolf:/local/scratch/alali/FingerPrint/results/dpe_full35k/ results/dpe_full35k/
+rsync -avz "$REMOTE:$REMOTE_DIR/results/dpe_full35k/" results/dpe_full35k/
 ```
 
 ---
@@ -114,7 +115,7 @@ Outputs land in `figures/dpe_aaai/` and are copied into `aaai_build/`.
 
 ## 4. Regenerate the DBs from scratch (GPU cluster)
 
-Only needed to rebuild the underlying data. On rolf:
+Only needed to rebuild the underlying data. On the GPU cluster:
 
 1. **Baseline** (no DPE): `scripts/run_fhibe_benchmark.py` per model → `single_runs_35k/`.
 2. **Select α★**: `shell/run_dpe_ablation_rolf.sh` (α ∈ {0.25,0.5,0.75,1.0,1.5} on a balanced dev set), pick min-σ per model.
